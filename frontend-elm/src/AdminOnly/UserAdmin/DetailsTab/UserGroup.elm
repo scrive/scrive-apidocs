@@ -1,15 +1,18 @@
 module AdminOnly.UserAdmin.DetailsTab.UserGroup exposing
     ( Address
-    , PadAppMode(..)
+    , DeletionRequest
+    , DeletionStatus
     , DigitalSignatureMethod(..)
+    , PadAppMode(..)
     , Settings
     , SmsProvider(..)
     , UserGroup
     , afterSaved
     , decoder
+    , deletionRequestDecoder
+    , enumDigitalSignatureMethod
     , enumPadAppMode
     , enumSEBankIDSigningProviderOverride
-    , enumDigitalSignatureMethod
     , enumSmsProvider
     , formValues
     , getInternalTag
@@ -19,9 +22,6 @@ module AdminOnly.UserAdmin.DetailsTab.UserGroup exposing
     , setInternalTag
     , setStringField
     , smsProviderDecoder
-    , DeletionStatus
-    , DeletionRequest
-    , deletionRequestDecoder
     )
 
 import Dict as D
@@ -32,14 +32,16 @@ import Json.Encode as JE
 import List as L
 import Maybe as M
 import Maybe.Extra as M
-import Utils exposing (boolToJson, ite, stringNonEmpty, flip)
+import Utils exposing (boolToJson, flip, ite, stringNonEmpty)
+
 
 
 -- USER GROUP
-
 -- Note that `UserGroup` is a misnomer: this type represents a user group _along
 -- with_ ad-hoc facts about the user group. We should split this type into its
 -- conceptual components.
+
+
 type alias UserGroup =
     { id : String
     , name : String
@@ -79,21 +81,25 @@ decoder =
         |> DP.required "companyhomefolderid" (JD.nullable JD.string)
         |> DP.optional "deletionrequest" (JD.nullable deletionRequestDecoder) Nothing
 
+
 deletionRequestDecoder : Decoder DeletionRequest
 deletionRequestDecoder =
     JD.succeed DeletionRequest
-    |> DP.required "requested_by" JD.string
-    |> DP.required "requested_deletion_date" JD.string
-    |> DP.optional "signed_off_by" (JD.nullable JD.string) Nothing
+        |> DP.required "requested_by" JD.string
+        |> DP.required "requested_deletion_date" JD.string
+        |> DP.optional "signed_off_by" (JD.nullable JD.string) Nothing
 
 
-type alias DeletionStatus = Maybe DeletionRequest
+type alias DeletionStatus =
+    Maybe DeletionRequest
+
 
 type alias DeletionRequest =
     { requestedBy : String
     , requestedDeletionDate : String
     , signedOffBy : Maybe String
     }
+
 
 modifySettings : (Settings -> Settings) -> UserGroup -> UserGroup
 modifySettings modify ug =
@@ -352,29 +358,57 @@ type alias Settings =
     , padesCredentialsLabel : Maybe String
     }
 
-type SEBankIDSigningProviderOverride = ForceCGIForSEBankIDSigning | ForceEIDHubForSEBankIDSigning | DefaultSEBankIDSigning
+
+type SEBankIDSigningProviderOverride
+    = ForceCGIForSEBankIDSigning
+    | ForceEIDHubForSEBankIDSigning
+    | DefaultSEBankIDSigning
+
 
 enumSEBankIDSigningProviderOverride : Enum SEBankIDSigningProviderOverride
 enumSEBankIDSigningProviderOverride =
-  let allValues = [ForceCGIForSEBankIDSigning, ForceEIDHubForSEBankIDSigning, DefaultSEBankIDSigning]
-      toString override = case override of
-        ForceCGIForSEBankIDSigning -> "force_cgi"
-        ForceEIDHubForSEBankIDSigning -> "force_eidhub"
-        DefaultSEBankIDSigning -> "no_override"
-      toHumanString override = case override of
-        ForceCGIForSEBankIDSigning -> "Force CGI"
-        ForceEIDHubForSEBankIDSigning -> "Force EID Hub"
-        DefaultSEBankIDSigning -> "Use global default"
-  in makeEnum allValues toString toHumanString
+    let
+        allValues =
+            [ ForceCGIForSEBankIDSigning, ForceEIDHubForSEBankIDSigning, DefaultSEBankIDSigning ]
+
+        toString override =
+            case override of
+                ForceCGIForSEBankIDSigning ->
+                    "force_cgi"
+
+                ForceEIDHubForSEBankIDSigning ->
+                    "force_eidhub"
+
+                DefaultSEBankIDSigning ->
+                    "no_override"
+
+        toHumanString override =
+            case override of
+                ForceCGIForSEBankIDSigning ->
+                    "Force CGI"
+
+                ForceEIDHubForSEBankIDSigning ->
+                    "Force EID Hub"
+
+                DefaultSEBankIDSigning ->
+                    "Use global default"
+    in
+    makeEnum allValues toString toHumanString
+
 
 seBankIDSigningProviderOverrideDecoder : Decoder SEBankIDSigningProviderOverride
 seBankIDSigningProviderOverrideDecoder =
     JD.string
-    |> JD.andThen (
-    \str -> case findEnumValue enumSEBankIDSigningProviderOverride str of
-        Err _ -> JD.fail <| "Cannot parse SEBankIDSigningProviderOverride: " ++ str
-        Ok override -> JD.succeed override
-    )
+        |> JD.andThen
+            (\str ->
+                case findEnumValue enumSEBankIDSigningProviderOverride str of
+                    Err _ ->
+                        JD.fail <| "Cannot parse SEBankIDSigningProviderOverride: " ++ str
+
+                    Ok override ->
+                        JD.succeed override
+            )
+
 
 settingsDecoder : Decoder Settings
 settingsDecoder =
@@ -637,9 +671,10 @@ formValuesSettings settings =
     , ( "companyappfrontend", boolToJson settings.appFrontend )
     , ( "companycgiserviceid", M.withDefault "" settings.cgiServiceID )
     , ( "companycgidisplayname", M.withDefault "" settings.cgiDisplayName )
-    , ( "companysebankidsigningoverride", Enum.toString enumSEBankIDSigningProviderOverride settings.seBankIDSigningOverride)
+    , ( "companysebankidsigningoverride", Enum.toString enumSEBankIDSigningProviderOverride settings.seBankIDSigningOverride )
     , ( "companypadescredentialslabel", M.withDefault "" settings.padesCredentialsLabel )
     ]
+
 
 mField : (value -> String) -> ( String, Maybe value ) -> Maybe ( String, String )
 mField toString tuple =

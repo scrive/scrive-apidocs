@@ -61,7 +61,7 @@ type UserGroupListState
 
 
 type Msg
-    = GotUserGroupList (Result Http.Error ( Int, List UserGroup))
+    = GotUserGroupList (Result Http.Error ( Int, List UserGroup ))
     | SetSearch String
     | SetFilter String
     | FormSubmitted
@@ -173,7 +173,7 @@ update _ globals msg model =
 
         GotUserGroupList result ->
             case result of
-                Ok (total, userGroupList) ->
+                Ok ( total, userGroupList ) ->
                     ( { model | userGroupList = Success userGroupList, mPaginationTotal = Just total }
                     , Cmd.none
                     )
@@ -244,49 +244,50 @@ view embed model =
         filter =
             M.withDefault WithNonFreePricePlan <| model.page.mFilter
     in
-    Html.map embed <| div []
-        [ Form.formInline [ class "justify-content-end", method "get", onSubmit FormSubmitted ]
-            [ Select.select [ Select.onChange <| SetFilter ] <|
-                L.map
-                    (\f ->
-                        Select.item
-                            [ value <| encodeFilter f
-                            , selected <| f == filter
-                            ]
-                            [ text <| textFromFilter f ]
-                    )
-                <|
-                    allFilters
-            , Input.text
-                [ Input.attrs
-                    [ onInput SetSearch
-                    , value model.search
-                    , class "ml-sm-2"
-                    , placeholder "Username, email or company name"
+    Html.map embed <|
+        div []
+            [ Form.formInline [ class "justify-content-end", method "get", onSubmit FormSubmitted ]
+                [ Select.select [ Select.onChange <| SetFilter ] <|
+                    L.map
+                        (\f ->
+                            Select.item
+                                [ value <| encodeFilter f
+                                , selected <| f == filter
+                                ]
+                                [ text <| textFromFilter f ]
+                        )
+                    <|
+                        allFilters
+                , Input.text
+                    [ Input.attrs
+                        [ onInput SetSearch
+                        , value model.search
+                        , class "ml-sm-2"
+                        , placeholder "Username, email or company name"
+                        ]
                     ]
+                , Button.button
+                    [ Button.secondary
+                    , Button.attrs [ attribute "type" "submit", class "ml-sm-2", value "submit" ]
+                    ]
+                    [ text "Search" ]
                 ]
-            , Button.button
-                [ Button.secondary
-                , Button.attrs [ attribute "type" "submit", class "ml-sm-2", value "submit" ]
+            , div [ class "mt-3" ]
+                [ case model.userGroupList of
+                    Failure ->
+                        text "Failure"
+
+                    Loading ->
+                        text "Loading"
+
+                    Success userGroupList ->
+                        viewUserGroups model userGroupList
                 ]
-                [ text "Search" ]
+            , Pagination.view
+                model.page.paginationPageNum
+                model.mPaginationTotal
+                PaginationMsg
             ]
-        , div [ class "mt-3" ]
-            [ case model.userGroupList of
-                Failure ->
-                    text "Failure"
-
-                Loading ->
-                    text "Loading"
-
-                Success userGroupList ->
-                    viewUserGroups model userGroupList
-            ]
-        , Pagination.view
-            model.page.paginationPageNum
-            model.mPaginationTotal
-            PaginationMsg
-        ]
 
 
 type alias UserGroup =

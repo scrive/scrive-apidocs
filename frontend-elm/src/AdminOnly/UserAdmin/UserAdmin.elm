@@ -149,19 +149,34 @@ update embed globals msg model =
             )
 
         DetailsTabMsg tabMsg ->
-            let updateDetailsTab = DetailsTab.update (embed << DetailsTabMsg) globals tabMsg
-                (newDetailsTab, cmd) = maybeUpdate updateDetailsTab model.mDetailsTab
-            in ({ model | mDetailsTab = newDetailsTab}, cmd)
+            let
+                updateDetailsTab =
+                    DetailsTab.update (embed << DetailsTabMsg) globals tabMsg
+
+                ( newDetailsTab, cmd ) =
+                    maybeUpdate updateDetailsTab model.mDetailsTab
+            in
+            ( { model | mDetailsTab = newDetailsTab }, cmd )
 
         StatisticsTabMsg tabMsg ->
-            let updateStatisticsTab = StatisticsTab.update (embed << StatisticsTabMsg) globals tabMsg
-                (newStatisticsTab, cmd) = maybeUpdate updateStatisticsTab model.mStatisticsTab
-            in ({ model | mStatisticsTab = newStatisticsTab}, cmd)
+            let
+                updateStatisticsTab =
+                    StatisticsTab.update (embed << StatisticsTabMsg) globals tabMsg
+
+                ( newStatisticsTab, cmd ) =
+                    maybeUpdate updateStatisticsTab model.mStatisticsTab
+            in
+            ( { model | mStatisticsTab = newStatisticsTab }, cmd )
 
         DocumentsTabMsg tabMsg ->
-            let updateDocumentsTab = DocumentsTab.update (embed << DocumentsTabMsg) globals tabMsg
-                (newDocumentsTab, cmd) = maybeUpdate updateDocumentsTab model.mDocumentsTab
-            in ({ model | mDocumentsTab = newDocumentsTab}, cmd)
+            let
+                updateDocumentsTab =
+                    DocumentsTab.update (embed << DocumentsTabMsg) globals tabMsg
+
+                ( newDocumentsTab, cmd ) =
+                    maybeUpdate updateDocumentsTab model.mDocumentsTab
+            in
+            ( { model | mDocumentsTab = newDocumentsTab }, cmd )
 
 
 updatePage : (Msg -> msg) -> Page -> Model -> ( Model, Cmd msg )
@@ -171,8 +186,13 @@ updatePage embed page model =
             let
                 ( tab, tabCmd ) =
                     model.mDetailsTab
-                        |> M.map (\t -> ( t, Cmd.map (embed << DetailsTabMsg)
-                                              <| DetailsTab.getUserCmd (userID page) ))
+                        |> M.map
+                            (\t ->
+                                ( t
+                                , Cmd.map (embed << DetailsTabMsg) <|
+                                    DetailsTab.getUserCmd (userID page)
+                                )
+                            )
                         |> M.withDefault
                             (DetailsTab.init (embed << DetailsTabMsg) (userID page))
             in
@@ -190,7 +210,8 @@ updatePage embed page model =
                     model.mStatisticsTab
                         |> M.map (StatisticsTab.updatePage (embed << StatisticsTabMsg) tabPage (StatisticsTab.ConfigForUser <| userID page))
                         |> M.withDefault
-                            (StatisticsTab.init (embed << StatisticsTabMsg) tabPage
+                            (StatisticsTab.init (embed << StatisticsTabMsg)
+                                tabPage
                                 (StatisticsTab.ConfigForUser <| userID page)
                             )
             in

@@ -109,10 +109,10 @@ update embed globals msg model =
         SubmitForm ->
             ( { model | response = Nothing }
             , Http.post
-                    { url = "/adminonly/companyadmin/merge/" ++ model.userGroup.id
-                    , body = formBody globals [ ( "companyid", model.newUserGroupID ) ]
-                    , expect = Http.expectString (embed << GotResponse)
-                    }
+                { url = "/adminonly/companyadmin/merge/" ++ model.userGroup.id
+                , body = formBody globals [ ( "companyid", model.newUserGroupID ) ]
+                , expect = Http.expectString (embed << GotResponse)
+                }
             )
 
 

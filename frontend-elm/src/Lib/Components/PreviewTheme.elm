@@ -1,21 +1,29 @@
-module Lib.Components.PreviewTheme exposing (viewEmailThemePreview, viewSignViewThemePreview, viewServiceThemePreview, viewLoginThemePreview)
+module Lib.Components.PreviewTheme exposing (viewEmailThemePreview, viewLoginThemePreview, viewServiceThemePreview, viewSignViewThemePreview)
 
-import Lib.Types.Theme exposing (..)
-import Html exposing (Html, a, div, img, p, strong, text, span, input)
-import Html.Attributes exposing (class, placeholder, readonly, src, style, type_, value)
-import Vendor.ColorPickerExtra exposing (color2Hex)
-import EnumExtra as Enum
 import Color exposing (Color, rgb255)
+import EnumExtra as Enum
+import Html exposing (Html, a, div, img, input, p, span, strong, text)
+import Html.Attributes exposing (class, placeholder, readonly, src, style, type_, value)
+import Lib.Types.Theme exposing (..)
 import Url
+import Vendor.ColorPickerExtra exposing (color2Hex)
+
 
 getThemeColor : Theme -> ColorIdentifier -> Color
-getThemeColor theme ident = Maybe.withDefault (rgb255 85 107 47) <| Enum.get ident theme.colors
+getThemeColor theme ident =
+    Maybe.withDefault (rgb255 85 107 47) <| Enum.get ident theme.colors
+
 
 viewEmailThemePreview : Theme -> Html msg
 viewEmailThemePreview theme =
-  let color label = style label << color2Hex << getThemeColor theme
-      themeFont = style "font-family" (Enum.toString enumFont theme.font)
-  in div
+    let
+        color label =
+            style label << color2Hex << getThemeColor theme
+
+        themeFont =
+            style "font-family" (Enum.toString enumFont theme.font)
+    in
+    div
         [ class "email-preview"
         , color "backgroundColor" { kind = BrandColors, component = BackgroundColor }
         ]
@@ -59,10 +67,14 @@ viewEmailThemePreview theme =
             ]
         ]
 
+
 viewSignViewThemePreview : Theme -> Html msg
 viewSignViewThemePreview theme =
-  let color label = style label << color2Hex << getThemeColor theme
-  in div
+    let
+        color label =
+            style label << color2Hex << getThemeColor theme
+    in
+    div
         [ class "sample-sign-view" ]
         [ div
             [ class "sample-sign-view-header"
@@ -151,10 +163,14 @@ viewSignViewThemePreview theme =
             ]
         ]
 
+
 viewServiceThemePreview : Theme -> Html msg
 viewServiceThemePreview theme =
-  let color label = style label << color2Hex << getThemeColor theme
-  in div [ class "service-preview" ]
+    let
+        color label =
+            style label << color2Hex << getThemeColor theme
+    in
+    div [ class "service-preview" ]
         [ div
             [ class "service-preview-header"
             , color "background-color" { kind = BrandColors, component = BackgroundColor }
@@ -236,11 +252,17 @@ viewServiceThemePreview theme =
             ]
         ]
 
+
 viewLoginThemePreview : Theme -> Html msg
 viewLoginThemePreview theme =
-  let color label = style label << color2Hex << getThemeColor theme
-      brandTextColor = getThemeColor theme { kind = BrandColors, component = TextColor }
-  in div
+    let
+        color label =
+            style label << color2Hex << getThemeColor theme
+
+        brandTextColor =
+            getThemeColor theme { kind = BrandColors, component = TextColor }
+    in
+    div
         [ class "login-preview"
         , color "background-color" { kind = BrandColors, component = BackgroundColor }
         ]
@@ -270,7 +292,8 @@ viewLoginThemePreview theme =
                         [ type_ "text"
                         , readonly True
                         , placeholder "Email address"
-                        , value "" ]
+                        , value ""
+                        ]
                         []
                     , div [ class "after" ] []
                     ]
@@ -279,7 +302,8 @@ viewLoginThemePreview theme =
                         [ type_ "text"
                         , readonly True
                         , placeholder "Password"
-                        , value "" ]
+                        , value ""
+                        ]
                         []
                     , div [ class "internal-button-wrapper", style "width" "auto" ]
                         [ div [ class "internal-button" ]

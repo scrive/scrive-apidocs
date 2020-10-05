@@ -345,9 +345,14 @@ update msg model =
             )
 
         AdminOnlyMsg adminOnlyMsg ->
-            let updateAdminOnly = AdminOnly.update AdminOnlyMsg model.globals adminOnlyMsg
-                (newAdminOnly, cmd) = maybeUpdate updateAdminOnly model.mAdminOnly
-            in ({ model | mAdminOnly = newAdminOnly}, cmd)
+            let
+                updateAdminOnly =
+                    AdminOnly.update AdminOnlyMsg model.globals adminOnlyMsg
+
+                ( newAdminOnly, cmd ) =
+                    maybeUpdate updateAdminOnly model.mAdminOnly
+            in
+            ( { model | mAdminOnly = newAdminOnly }, cmd )
 
         AddFlashMessage flash ->
             ( { model | flashMessage = FlashMessage.addFlashMessage flash model.flashMessage }

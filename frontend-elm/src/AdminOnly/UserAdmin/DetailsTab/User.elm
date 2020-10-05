@@ -66,7 +66,7 @@ formValues user =
     , ( "userlang", Enum.toString enumLanguage user.language )
     , ( "useraccounttype", Enum.toString enumAccountType user.accountType )
     , ( "usercallbackurl", user.callbackUrl )
-    , ( "usertotpismandatory", ite user.twoFAMandatory "true" "false")
+    , ( "usertotpismandatory", ite user.twoFAMandatory "true" "false" )
     ]
 
 

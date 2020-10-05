@@ -52,10 +52,10 @@ update embed globals msg model =
         SubmitForm ->
             ( { model | response = Nothing }
             , Http.post
-                    { url = "/adminonly/useradmin/delete/" ++ model.user.id
-                    , body = formBody globals []
-                    , expect = Http.expectString (embed << GotResponse)
-                    }
+                { url = "/adminonly/useradmin/delete/" ++ model.user.id
+                , body = formBody globals []
+                , expect = Http.expectString (embed << GotResponse)
+                }
             )
 
         GotResponse result ->

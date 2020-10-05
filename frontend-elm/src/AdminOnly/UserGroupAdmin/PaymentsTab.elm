@@ -528,7 +528,6 @@ featureFlagsStructure =
       , [ ( "Can use Portal", "can_use_portal" )
         ]
       )
-    
     , ( "Integrations"
       , [ ( "Can use archive to DropBox", "can_use_archive_to_drop_box" )
         , ( "Can use archive to GoogleDrive", "can_use_archive_to_google_drive" )

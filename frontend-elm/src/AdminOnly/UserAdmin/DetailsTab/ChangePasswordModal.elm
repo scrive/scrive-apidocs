@@ -70,11 +70,11 @@ update embed globals msg model =
                     , Cmd.batch
                         [ globals.setPageUrlFromModel -- reloads User Details
                         , globals.flashMessage <|
-                                if changed then
-                                    FlashMessage.success "Changed"
+                            if changed then
+                                FlashMessage.success "Changed"
 
-                                else
-                                    FlashMessage.error "Failed"
+                            else
+                                FlashMessage.error "Failed"
                         ]
                     )
 
@@ -84,12 +84,12 @@ update embed globals msg model =
         SubmitForm ->
             ( { model | response = Nothing }
             , Http.post
-                    { url = "/adminonly/useradmin/changepassword/" ++ model.user.id
-                    , body = formBody globals [ ( "password", model.newPassword ) ]
-                    , expect =
-                        Http.expectJson (embed << GotResponse)
-                            (D.field "changed" D.bool)
-                    }
+                { url = "/adminonly/useradmin/changepassword/" ++ model.user.id
+                , body = formBody globals [ ( "password", model.newPassword ) ]
+                , expect =
+                    Http.expectJson (embed << GotResponse)
+                        (D.field "changed" D.bool)
+                }
             )
 
 
@@ -132,4 +132,5 @@ view embed model =
                 ]
                 [ text "Change" ]
             ]
-        |> Modal.view model.modalVisibility |> Html.map embed
+        |> Modal.view model.modalVisibility
+        |> Html.map embed

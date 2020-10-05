@@ -24,7 +24,7 @@ folderDecoder : Decoder Folder
 folderDecoder =
     D.succeed Folder
         |> DP.required "id" D.string
-        |> DP.optional "parent_id"  (D.nullable D.string) Nothing
+        |> DP.optional "parent_id" (D.nullable D.string) Nothing
         |> DP.required "name" D.string
         |> DP.required "home_for_user" (D.nullable D.string)
         |> DP.required "home_for_user_group" (D.nullable D.string)
@@ -60,7 +60,7 @@ folderIsRoot folder tree =
 
 getHomeFolderForUserGroup : String -> FolderTree Folder -> Maybe Folder
 getHomeFolderForUserGroup ugid (FolderTree node childTrees) =
-    if (Just ugid == node.homeForUserGroup) then
+    if Just ugid == node.homeForUserGroup then
         Just node
 
     else
@@ -70,12 +70,18 @@ getHomeFolderForUserGroup ugid (FolderTree node childTrees) =
 folderDisplayName : Folder -> String
 folderDisplayName folder =
     case stringNonEmpty folder.name of
-        Just name -> folder.name ++ " (ID: " ++ folder.id ++ ")"
-        Nothing -> "FolderID: " ++ folder.id
+        Just name ->
+            folder.name ++ " (ID: " ++ folder.id ++ ")"
+
+        Nothing ->
+            "FolderID: " ++ folder.id
 
 
 folderDisplayNameForTree : Folder -> String
 folderDisplayNameForTree folder =
     case stringNonEmpty folder.name of
-        Just name -> folder.name
-        Nothing -> "FolderID: " ++ folder.id
+        Just name ->
+            folder.name
+
+        Nothing ->
+            "FolderID: " ++ folder.id

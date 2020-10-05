@@ -330,6 +330,7 @@ deliveryMethodDecoder =
             )
 
 
+
 -- DOCUMENT TYPE
 
 
@@ -394,8 +395,11 @@ enumDocumentStatus =
     makeEnum allDocumentStatuses encodeDocumentStatus encodeDocumentStatus
 
 
+
 -- A port of documentStatus from the old adminonly
 -- (frontend/app/scripts/archive/utils.jsx:175)
+
+
 extendedDocumentStatus : Document -> String
 extendedDocumentStatus document =
     let

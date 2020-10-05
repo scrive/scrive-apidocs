@@ -231,39 +231,74 @@ update embed globals msg model =
             )
 
         UserAdminTabMsg tabMsg ->
-            let updateUserAdminTab = UserAdminTab.update (embed << UserAdminTabMsg) globals tabMsg
-                (newUserAdminTab, cmd) = maybeUpdate updateUserAdminTab model.mUserAdminTab
-            in ({ model | mUserAdminTab = newUserAdminTab}, cmd)
+            let
+                updateUserAdminTab =
+                    UserAdminTab.update (embed << UserAdminTabMsg) globals tabMsg
+
+                ( newUserAdminTab, cmd ) =
+                    maybeUpdate updateUserAdminTab model.mUserAdminTab
+            in
+            ( { model | mUserAdminTab = newUserAdminTab }, cmd )
 
         UserGroupAdminTabMsg tabMsg ->
-            let updateUserGroupAdminTab = UserGroupAdminTab.update (embed << UserGroupAdminTabMsg) globals tabMsg
-                (newUserGroupAdminTab, cmd) = maybeUpdate updateUserGroupAdminTab model.mUserGroupAdminTab
-            in ({ model | mUserGroupAdminTab = newUserGroupAdminTab}, cmd)
+            let
+                updateUserGroupAdminTab =
+                    UserGroupAdminTab.update (embed << UserGroupAdminTabMsg) globals tabMsg
+
+                ( newUserGroupAdminTab, cmd ) =
+                    maybeUpdate updateUserGroupAdminTab model.mUserGroupAdminTab
+            in
+            ( { model | mUserGroupAdminTab = newUserGroupAdminTab }, cmd )
 
         DocumentsTabMsg tabMsg ->
-            let updateDocumentsTab = DocumentsTab.update (embed << DocumentsTabMsg) globals tabMsg
-                (newDocumentsTab, cmd) = maybeUpdate updateDocumentsTab model.mDocumentsTab
-            in ({ model | mDocumentsTab = newDocumentsTab}, cmd)
+            let
+                updateDocumentsTab =
+                    DocumentsTab.update (embed << DocumentsTabMsg) globals tabMsg
+
+                ( newDocumentsTab, cmd ) =
+                    maybeUpdate updateDocumentsTab model.mDocumentsTab
+            in
+            ( { model | mDocumentsTab = newDocumentsTab }, cmd )
 
         BrandedDomainsTabMsg tabMsg ->
-            let updateBrandedDomainsTab = BrandedDomainsTab.update (embed << BrandedDomainsTabMsg) globals tabMsg
-                (newBrandedDomainsTab, cmd) = maybeUpdate updateBrandedDomainsTab model.mBrandedDomainsTab
-            in ({ model | mBrandedDomainsTab = newBrandedDomainsTab}, cmd)
+            let
+                updateBrandedDomainsTab =
+                    BrandedDomainsTab.update (embed << BrandedDomainsTabMsg) globals tabMsg
+
+                ( newBrandedDomainsTab, cmd ) =
+                    maybeUpdate updateBrandedDomainsTab model.mBrandedDomainsTab
+            in
+            ( { model | mBrandedDomainsTab = newBrandedDomainsTab }, cmd )
 
         UserAdminMsg subMsg ->
-            let updateUserAdmin = UserAdmin.update (embed << UserAdminMsg) globals subMsg
-                (newUserAdmin, cmd) = maybeUpdate updateUserAdmin model.mUserAdmin
-            in ({ model | mUserAdmin = newUserAdmin}, cmd)
+            let
+                updateUserAdmin =
+                    UserAdmin.update (embed << UserAdminMsg) globals subMsg
+
+                ( newUserAdmin, cmd ) =
+                    maybeUpdate updateUserAdmin model.mUserAdmin
+            in
+            ( { model | mUserAdmin = newUserAdmin }, cmd )
 
         UserGroupAdminMsg subMsg ->
-            let updateUserGroupAdmin = UserGroupAdmin.update (embed << UserGroupAdminMsg) globals subMsg
-                (newUserGroupAdmin, cmd) = maybeUpdate updateUserGroupAdmin model.mUserGroupAdmin
-            in ({ model | mUserGroupAdmin = newUserGroupAdmin}, cmd)
+            let
+                updateUserGroupAdmin =
+                    UserGroupAdmin.update (embed << UserGroupAdminMsg) globals subMsg
+
+                ( newUserGroupAdmin, cmd ) =
+                    maybeUpdate updateUserGroupAdmin model.mUserGroupAdmin
+            in
+            ( { model | mUserGroupAdmin = newUserGroupAdmin }, cmd )
 
         BrandedDomainMsg subMsg ->
-            let updateBrandedDomain = BrandedDomain.update (embed << BrandedDomainMsg) globals subMsg
-                (newBrandedDomain, cmd) = maybeUpdate updateBrandedDomain model.mBrandedDomain
-            in ({ model | mBrandedDomain = newBrandedDomain}, cmd)
+            let
+                updateBrandedDomain =
+                    BrandedDomain.update (embed << BrandedDomainMsg) globals subMsg
+
+                ( newBrandedDomain, cmd ) =
+                    maybeUpdate updateBrandedDomain model.mBrandedDomain
+            in
+            ( { model | mBrandedDomain = newBrandedDomain }, cmd )
 
 
 updatePage : (Msg -> msg) -> Globals msg -> Page -> Model -> ( Model, Cmd msg )

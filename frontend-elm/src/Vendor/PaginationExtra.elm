@@ -1,8 +1,8 @@
 -- Extra bits for Bootstrap.Pagination
 -- Based on: https://github.com/rundis/elm-bootstrap/blob/5.2.0/src/Bootstrap/Pagination.elm
 
-module Vendor.PaginationExtra exposing ( view, itemsPerPage, pageNumToOffset )
 
+module Vendor.PaginationExtra exposing (itemsPerPage, pageNumToOffset, view)
 
 import Bootstrap.General.HAlign as HAlign
 import Bootstrap.Pagination as Pagination exposing (Config)
@@ -58,7 +58,10 @@ type alias ListConfig msg =
     }
 
 
+
 -- A simplified version of Pagination.itemsList
+
+
 itemsList : ListConfig msg -> Config msg -> Config msg
 itemsList conf config =
     let
@@ -77,11 +80,16 @@ itemsList conf config =
                 Nothing
 
         onClickPreventDefault msg =
-            Events.custom "click" (D.map (\m -> { message = m
-                                                , stopPropagation = False
-                                                , preventDefault = True
-                                                }
-                                         ) (D.succeed msg))
+            Events.custom "click"
+                (D.map
+                    (\m ->
+                        { message = m
+                        , stopPropagation = False
+                        , preventDefault = True
+                        }
+                    )
+                    (D.succeed msg)
+                )
 
         link mOnClickMsg children =
             Item.link
@@ -105,13 +113,17 @@ itemsList conf config =
             Item.item
                 |> Item.disabled True
                 |> link Nothing [ text "..." ]
-
     in
     ([ Item.item
-        |> Item.disabled (M.isNothing mPrevPageNum )
+        |> Item.disabled (M.isNothing mPrevPageNum)
         |> link (M.map conf.selectedMsg mPrevPageNum) [ text "Previous" ]
      ]
-        ++ (if minPageNum > 1 then [ morePagesItem ] else [])
+        ++ (if minPageNum > 1 then
+                [ morePagesItem ]
+
+            else
+                []
+           )
         ++ List.map
             (\pageNum ->
                 Item.item
@@ -119,11 +131,15 @@ itemsList conf config =
                     |> link (Just <| conf.selectedMsg pageNum) [ text <| String.fromInt pageNum ]
             )
             (L.range minPageNum maxPageNum)
-        ++ (if maxPageNum < conf.totalPages then [ morePagesItem ] else [])
+        ++ (if maxPageNum < conf.totalPages then
+                [ morePagesItem ]
+
+            else
+                []
+           )
         ++ [ Item.item
                 |> Item.disabled (M.isNothing mNextPageNum)
                 |> link (M.map conf.selectedMsg mNextPageNum) [ text "Next" ]
            ]
     )
         |> (\xs -> Pagination.items xs config)
-
