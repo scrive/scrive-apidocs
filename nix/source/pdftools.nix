@@ -1,4 +1,4 @@
 builtins.fetchGit {
   url = "ssh://git@github.com/scrive/new-scrive-pdf-tools.git";
-  rev = "fceb73ee4f8deb8fa962ccf4279629176f1b4037";
+  rev = "5b0d4f7428fc116ebf3a61d15aac0c7a73efb94f";
 }

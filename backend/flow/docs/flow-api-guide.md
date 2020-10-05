@@ -30,6 +30,8 @@ _Warning:_ The _Template_ concept is currently undergoing a lot of discussion an
 
 Flow uses the same authentication mechanisms as the Document API. In this guide, we will be using so-called personal access credentials, which should be sufficient to test-drive the API. See the [Authentication section](https://apidocs.scrive.com/#authentication) of the Document API documentation for more details and also information on how to configure a full OAuth workflow.
 
+Note that when using OAuth Flow requires a token with privilege `FULL_ACCESS`.
+
 ### Obtaining the Credentials
 
 To run the examples in this guide you will need an account in the Scrive `dev` environment at [https://dev.scrive.com](https://dev.scrive.com).
@@ -362,14 +364,16 @@ This event is produced when the user tries to access the Flow Overview page and 
 
 The event is described in `CallbackEventAuthenticationAttemptedVersion1` schema.
 
-#### Rejected (Work in progress)
+#### Rejected
 
-This event is produced when user rejects Flow. They can do this either from the Flow authentication page or from the Flow Overview page. This is different from rejecting individual documents; see the `Failed` event below.
+This event is produced when user rejects Flow, or a document in a Flow.
+
+A Flow can be rejected from the Flow authentication page or from the Flow Overview page.
 
 ```json
   {
     "version": 1,
-    "type": "rejected",
+    "type": "flow_rejected",
     "flow_instance_id": "31ebc664-3a61-41ec-b03b-d7b48b7b3a9e",
     "event_created": "2020-09-22T16:26:54.87.00000Z",
     "user_name": "user1",
@@ -377,11 +381,26 @@ This event is produced when user rejects Flow. They can do this either from the 
   }
 ```
 
+The rejected event could also be triggered when a user rejects a document in a flow.
+An additional `document_name` field is provided to indicate the specific document
+that is being rejected.
+
+```json
+  {
+    "version": 1,
+    "type": "flow_rejected",
+    "flow_instance_id": "31ebc664-3a61-41ec-b03b-d7b48b7b3a9e",
+    "event_created": "2020-09-22T16:26:54.87.00000Z",
+    "user_name": "user1",
+    "document_name": "agreement"
+  }
+```
+
 The event is described in `CallbackEventFlowRejectedVersion1` schema.
 
 #### Failed
 
-This event is produced when Flow fails. Currently, this occurs when a user rejects an individual document.
+This event is produced when Flow fails for generic reasons not covered by other events.
 
 ```json
   {

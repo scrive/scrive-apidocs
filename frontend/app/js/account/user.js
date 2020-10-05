@@ -110,3 +110,11 @@ var User = exports.User = Backbone.Model.extend({
   }
 });
 
+User.currentUser = function () {
+  if (_.isUndefined(User.currentUserInstance)) {
+    var user = new User({});
+    user.reload();
+    User.currentUserInstance = user;
+  }
+  return User.currentUserInstance;
+}

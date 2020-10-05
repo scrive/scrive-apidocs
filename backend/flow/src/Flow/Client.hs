@@ -53,11 +53,11 @@ data ApiClient = ApiClient
 
 data ParticipantApiClient = ParticipantApiClient
   { getInstanceView  :: InstanceId -> Maybe Host -> ClientM GetInstanceView
-  , rejectInstance :: InstanceId -> ClientM NoContent
+  , rejectInstance :: InstanceId -> RejectParam -> ClientM NoContent
   }
 
 data PageClient = PageClient
-  { instanceOverview  :: InstanceId -> UserName -> Bool -> Maybe Cookies' -> Maybe Host -> ClientM Html
+  { instanceOverview  :: InstanceId -> UserName -> Maybe Cookies' -> Maybe Host -> ClientM Html
   , instanceOverviewMagicHash
       :: InstanceId -> UserName -> MagicHash -> Maybe Cookies' -> Maybe Host
       -> ClientM (Headers '[ Header "Location" Text

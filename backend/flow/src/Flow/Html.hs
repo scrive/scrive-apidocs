@@ -1,6 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 module Flow.Html (
-    CommonPageVars(..)
+    AuthenticationToViewFlowMethod(..)
+  , CommonPageVars(..)
   , InstanceOverviewPageVars(..)
   , IdentifyViewVars(..)
   , IdentifyViewAppConfig(..)
@@ -14,6 +15,7 @@ module Flow.Html (
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Data.Aeson
+import Data.Aeson.Encoding as Encoding
 import GHC.Generics
 import Prelude hiding (div, head)
 import Servant (toUrlPiece)
@@ -30,7 +32,6 @@ import qualified Data.Text.Lazy.Encoding as LT
 import BrandedDomain.Model
 import Branding.Adler32
 import DB
-import Doc.Types.SignatoryLink (AuthenticationToViewMethod)
 import Flow.Id
 import Flow.Server.Types
 import VersionTH
@@ -56,19 +57,37 @@ data IdentifyViewVars = IdentifyViewVars
   , appConfig :: IdentifyViewAppConfig
   }
 
+-- We're using a separate type because signatory links do not support SMS OTP yet.
+data AuthenticationToViewFlowMethod
+  = OnfidoDocumentCheckAuthenticationToView
+  | OnfidoDocumentAndPhotoCheckAuthenticationToView
+  | SmsOtpAuthenticationToView
+
+instance ToJSON AuthenticationToViewFlowMethod where
+  toJSON     = unexpectedError "Unexpected toJSON call for AuthenticationToViewFlowMethod"
+  toEncoding = \case
+    OnfidoDocumentCheckAuthenticationToView -> Encoding.text "onfido_document_check"
+    OnfidoDocumentAndPhotoCheckAuthenticationToView ->
+      Encoding.text "onfido_document_and_photo_check"
+    SmsOtpAuthenticationToView -> Encoding.text "sms_otp"
+
 data IdentifyViewAppConfig = IdentifyViewAppConfig
   { cdnBaseUrl :: Text
   , logoUrl :: Text
   , welcomeText :: Text
   , entityTypeLabel :: Text
   , entityTitle :: Text
-  , authenticationMethod :: AuthenticationToViewMethod
+  , authenticationMethod :: AuthenticationToViewFlowMethod
   , authorName :: Text
   , participantEmail :: Text
   , participantMaskedMobile :: Text
-  , genericEidServiceStartUrl :: Text
+  , genericEidServiceStartUrl :: Maybe Text
   , smsPinSendUrl :: Text
   , smsPinVerifyUrl :: Text
+  , rejectionRejectUrl :: Text
+  , rejectionAlreadyRejected :: Bool
+  , errorMessage :: Maybe Text
+  , maxFailuresExceeded :: Bool
   } deriving (Generic)
 
 instance ToJSON IdentifyViewAppConfig where

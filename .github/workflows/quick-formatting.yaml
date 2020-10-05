@@ -27,11 +27,6 @@ jobs:
         run: "./ci/workflow/scripts/setup-ssh.sh"
       - name: Load Nix Shell
         run: |
-          df -h
-          nix-collect-garbage
-          rm -rf ~/.cabal
-          df -h
-          
           nix-shell -j4 -A ghc88.detect-unused-shell release.nix --run true
       - name: Detect Old Templates
         run: |
@@ -68,11 +63,6 @@ jobs:
         run: "./ci/workflow/scripts/setup-ssh.sh"
       - name: Load Nix Shell
         run: |
-          df -h
-          nix-collect-garbage
-          rm -rf ~/.cabal
-          df -h
-          
           nix-shell -j4 -A ghc88.lint-shell release.nix --run true
       - env:
           quick: "-quick"
@@ -113,11 +103,6 @@ jobs:
         run: "./ci/workflow/scripts/setup-ssh.sh"
       - name: Load Nix Shell
         run: |
-          df -h
-          nix-collect-garbage
-          rm -rf ~/.cabal
-          df -h
-          
           nix-shell -j4 -A ghc88.lint-shell release.nix --run true
       - env:
           quick: "-quick"

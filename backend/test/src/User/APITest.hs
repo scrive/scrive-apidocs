@@ -315,13 +315,12 @@ testUserDeletionOwnershipTransfer = do
                                                           , rdaSharings = OneOf [Private]
                                                           }
 
-  ctx <- mkContextWithUser defaultLang anna
-  let actor = userActor ctx anna
+  ctx                <- mkContextWithUser defaultLang anna
 
   fid                <- addNewRandomFile
   fid'               <- addNewRandomFile
-  sharedAttachment   <- dbUpdate $ NewAttachment (anna ^. #id) "shared" fid actor
-  unsharedAttachment <- dbUpdate $ NewAttachment (anna ^. #id) "shared" fid' actor
+  sharedAttachment   <- dbUpdate $ NewAttachment (anna ^. #id) "shared" fid
+  unsharedAttachment <- dbUpdate $ NewAttachment (anna ^. #id) "shared" fid'
   dbUpdate $ SetAttachmentsSharing (anna ^. #id) [attachmentid sharedAttachment] True
 
   req      <- mkRequest POST [("email", inText "anna@android.com")]

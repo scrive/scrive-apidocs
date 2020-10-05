@@ -23,9 +23,9 @@ module Flow.Model
     , selectSignatoryInfo
     , selectUserNameFromKV
     , updateAggregatorState
-    , insertUserAuthConfigs
-    , selectUserAuthConfigs
-    , selectUserAuthConfig
+    , insertUserAuthenticationConfigurations
+    , selectUserAuthenticationConfigurations
+    , selectUserAuthenticationConfiguration
     )
   where
 
@@ -33,9 +33,11 @@ import Control.Monad.Catch (MonadThrow)
 import Control.Monad.State
 import Control.Monad.Time
 import Data.Aeson
+import Data.ByteString.Lazy (ByteString)
 import Data.Tuple.Extra
 import Database.PostgreSQL.PQTypes
 import Database.PostgreSQL.PQTypes.SQL.Builder
+import qualified Data.Aeson as Aeson
 import qualified Data.Map as Map
 
 import Doc.DocumentID (DocumentID)
@@ -306,20 +308,30 @@ updateInstanceLastModified instanceId = do
 
 insertEvent :: (MonadDB m, MonadTime m, MonadThrow m) => InsertEvent -> m EventId
 insertEvent ie = do
+  let detailsBs :: Maybe ByteString = Aeson.encode <$> ie ^. #eventDetails
   now <- currentTime
   runQuery_ . sqlInsert "flow_events" $ do
     sqlSet "instance_id" $ ie ^. #instanceId
     sqlSet "user_name" $ ie ^. #userName
     sqlSet "document_name" $ ie ^. #documentName
     sqlSet "user_action" $ ie ^. #userAction
+    sqlSet "details" (JSONB <$> detailsBs)
     sqlSet "created" now
     sqlResult "id"
   fetchOne runIdentity
 
 eventSelectors :: (MonadState v m, SqlResult v) => SQL -> m ()
 eventSelectors prefix = do
-  mapM_ (\c -> sqlResult $ prefix <> "." <> c)
-        ["id", "instance_id", "user_name", "document_name", "user_action", "created"]
+  mapM_
+    (\c -> sqlResult $ prefix <> "." <> c)
+    [ "id"
+    , "instance_id"
+    , "user_name"
+    , "document_name"
+    , "user_action"
+    , "created"
+    , "details"
+    ]
 
 selectInstanceEvents :: (MonadDB m, MonadThrow m) => InstanceId -> Bool -> m [Event]
 selectInstanceEvents instanceId onlyAggregatorEvents = do
@@ -388,29 +400,28 @@ selectSignatoryInfo instanceId = do
     sqlWhereEq "fis.instance_id" instanceId
   fetchMany identity
 
-insertUserAuthConfigs :: MonadDB m => [UserAuthConfig] -> m ()
-insertUserAuthConfigs configs =
+insertUserAuthenticationConfigurations
+  :: MonadDB m => [UserAuthenticationConfiguration] -> m ()
+insertUserAuthenticationConfigurations configs =
   unless (null configs) . runQuery_ . sqlInsert "flow_user_auth_configs" $ do
-    sqlSetList "instance_id" $ map (view #instanceId) configs
-    sqlSetList "key" $ map (view #userName) configs
-    let datas = fmap toJson configs
-    sqlSetList "data" datas
-  where
-    toJson c = JSONB . encode $ UserAuthenticationConfigurationData
-      { authenticationToView         = c ^. #authToView
-      , authenticationToViewArchived = c ^. #authToViewArchived
-      }
+    sqlSetList "instance_id" $ fmap (view #instanceId) configs
+    sqlSetList "key" $ fmap (view #userName) configs
+    sqlSetList "data" $ fmap (JSONB . encode . view #configurationData) configs
 
-selectUserAuthConfigs :: (MonadDB m, MonadThrow m) => InstanceId -> m [UserAuthConfig]
-selectUserAuthConfigs instanceId = do
+selectUserAuthenticationConfigurations
+  :: (MonadDB m, MonadThrow m) => InstanceId -> m [UserAuthenticationConfiguration]
+selectUserAuthenticationConfigurations instanceId = do
   runQuery_ . sqlSelect "flow_user_auth_configs uac" $ do
     userAuthConfigSelectors "uac"
     sqlWhereEq "instance_id" instanceId
   fetchMany fetchUserAuthConfig
 
-selectUserAuthConfig
-  :: (MonadDB m, MonadThrow m) => InstanceId -> UserName -> m (Maybe UserAuthConfig)
-selectUserAuthConfig instanceId userName = do
+selectUserAuthenticationConfiguration
+  :: (MonadDB m, MonadThrow m)
+  => InstanceId
+  -> UserName
+  -> m (Maybe UserAuthenticationConfiguration)
+selectUserAuthenticationConfiguration instanceId userName = do
   runQuery_ . sqlSelect "flow_user_auth_configs uac" $ do
     userAuthConfigSelectors "uac"
     sqlWhereEq "instance_id" instanceId

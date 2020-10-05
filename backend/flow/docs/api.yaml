@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: Scrive Flow API
-  version: "0.10.4"
+  version: "0.10.7"
   description: |
     This is a specification of an API for configuring and managing Scrive Flow processes.
 
@@ -415,6 +415,17 @@ paths:
         to be cancelled. This is an internal API and the behavior may change in the future.
       parameters:
         - $ref: "#/components/parameters/InstanceId"
+      requestBody:
+        description: Rejection parameters.
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  description: message about the rejection reason.
       responses:
         204:
           description: The flow instance is rejected successfully.
@@ -635,12 +646,12 @@ components:
         auth_to_view_archived:
           $ref: "#/components/schemas/AuthConfig"
     AuthConfig:
+      oneOf:
+        - $ref: "#/components/schemas/AuthenticationOnfido"
+        - $ref: "#/components/schemas/AuthenticationSMS"
+    AuthConfigBase:
       description: |
         Authentication settings
-
-        **In development:** The authentication functionality is in development and these
-         settings do not have any effect yet.
-      type: object
       required:
         - provider
         - max_failures
@@ -652,13 +663,45 @@ components:
           enum:
             - onfido
             - sms_pin
-          example: onfido
         max_failures:
           description: |
             Number of failed authentication attempts before the user is denied access.
           type: number
           format: integer
           example: 3
+    AuthenticationOnfido:
+      description: |
+        Onfido authentication object.
+      allOf:
+        - $ref: "#/components/schemas/AuthConfigBase"
+        - type: object
+          properties:
+            provider:
+              type: string
+              enum: [onfido]
+            method:
+              description: |
+                Optional parameter which specifies if Onfido requests only
+                document or both document and photo.
+
+                If not present `document` is assumed.
+              type: string
+              enum:
+                - document
+                - document_and_photo
+    AuthenticationSMS:
+      description: |
+        SMS pin authentication code.
+
+        When using this method, make sure that the a phone number is configured on all documents
+        that the given user participates in.
+      allOf:
+        - $ref: "#/components/schemas/AuthConfigBase"
+        - type: object
+          properties:
+            provider:
+              type: string
+              enum: [sms_pin]
     InstanceCreateRequest:
       description: |
         This object specifies the parameters required to instantiate a template.
@@ -1222,7 +1265,8 @@ components:
 
     CallbackEventFlowRejectedVersion1:
       description: |
-        Callback event produced when a participant rejects Flow.
+        Callback event produced when a participant rejects a Flow,
+        or rejects a document in a Flow.
       type: object
       allOf:
         - $ref: "#/components/schemas/CallbackEventBaseVersion1"
@@ -1230,7 +1274,6 @@ components:
           required:
             - type
             - user_name
-            - message
           properties:
             type:
               type: string
@@ -1240,6 +1283,12 @@ components:
               description: |
                 Name of the Flow participant that rejected Flow, as specified in the DSL.
               example: user1
+            document_name:
+              type: string
+              description: |
+                If provided, the rejection comes from a document in a flow being
+                rejected. This is set to the name of the document that causes the
+                rejection. The field is not set if the Flow itself is rejected.
             message:
               type: string
               example: Please help me, I could not authenticate.
@@ -1282,5 +1331,4 @@ components:
       properties:
         applicant_id:
           type: string
-          format: uuid
           example: cec0f826-ad0b-4b71-b735-44310f4952fd

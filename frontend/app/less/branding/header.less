@@ -41,8 +41,8 @@ header.site {
       // right-container is used to align the items to the bottom
       // since the logo (#branding) can have different heights
       .right-container {
-        bottom: 0;
         position: absolute;
+        bottom: 0;
         right: 0;
       }
 
@@ -137,6 +137,22 @@ header.site {
               padding-bottom: 18px;
               padding-top: 18px;
             }
+          }
+        }
+
+        &#switch-frontend {
+          .clearfix;
+
+          float: left;
+
+          // absolute position is used to align the link to the bottom
+          // same as .right-container
+          position: absolute;
+          bottom: 0;
+          left: 184px;
+
+          a {
+            text-decoration: underline;
           }
         }
       }

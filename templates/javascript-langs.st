@@ -1153,6 +1153,7 @@ javascriptLocalisation =
            , createPermission : "$_apiConfiramtionCreatePersmission()$"
            , readUserInfo : "$_apiConfiramtionReadUserInfo()$"
            , sendPermission : "$_apiConfiramtionSendPermission()$"
+           , fullAccessPermission : "$_apiConfiramtionFullAccessPermission()$"
            , accept : "$_apiConfiramtionAccept()$"
            , loginAndAcceptTitle : "$_apiConfiramtionLoginAndAcceptTitle()$"
            , loginAndAccept : "$_apiConfiramtionLoginAndAccept()$"
@@ -1432,6 +1433,7 @@ javascriptLocalisation =
             , archive : "$_headerArchive()$"
             , template : "$_headerTemplate()$"
             , send     : "$_headerSend()$"
+            , switchFrontend : "$_headerSwitchFrontend()$"
       }
       , branding: {
             defaultTheme : "$_brandingDefaultTheme()$"

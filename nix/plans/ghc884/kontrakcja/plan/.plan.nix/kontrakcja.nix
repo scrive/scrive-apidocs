@@ -26,7 +26,15 @@
       licenseFiles = [];
       dataDir = "";
       dataFiles = [];
-      extraSrcFiles = [];
+      extraSrcFiles = [
+        "backend/flow/docs/*.yaml"
+        "backend/flow/docs/*.md"
+        "backend/flow/docs/*.py"
+        "backend/flow/docs/*.html"
+        "backend/flow/docs/*.txt"
+        "backend/flow/docs/*.sh"
+        "backend/flow/docs/*.pdf"
+        ];
       extraTmpFiles = [];
       extraDocFiles = [];
       };
@@ -223,14 +231,15 @@
           depends = [
             (hsPkgs."base" or (errorHandler.buildDepError "base"))
             (hsPkgs."base-noprelude" or (errorHandler.buildDepError "base-noprelude"))
-            (hsPkgs."kontrakcja-prelude" or (errorHandler.buildDepError "kontrakcja-prelude"))
             (hsPkgs."aeson" or (errorHandler.buildDepError "aeson"))
             (hsPkgs."aeson-casing" or (errorHandler.buildDepError "aeson-casing"))
             (hsPkgs."containers" or (errorHandler.buildDepError "containers"))
             (hsPkgs."exceptions" or (errorHandler.buildDepError "exceptions"))
             (hsPkgs."extra" or (errorHandler.buildDepError "extra"))
             (hsPkgs."hpqtypes" or (errorHandler.buildDepError "hpqtypes"))
+            (hsPkgs."kontrakcja-prelude" or (errorHandler.buildDepError "kontrakcja-prelude"))
             (hsPkgs."mtl" or (errorHandler.buildDepError "mtl"))
+            (hsPkgs."optics" or (errorHandler.buildDepError "optics"))
             (hsPkgs."servant" or (errorHandler.buildDepError "servant"))
             (hsPkgs."text" or (errorHandler.buildDepError "text"))
             (hsPkgs."unordered-containers" or (errorHandler.buildDepError "unordered-containers"))
@@ -681,16 +690,11 @@
             (hsPkgs."kontrakcja-prelude" or (errorHandler.buildDepError "kontrakcja-prelude"))
             (hsPkgs."kontrakcja-appdir" or (errorHandler.buildDepError "kontrakcja-appdir"))
             (hsPkgs."kontrakcja" or (errorHandler.buildDepError "kontrakcja"))
-            (hsPkgs."authentication" or (errorHandler.buildDepError "authentication"))
             (hsPkgs."kontrakcja-flow" or (errorHandler.buildDepError "kontrakcja-flow"))
-            (hsPkgs."Decimal" or (errorHandler.buildDepError "Decimal"))
-            (hsPkgs."HStringTemplate" or (errorHandler.buildDepError "HStringTemplate"))
-            (hsPkgs."HUnit" or (errorHandler.buildDepError "HUnit"))
-            (hsPkgs."HTTP" or (errorHandler.buildDepError "HTTP"))
-            (hsPkgs."QuickCheck" or (errorHandler.buildDepError "QuickCheck"))
             (hsPkgs."aeson" or (errorHandler.buildDepError "aeson"))
             (hsPkgs."aeson-diff" or (errorHandler.buildDepError "aeson-diff"))
             (hsPkgs."amazonka" or (errorHandler.buildDepError "amazonka"))
+            (hsPkgs."authentication" or (errorHandler.buildDepError "authentication"))
             (hsPkgs."base64-bytestring" or (errorHandler.buildDepError "base64-bytestring"))
             (hsPkgs."binary" or (errorHandler.buildDepError "binary"))
             (hsPkgs."blaze-markup" or (errorHandler.buildDepError "blaze-markup"))
@@ -699,15 +703,15 @@
             (hsPkgs."consumers" or (errorHandler.buildDepError "consumers"))
             (hsPkgs."containers" or (errorHandler.buildDepError "containers"))
             (hsPkgs."cookie" or (errorHandler.buildDepError "cookie"))
-            (hsPkgs."crypto-rng" or (errorHandler.buildDepError "crypto-rng"))
             (hsPkgs."cryptonite" or (errorHandler.buildDepError "cryptonite"))
+            (hsPkgs."crypto-rng" or (errorHandler.buildDepError "crypto-rng"))
             (hsPkgs."cryptostore" or (errorHandler.buildDepError "cryptostore"))
             (hsPkgs."data-default" or (errorHandler.buildDepError "data-default"))
+            (hsPkgs."Decimal" or (errorHandler.buildDepError "Decimal"))
             (hsPkgs."directory" or (errorHandler.buildDepError "directory"))
             (hsPkgs."either" or (errorHandler.buildDepError "either"))
             (hsPkgs."exceptions" or (errorHandler.buildDepError "exceptions"))
             (hsPkgs."extra" or (errorHandler.buildDepError "extra"))
-            (hsPkgs."optics" or (errorHandler.buildDepError "optics"))
             (hsPkgs."fields-json" or (errorHandler.buildDepError "fields-json"))
             (hsPkgs."filepath" or (errorHandler.buildDepError "filepath"))
             (hsPkgs."free" or (errorHandler.buildDepError "free"))
@@ -716,13 +720,17 @@
             (hsPkgs."hpqtypes" or (errorHandler.buildDepError "hpqtypes"))
             (hsPkgs."hpqtypes-extras" or (errorHandler.buildDepError "hpqtypes-extras"))
             (hsPkgs."hsaml2" or (errorHandler.buildDepError "hsaml2"))
+            (hsPkgs."HStringTemplate" or (errorHandler.buildDepError "HStringTemplate"))
+            (hsPkgs."HTTP" or (errorHandler.buildDepError "HTTP"))
             (hsPkgs."http-client" or (errorHandler.buildDepError "http-client"))
             (hsPkgs."http-client-tls" or (errorHandler.buildDepError "http-client-tls"))
             (hsPkgs."http-types" or (errorHandler.buildDepError "http-types"))
+            (hsPkgs."HUnit" or (errorHandler.buildDepError "HUnit"))
             (hsPkgs."hxt" or (errorHandler.buildDepError "hxt"))
             (hsPkgs."invariant" or (errorHandler.buildDepError "invariant"))
             (hsPkgs."json" or (errorHandler.buildDepError "json"))
             (hsPkgs."kontrakcja-templates" or (errorHandler.buildDepError "kontrakcja-templates"))
+            (hsPkgs."lifted-async" or (errorHandler.buildDepError "lifted-async"))
             (hsPkgs."lifted-base" or (errorHandler.buildDepError "lifted-base"))
             (hsPkgs."log-base" or (errorHandler.buildDepError "log-base"))
             (hsPkgs."monad-control" or (errorHandler.buildDepError "monad-control"))
@@ -730,7 +738,9 @@
             (hsPkgs."mtl" or (errorHandler.buildDepError "mtl"))
             (hsPkgs."network-uri" or (errorHandler.buildDepError "network-uri"))
             (hsPkgs."one-time-password" or (errorHandler.buildDepError "one-time-password"))
+            (hsPkgs."optics" or (errorHandler.buildDepError "optics"))
             (hsPkgs."pretty-simple" or (errorHandler.buildDepError "pretty-simple"))
+            (hsPkgs."QuickCheck" or (errorHandler.buildDepError "QuickCheck"))
             (hsPkgs."quickcheck-instances" or (errorHandler.buildDepError "quickcheck-instances"))
             (hsPkgs."quickcheck-unicode" or (errorHandler.buildDepError "quickcheck-unicode"))
             (hsPkgs."raw-strings-qq" or (errorHandler.buildDepError "raw-strings-qq"))
@@ -759,7 +769,10 @@
             (hsPkgs."unjson" or (errorHandler.buildDepError "unjson"))
             (hsPkgs."unordered-containers" or (errorHandler.buildDepError "unordered-containers"))
             (hsPkgs."utf8-string" or (errorHandler.buildDepError "utf8-string"))
+            (hsPkgs."uuid" or (errorHandler.buildDepError "uuid"))
             (hsPkgs."vector" or (errorHandler.buildDepError "vector"))
+            (hsPkgs."wai" or (errorHandler.buildDepError "wai"))
+            (hsPkgs."warp" or (errorHandler.buildDepError "warp"))
             (hsPkgs."x509" or (errorHandler.buildDepError "x509"))
             (hsPkgs."xml-conduit" or (errorHandler.buildDepError "xml-conduit"))
             (hsPkgs."yaml" or (errorHandler.buildDepError "yaml"))

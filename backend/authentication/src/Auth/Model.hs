@@ -25,11 +25,20 @@ authenticateToken (OAuthAuthorization token secret atoken asecret) = do
     <> "JOIN oauth_api_token t ON a.api_token_id    = t.id "
     <> "JOIN users u           ON t.user_id         = u.id "
     <> "JOIN user_groups ug    ON u.user_group_id   = ug.id "
-    <> "WHERE t.id = $1 AND t.api_token = $2 AND t.api_secret = $3 AND a.id = $4 AND a.access_token = $5 AND a.access_secret = $6 AND p.privilege = $7 LIMIT 1"
+    <> "WHERE t.id = $1 AND t.api_token = $2 AND t.api_secret = $3 "
+    <> "AND a.id = $4 AND a.access_token = $5 AND a.access_secret = $6 "
+    <> "AND (p.privilege = $7 OR p.privilege = $8) LIMIT 1"
     )
-    (atID token, atToken token, secret, atID atoken, atToken atoken, asecret, apiPersonal)
+    ( atID token
+    , atToken token
+    , secret
+    , atID atoken
+    , atToken atoken
+    , asecret
+    , APIPersonal
+    , APIFullAccess
+    )
   fetchMaybe identity
-  where apiPersonal = 0 :: Int64 -- APIPersonal
 
 -- TODO use UserId and UserGroupId types, once they are available in some ID component
 authenticateSession

@@ -19,6 +19,7 @@ var OAuthConfirationModel = exports.OAuthConfirationModel = Backbone.Model.exten
     readPermission   : false,
     createPermission : false,
     sendPermission   : false,
+    fullAccessPermission   : false,
     token : "",
     askFor2FA: false
     }
@@ -37,6 +38,9 @@ var OAuthConfirationModel = exports.OAuthConfirationModel = Backbone.Model.exten
   },
   sendPermission: function() {
       return this.get("sendPermission");
+  },
+  fullAccessPermission: function() {
+      return this.get("fullAccessPermission");
   },
   token : function() {
       return this.get("token");
@@ -114,6 +118,8 @@ var OAuthConfirationView = Backbone.View.extend({
         list.append($("<li>").text(localization.apiConfiration.readPermission));
       if (model.sendPermission())
         list.append($("<li>").text(localization.apiConfiration.sendPermission));
+      if (model.fullAccessPermission())
+        list.append($("<li>").text(localization.apiConfiration.fullAccessPermission));
       box.append(list);
       if (model.logged()) {
         box.append($("<p class=''/>").text(localization.apiConfiration.footerLogged));

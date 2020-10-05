@@ -11,7 +11,9 @@ module Flow.Model.Types.Internal
     , InstanceSession(..)
     , InstanceKeyValues(..)
     , InstanceAccessToken(..)
-    , UserAuthConfig(..)
+    , EventDetails(..)
+    , UserAuthenticationConfiguration(..)
+    , UserAuthenticationConfigurationData(..)
     )
  where
 
@@ -25,8 +27,8 @@ import Optics.TH
 import Auth.MagicHash
 import Auth.Session.SessionID
 import Doc.DocumentID
+import Flow.Core.Type.AuthenticationConfiguration
 import Flow.Core.Type.Callback
-import Flow.EID.AuthConfig
 import Flow.Id
 import Flow.Machinize
 import Flow.Message
@@ -95,6 +97,7 @@ data Event = Event
     , documentName :: Maybe DocumentName
     , userAction :: UserAction
     , created :: UTCTime
+    , eventDetails :: Maybe EventDetails
     }
 
 data InsertEvent = InsertEvent
@@ -102,7 +105,12 @@ data InsertEvent = InsertEvent
     , userName :: UserName
     , documentName :: Maybe DocumentName
     , userAction :: UserAction
+    , eventDetails :: Maybe EventDetails
     }
+  deriving (Generic)
+
+instance ToJSON InsertEvent where
+  toEncoding = genericToEncoding aesonOptions
 
 -- TODO we should also add key/values here
 data FullInstance = FullInstance
@@ -125,7 +133,8 @@ data InstanceKeyValues = InstanceKeyValues
     } deriving (Eq, Generic, Show)
 
 aesonOptions :: Options
-aesonOptions = defaultOptions { fieldLabelModifier = snakeCase }
+aesonOptions =
+  defaultOptions { fieldLabelModifier = snakeCase, constructorTagModifier = snakeCase }
 
 instance FromJSON InstanceKeyValues where
   parseJSON = genericParseJSON aesonOptions
@@ -138,14 +147,24 @@ data InstanceAccessToken = InstanceAccessToken
     , instanceId :: InstanceId
     , userName :: UserName
     , hash :: MagicHash
-    }
+    } deriving (Eq, Generic, Show)
 
-data UserAuthConfig = UserAuthConfig
+data UserAuthenticationConfiguration = UserAuthenticationConfiguration
     { instanceId :: InstanceId
     , userName :: UserName
-    , authToView :: Maybe AuthConfig
-    , authToViewArchived :: Maybe AuthConfig
-    }
+    , configurationData :: UserAuthenticationConfigurationData
+    } deriving (Eq, Generic, Show)
+
+data UserAuthenticationConfigurationData = UserAuthenticationConfigurationData
+    { authenticationToView :: Maybe AuthenticationConfiguration
+    , authenticationToViewArchived :: Maybe AuthenticationConfiguration
+    } deriving (Eq, Generic, Show)
+
+instance FromJSON UserAuthenticationConfigurationData where
+  parseJSON = genericParseJSON aesonOptions
+
+instance ToJSON UserAuthenticationConfigurationData where
+  toEncoding = genericToEncoding aesonOptions
 
 makeFieldLabelsWith noPrefixFieldLabels ''Template
 makeFieldLabelsWith noPrefixFieldLabels ''InsertTemplate
@@ -158,4 +177,5 @@ makeFieldLabelsWith noPrefixFieldLabels ''FullInstance
 makeFieldLabelsWith noPrefixFieldLabels ''InstanceSession
 makeFieldLabelsWith noPrefixFieldLabels ''InstanceKeyValues
 makeFieldLabelsWith noPrefixFieldLabels ''InstanceAccessToken
-makeFieldLabelsWith noPrefixFieldLabels ''UserAuthConfig
+makeFieldLabelsWith noPrefixFieldLabels ''UserAuthenticationConfiguration
+makeFieldLabelsWith noPrefixFieldLabels ''UserAuthenticationConfigurationData

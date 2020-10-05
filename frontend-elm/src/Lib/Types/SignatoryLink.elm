@@ -40,6 +40,7 @@ type AuthenticationToViewMethod
   | IDINAuthenticationToView
   | OnfidoDocumentCheckAuthenticationToView
   | OnfidoDocumentAndPhotoCheckAuthenticationToView
+  | SmsOtpAuthenticationToView
 
 type SignatoryField
   = SignatoryNameField

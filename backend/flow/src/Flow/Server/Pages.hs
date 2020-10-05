@@ -3,7 +3,6 @@ module Flow.Server.Pages where
 import Control.Monad.Catch (MonadMask, MonadThrow)
 import Control.Monad.Extra (fromMaybeM)
 import Control.Monad.Reader (ask)
-import Control.Monad.Trans.Maybe
 import Database.PostgreSQL.PQTypes
 import Log.Class
 import Servant
@@ -26,13 +25,16 @@ import Doc.DocControl
   )
 import Doc.Model.Query
 import Doc.Tokens.Model
-import Doc.Types.SignatoryLink
-import EID.Authentication.Model
-import Flow.Aggregator
-import Flow.EID.AuthConfig
+import Doc.Types.SignatoryLink (AuthenticationKind)
+import EID.Authentication.Model hiding (AuthenticationProvider)
+import EID.EIDService.Types
+import Flow.Aggregator (failureStageName)
+import Flow.Core.Type.AuthenticationConfiguration
 import Flow.EID.Authentication
+import Flow.EID.EIDService.Model
 import Flow.Error
 import Flow.HighTongue
+import Flow.Html (AuthenticationToViewFlowMethod(..))
 import Flow.Id
 import Flow.Model.Types
 import Flow.OrphanInstances ()
@@ -41,6 +43,7 @@ import Flow.Routes.Types
 import Flow.Server.Cookies
 import Flow.Server.Types
 import Flow.Server.Utils
+import Flow.Utils
 import User.Model.Query
 import User.UserID
 import UserGroup.Model
@@ -48,6 +51,7 @@ import UserGroup.Types
 import Util.HasSomeUserInfo
 import VersionTH (versionID)
 import qualified Auth.Model as AuthModel
+import qualified Flow.EID.EIDService.Types as FEET
 import qualified Flow.Html as Html
 import qualified Flow.Model as Model
 import qualified Flow.Model.InstanceSession as Model
@@ -121,12 +125,11 @@ instanceOverview
   :: InstanceUserHTML
   -> InstanceId
   -> UserName
-  -> Bool
   -> Maybe Cookies'
   -> Maybe Host
   -> IsSecure
   -> AppM Html
-instanceOverview (InstanceUserHTML InstanceUser {..}) instanceId' _ bypassIdentify mCookies mHost isSecure
+instanceOverview (InstanceUserHTML InstanceUser {..}) instanceId' _ mCookies mHost isSecure
   = do
     FlowContext { mainDomainUrl, cdnBaseUrl, production } <- ask
     let baseUrl = mkBaseUrl mainDomainUrl (isSecure == Secure) mHost
@@ -191,54 +194,56 @@ instanceOverview (InstanceUserHTML InstanceUser {..}) instanceId' _ bypassIdenti
           , flowInstanceId = instanceId'
           }
 
-    mInstanceAuthConfig <- runMaybeT $ do
-      uac <- MaybeT $ Model.selectUserAuthConfig instanceId userName
-      MaybeT . pure $ instanceAuthConfig fullInstance uac
+    mUserAuthConfig <- Model.selectUserAuthenticationConfiguration instanceId userName
+    let mAuthKindAndConfig =
+          mUserAuthConfig >>= getAuthenticationKindAndConfiguration fullInstance
 
-    mIdentifyViewVars <- case mInstanceAuthConfig of
-      Just (authKind, authConfig) -> do
-        needsToIdentify <- participantNeedsToIdentifyToView (authKind, authConfig)
-                                                            instanceId
-                                                            userName
-                                                            sessionId
+    mIdentifyViewVars <- case mAuthKindAndConfig of
+      Just (authenticationKind, authenticationConfig) -> do
+        needsToIdentify <- participantNeedsToIdentifyToView
+          (authenticationKind, authenticationConfig)
+          instanceId
+          userName
+          sessionId
         if needsToIdentify
           then do
-            appConfig <- mkIdentifyViewAppConfig cdnBaseUrl'
-                                                 logoUrl
-                                                 (fullInstance ^. #flowInstance)
-                                                 userName
-                                                 authorUserId
-                                                 authConfig
+            appConfig <- mkIdentifyViewAppConfig
+              cdnBaseUrl'
+              logoUrl
+              (fullInstance ^. #flowInstance)
+              userName
+              authorUserId
+              (authenticationKind, authenticationConfig)
+              sessionId
             pure . Just $ Html.IdentifyViewVars commonVars appConfig
           else pure Nothing
       Nothing -> pure Nothing
 
     case mIdentifyViewVars of
-      -- TODO: Temporary: Remove bypassIdentify when the Elm identify-view is usable.
-      Just identifyViewVars | not bypassIdentify ->
-        return $ Html.renderIdentifyView identifyViewVars
-      _ -> return $ Html.renderInstanceOverview instanceOverviewVars
+      Just identifyViewVars -> return $ Html.renderIdentifyView identifyViewVars
+      Nothing               -> return $ Html.renderInstanceOverview instanceOverviewVars
 
 participantNeedsToIdentifyToView
   :: (MonadDB m, MonadThrow m, MonadMask m)
-  => (AuthenticationKind, AuthConfig)
+  => (AuthenticationKind, AuthenticationConfiguration)
   -> InstanceId
   -> UserName
   -> SessionID
   -> m Bool
-participantNeedsToIdentifyToView (authKind, authConf) instanceId userName sid = do
-  let authProvider = provider authConf
-  mAuthInDb <- selectFlowEidAuthentication instanceId userName authKind sid
-  case mAuthInDb of
-    Nothing -> do
-      return True
-    Just authInDb -> return . not . authProviderMatchesAuth authProvider $ authInDb
+participantNeedsToIdentifyToView (authenticationKind, authenticationConfig) instanceId userName sid
+  = do
+    let authProvider = provider authenticationConfig
+    mAuthInDb <- selectFlowEidAuthentication instanceId userName authenticationKind sid
+    case mAuthInDb of
+      Nothing -> do
+        return True
+      Just authInDb -> return . not . authProviderMatchesAuth authProvider $ authInDb
 
   where
-    authProviderMatchesAuth SmsPin SMSPinAuthentication_{} = True
-    authProviderMatchesAuth SmsPin _ = False
-    authProviderMatchesAuth Onfido EIDServiceOnfidoAuthentication_{} = True
-    authProviderMatchesAuth Onfido _ = False
+    authProviderMatchesAuth SmsOtp EIDServiceSmsOtpAuthentication_{} = True
+    authProviderMatchesAuth SmsOtp     _ = False
+    authProviderMatchesAuth (Onfido _) EIDServiceOnfidoAuthentication_{} = True
+    authProviderMatchesAuth (Onfido _) _ = False
 
 getMSessionID
   :: (MonadDB m, MonadThrow m, MonadTime m)
@@ -260,52 +265,101 @@ mkIdentifyViewAppConfig
   -> Instance
   -> UserName
   -> UserID
-  -> AuthConfig
+  -> (AuthenticationKind, AuthenticationConfiguration)
+  -> SessionID
   -> m Html.IdentifyViewAppConfig
-mkIdentifyViewAppConfig cdnBaseUrl logoUrl instance_ userName authorId authConfig = do
-  mAuthor       <- dbQuery $ GetUserByID authorId
+mkIdentifyViewAppConfig cdnBaseUrl logoUrl instance_ userName authorId (authenticationKind, authenticationConfig) sessionId
+  = do
+    mAuthor             <- dbQuery $ GetUserByID authorId
 
-  -- TODO: Find a nicer way of getting the signatory link
-  signatoryInfo <- find (\(userName', _, _) -> userName' == userName)
-    <$> Model.selectSignatoryInfo (instance_ ^. #id)
-  signatoryLink <- case signatoryInfo of
-    Just (_, slid, did) -> dbQuery $ GetSignatoryLinkByID did slid
-    Nothing -> unexpectedError "mkIdentifyViewAppConfig: signatory info not found!"
+    (did, slid)         <- findFirstSignatoryLink (instance_ ^. #id) userName
+    signatoryLink       <- dbQuery $ GetSignatoryLinkByID did slid
 
-  let genericEidServiceStartUrl = T.intercalate
-        "/"
-        [ "eid-service"
-        , "start-flow"
-        , toUrlPiece (authConfig ^. #provider)
-        , "view"
-        , toUrlPiece (instance_ ^. #id)
-        , toUrlPiece userName
-        ]
+    maxFailuresExceeded <- checkAuthMaxFailuresExceeded
+      (instance_ ^. #id)
+      userName
+      (authenticationKind, authenticationConfig)
 
-      -- TODO: Use localisation
-      welcomeText = "To see the documents verify your identity"
+    mEidTransaction <- dbQuery $ GetEIDServiceTransactionGuardSessionID
+      sessionId
+      (instance_ ^. #id)
+      userName
+      (EIDServiceAuthToView authenticationKind)
 
-  pure $ Html.IdentifyViewAppConfig
-    { cdnBaseUrl                = cdnBaseUrl
-    , logoUrl                   = logoUrl
-    , welcomeText               = welcomeText
-    , entityTypeLabel           = "Flow"
-    , entityTitle               = fromMaybe "" (instance_ ^. #title)
-    , authenticationMethod      = toAuthenticationToViewMethod (authConfig ^. #provider)
-    , authorName                = maybe "" getFullName mAuthor
-    , participantEmail          = getEmail signatoryLink
-    , participantMaskedMobile   = maskedMobile 3 (getMobile signatoryLink)
-    , genericEidServiceStartUrl = genericEidServiceStartUrl
-    , smsPinSendUrl             = "" -- TODO
-    , smsPinVerifyUrl           = "" -- TODO
-    }
+    let lastTransactionFailed = maybe False isFailedEidTransaction mEidTransaction
+
+        -- The error messages are based on the assumption that we only use EID Hub
+        mErrorMessage         = if
+          | maxFailuresExceeded -> Just
+            "Maximum number of failed authentications has been reached."
+          | lastTransactionFailed -> Just "Authentication failed, please try again."
+          | otherwise -> Nothing
+
+        flowRejected = instance_ ^. #currentState == failureStageName
+
+        -- TODO: Use localisation
+        welcomeText  = if
+          | maxFailuresExceeded -> "Authentication failed"
+          | flowRejected        -> "Flow rejected"
+          | otherwise           -> "To see the documents verify your identity"
+
+        mGenericEidServiceStartUrl =
+          (\eidProvider -> "/" <> T.intercalate
+              "/"
+              [ "eid-service-flow"
+              , "start"
+              , toRedirectURLName eidProvider
+              , toUrlPiece (instance_ ^. #id)
+              , toUrlPiece userName
+              ]
+            )
+            <$> toEIDServiceTransactionProvider (authenticationConfig ^. #provider)
+
+        rejectionRejectUrl = "/" <> T.intercalate
+          "/"
+          [flowPath, "instances", toUrlPiece (instance_ ^. #id), "reject"]
+
+    pure $ Html.IdentifyViewAppConfig
+      { cdnBaseUrl                = cdnBaseUrl
+      , logoUrl                   = logoUrl
+      , welcomeText               = welcomeText
+      , entityTypeLabel           = "Flow"
+      , entityTitle               = fromMaybe "" (instance_ ^. #title)
+      , authenticationMethod      = toAuthenticationToViewMethod
+                                      (authenticationConfig ^. #provider)
+      , authorName                = maybe "" getFullName mAuthor
+      , participantEmail          = getEmail signatoryLink
+      , participantMaskedMobile   = maskedMobile 3 (getMobile signatoryLink)
+      , genericEidServiceStartUrl = mGenericEidServiceStartUrl
+      , smsPinSendUrl             = "" -- TODO
+      , smsPinVerifyUrl           = "" -- TODO
+      , rejectionRejectUrl        = rejectionRejectUrl
+      , rejectionAlreadyRejected  = flowRejected
+      , errorMessage              = mErrorMessage
+      , maxFailuresExceeded       = maxFailuresExceeded
+      }
   where
     maskedMobile showLastN mobile =
       T.map (\c -> if c /= ' ' then '*' else c) (T.dropEnd showLastN mobile)
         <> T.takeEnd showLastN mobile
 
-instanceAuthConfig
-  :: FullInstance -> UserAuthConfig -> Maybe (AuthenticationKind, AuthConfig)
-instanceAuthConfig fullInstance uac = if isComplete $ instanceToAggregator fullInstance
-  then uac ^. #authToViewArchived >>= \conf -> pure (AuthenticationToViewArchived, conf)
-  else uac ^. #authToView >>= \conf -> pure (AuthenticationToView, conf)
+    isFailedEidTransaction transaction =
+      FEET.estStatus transaction
+        `elem` [ EIDServiceTransactionStatusFailed
+               , EIDServiceTransactionStatusCompleteAndFailed
+               ]
+
+    toEIDServiceTransactionProvider
+      :: AuthenticationProvider -> Maybe EIDServiceTransactionProvider
+    toEIDServiceTransactionProvider = \case
+      (Onfido _) -> Just EIDServiceTransactionProviderOnfido
+      SmsOtp     -> Just EIDServiceTransactionProviderSmsOtp
+
+    toAuthenticationToViewMethod
+      :: AuthenticationProvider -> AuthenticationToViewFlowMethod
+    toAuthenticationToViewMethod = \case
+      (Onfido (AuthenticationProviderOnfidoData Document)) ->
+        OnfidoDocumentCheckAuthenticationToView
+      (Onfido (AuthenticationProviderOnfidoData DocumentAndPhoto)) ->
+        OnfidoDocumentAndPhotoCheckAuthenticationToView
+      SmsOtp -> SmsOtpAuthenticationToView

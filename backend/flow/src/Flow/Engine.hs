@@ -14,6 +14,7 @@ import Control.Monad.Extra (fromMaybeM)
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Crypto.RNG
+import Data.Aeson.Casing
 import Data.Aeson.Types
 import Database.PostgreSQL.PQTypes (MonadDB)
 import GHC.Generics
@@ -41,8 +42,12 @@ data EngineEvent = EngineEvent
     , userAction :: UserAction
     , signatoryId :: SignatoryLinkID
     , documentId :: DocumentID
+    , eventDetails :: Maybe EventDetails
     }
   deriving (Show, Eq, Generic)
+
+instance ToJSON EngineEvent where
+  toEncoding = genericToEncoding $ aesonPrefix snakeCase
 
 toPairs :: EngineEvent -> [Pair]
 toPairs EngineEvent {..} =
@@ -78,8 +83,8 @@ processFlowEvent
      )
   => EngineEvent
   -> ExceptT EngineError m ()
-processFlowEvent event@EngineEvent { instanceId, documentId, signatoryId, userAction } =
-  do
+processFlowEvent event@EngineEvent { instanceId, documentId, signatoryId, userAction, eventDetails }
+  = do
     localData (toPairs event) $ do
       documentName <- fromMaybeM noDocumentNameFound
         $ selectDocumentNameFromKV instanceId documentId
@@ -89,6 +94,7 @@ processFlowEvent event@EngineEvent { instanceId, documentId, signatoryId, userAc
         EventInfo { eventInfoAction   = userAction
                   , eventInfoUser     = userName
                   , eventInfoDocument = Just documentName
+                  , eventInfoDetails  = eventDetails
                   }
   where
     noDocumentNameFound = do

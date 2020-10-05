@@ -1,9 +1,10 @@
-module FlowOverview.View exposing (docTable, section)
+module FlowOverview.View exposing (docTable, rejectionButton, rejectionComponent, section)
 
 import Bootstrap.Table as Table
-import FlowOverview.Model exposing (..)
-import Html exposing (Html, a, div, h4, text)
-import Html.Attributes exposing (class, colspan, href)
+import FlowOverview.Model as Model exposing (..)
+import Html exposing (Html, a, div, h4, text, p, textarea)
+import Html.Attributes exposing (class, colspan, href, style, placeholder, autocomplete, value)
+import Html.Events exposing (onClick, onInput)
 import Maybe as M
 
 
@@ -107,4 +108,41 @@ docTable documents noDocumentsText =
                                 )
                                 documents
             }
+        ]
+
+rejectionButton : Html Msg
+rejectionButton =
+    div []
+        [ p []
+            [ a [ class "button enter-rejection-button"
+                , onClick <| EnterRejectionClicked
+                ]
+                [ text "Reject the documents" ]
+            ]
+        ]
+
+
+rejectionComponent : Model.Rejection -> Html Msg
+rejectionComponent (Rejection {message}) =
+    div [ class "rejection" ]
+        [ p [ style "margin-bottom" "1em" ]
+            [ text """Please let us know why you are rejecting the Flow.""" ]
+        , textarea [ placeholder "Enter message..." -- TODO: Localisation
+                   , autocomplete False
+                   , value message
+                   , onInput UpdateTextarea
+                   ]
+                   []
+        , div
+            [ class "button-group right"
+            ]
+            [ a [ class "button button-reject"
+                , onClick RejectButtonClicked
+                ]
+                [ text "Reject" ]
+            , a [ class "button button-cancel"
+                , onClick CancelButtonClicked
+                ]
+                [ text "Cancel" ]
+            ]
         ]

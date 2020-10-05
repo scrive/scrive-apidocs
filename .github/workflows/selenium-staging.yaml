@@ -2,8 +2,7 @@
 jobs:
   evidence-package:
     runs-on:
-      - linux
-      - self-hosted
+      - ubuntu-latest
     steps:
       - name: Checkout Code
         uses: "actions/checkout@v2"
@@ -28,11 +27,6 @@ jobs:
         run: "./ci/workflow/scripts/setup-ssh.sh"
       - name: Load Nix Shell
         run: |
-          df -h
-          nix-collect-garbage
-          rm -rf ~/.cabal
-          df -h
-          
           nix-shell -j4 -A ghc88.selenium-shell release.nix --run true
       - env:
           SELENIUM_CONFIG: "${{ secrets.STAGING_SELENIUM_CONFIG }}"
@@ -60,8 +54,7 @@ jobs:
           path: selenium-test/evidence_package/artifacts
   general:
     runs-on:
-      - linux
-      - self-hosted
+      - ubuntu-latest
     steps:
       - name: Checkout Code
         uses: "actions/checkout@v2"
@@ -86,11 +79,6 @@ jobs:
         run: "./ci/workflow/scripts/setup-ssh.sh"
       - name: Load Nix Shell
         run: |
-          df -h
-          nix-collect-garbage
-          rm -rf ~/.cabal
-          df -h
-          
           nix-shell -j4 -A ghc88.selenium-shell release.nix --run true
       - env:
           SELENIUM_CONFIG: "${{ secrets.STAGING_SELENIUM_CONFIG }}"
@@ -118,8 +106,7 @@ jobs:
           path: selenium-test/general/artifacts
   language:
     runs-on:
-      - linux
-      - self-hosted
+      - ubuntu-latest
     steps:
       - name: Checkout Code
         uses: "actions/checkout@v2"
@@ -144,11 +131,6 @@ jobs:
         run: "./ci/workflow/scripts/setup-ssh.sh"
       - name: Load Nix Shell
         run: |
-          df -h
-          nix-collect-garbage
-          rm -rf ~/.cabal
-          df -h
-          
           nix-shell -j4 -A ghc88.selenium-shell release.nix --run true
       - env:
           SELENIUM_CONFIG: "${{ secrets.STAGING_SELENIUM_CONFIG }}"

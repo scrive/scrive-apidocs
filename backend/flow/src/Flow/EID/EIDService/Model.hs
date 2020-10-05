@@ -2,7 +2,6 @@ module Flow.EID.EIDService.Model (
     MergeEIDServiceTransaction(..)
   , GetEIDServiceTransactionGuardSessionID(..)
   , GetEIDServiceTransactionNoSessionIDGuard(..)
-  , getAnyDocumentWithSl
   ) where
 
 import Control.Monad.Catch
@@ -11,12 +10,8 @@ import Crypto.RNG (CryptoRNG)
 import Data.Time
 
 import DB
-import Doc.DocumentID
-import Doc.Model.Query
-import Doc.Types.SignatoryLink
 import EID.EIDService.Types
 import Flow.Id
-import Flow.Model
 import Flow.Names
 import Session.SessionID
 import qualified Flow.EID.EIDService.Types as FEET
@@ -99,13 +94,3 @@ fetchEIDServiceTransaction
   -> FEET.EIDServiceTransactionFromDB
 fetchEIDServiceTransaction (estInstanceId, estUserName, estAuthKind, estSessionID, estID, estStatus, estProvider, estDeadline)
   = FEET.EIDServiceTransactionFromDB { .. }
-
-getAnyDocumentWithSl
-  :: (MonadDB m, MonadThrow m) => InstanceId -> UserName -> m (SignatoryLink, DocumentID)
-getAnyDocumentWithSl instanceId userName = do
-  -- TODO: Temporary - refactor into function when FLOW-325 is merged
-  signatoryInfo <- find (\(userName', _, _) -> userName' == userName)
-    <$> selectSignatoryInfo instanceId
-  case signatoryInfo of
-    Just (_, slid, did) -> fmap (, did) <$> dbQuery $ GetSignatoryLinkByID did slid
-    Nothing -> unexpectedError "getAnyDocumentWithS1: signatory info not found!"

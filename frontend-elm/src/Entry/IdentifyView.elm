@@ -13,12 +13,11 @@ import Lib.Json.ID exposing (idDecoder)
 import Lib.Json.Document exposing (documentDecoder)
 import Lib.Json.FlashMessage exposing (flashMessageDecoder)
 import Lib.Json.Localization exposing (localisationDecoder)
-import Lib.Json.SignatoryLink exposing (authenticationToViewMethodDecoder)
 import Lib.Components.FlashMessage as FlashMessage
 import Lib.Types.FlashMessage exposing (FlashMessage(..))
-import Lib.Types.SignatoryLink exposing (AuthenticationToViewMethod(..))
 
 import IdentifyView.GenericEidService.GenericEidService as GenericEidService
+import IdentifyView.Rejection.Rejection as Rejection
 import IdentifyView.Model exposing (..)
 import IdentifyView.SMSPin.SMSPin as SMSPin
 import IdentifyView.Update exposing (..)
@@ -28,7 +27,6 @@ import IdentifyView.View exposing (..)
 decodeFlags : JD.Decoder Flags
 decodeFlags =
   JD.succeed Flags
-  |> JDP.required "flashMessageFromCookie" (JD.maybe flashMessageDecoder)
   |> JDP.required "xtoken" JD.string
   |> JDP.required "localization" localisationDecoder
   |> JDP.required "cdnBaseUrl" JD.string
@@ -39,35 +37,46 @@ decodeFlags =
   |> JDP.required "welcomeText" JD.string
   |> JDP.required "entityTypeLabel" JD.string
   |> JDP.required "entityTitle" JD.string
-  |> JDP.required "authenticationMethod" authenticationToViewMethodDecoder
+  |> JDP.required "authenticationMethod" authenticationToViewFlowMethodDecoder
   |> JDP.required "authorName" JD.string
   |> JDP.required "participantEmail" JD.string
   |> JDP.required "participantMaskedMobile" JD.string
-  |> JDP.required "genericEidServiceStartUrl" JD.string
+  |> JDP.required "genericEidServiceStartUrl" (JD.nullable JD.string)
   |> JDP.required "smsPinSendUrl" JD.string
   |> JDP.required "smsPinVerifyUrl" JD.string
+  |> JDP.required "rejectionRejectUrl" JD.string
+  |> JDP.required "rejectionAlreadyRejected" JD.bool
+  |> JDP.required "errorMessage" (JD.nullable JD.string)
+  |> JDP.required "maxFailuresExceeded" JD.bool
 
 init : JD.Value -> (Model, Cmd Msg)
 init value = case JD.decodeValue decodeFlags value of
   Ok flags ->
-    let model = { flashMessages = FlashMessage.initialState
+    let flashMessages = case flags.errorMessage of
+            Just err -> Tuple.first <|
+                FlashMessage.addFlashMessage {embed = FlashMessageMsg} (FlashError err) FlashMessage.initialState
+            Nothing ->
+                FlashMessage.initialState
+
+        model = { flashMessages = flashMessages
                 , state = Loading flags
                 }
 
-        mInnerModel = case flags.authenticationMethod of
-            StandardAuthenticationToView -> Nothing
-            SEBankIDAuthenticationToView -> Just <| IdentifyGenericEidService GenericEidService.SEBankID GenericEidService.Idle
-            NOBankIDAuthenticationToView -> Just <| IdentifyGenericEidService GenericEidService.NOBankID GenericEidService.Idle
-            LegacyDKNemIDAuthenticationToView -> Just <| IdentifyGenericEidService GenericEidService.DKNemID GenericEidService.Idle
-            DKNemIDCPRAuthenticationToView -> Nothing
-            DKNemIDPIDAuthenticationToView -> Nothing
-            DKNemIDCVRAuthenticationToView -> Nothing
-            SMSPinAuthenticationToView -> Just <| IdentifySMSPin SMSPin.Idle
-            FITupasAuthenticationToView -> Just <| IdentifyGenericEidService GenericEidService.FITupas GenericEidService.Idle
-            VerimiAuthenticationToView -> Just <| IdentifyGenericEidService GenericEidService.Verimi GenericEidService.Idle
-            IDINAuthenticationToView -> Just <| IdentifyGenericEidService GenericEidService.IDIN GenericEidService.Idle
-            OnfidoDocumentCheckAuthenticationToView -> Nothing -- TODO: Add Onfido to GenericEidService
-            OnfidoDocumentAndPhotoCheckAuthenticationToView -> Nothing -- TODO: Add Onfido to GenericEidService
+        rInnerModel = if flags.rejectionAlreadyRejected
+            then Ok <| IdentifyRejection (toRejectionParams flags) Rejection.AlreadyRejected
+            else case flags.authenticationMethod of
+                OnfidoDocumentCheckAuthenticationToView -> eidServiceModel GenericEidService.Onfido
+                OnfidoDocumentAndPhotoCheckAuthenticationToView -> eidServiceModel GenericEidService.Onfido
+                SmsOtpAuthenticationToView -> eidServiceModel GenericEidService.SmsOtp
+
+        unsupportedMethodError = "Authentication method not supported by IdentifyView"
+
+        eidServiceModel provider =
+            Result.map (\params -> IdentifyGenericEidService params GenericEidService.Idle)
+                       (toGenericEidServiceParams flags provider)
+
+        smsPinModel =
+            Result.map (\params -> IdentifySMSPin params SMSPin.Idle) (toSMSPinParams flags)
 
         criticalError str fields =
             let (newFlashMessages, cmd) =
@@ -76,13 +85,13 @@ init value = case JD.decodeValue decodeFlags value of
                 (newModel2, cmd2) = update (ErrorTraceMsg fields) newModel
             in (newModel2, Cmd.batch [cmd, cmd2])
 
-        in case mInnerModel of
-            Just innerModel -> ({model | state = IdentifyView { flags = flags, innerModel = innerModel } }, Cmd.none)
-            Nothing ->
-                let flashMessage = "Internal error: Authentication method not supported by IdentifyView"
+        in case rInnerModel of
+            Ok innerModel -> ({model | state = IdentifyView { flags = flags, innerModel = innerModel } }, Cmd.none)
+            Err errMsg ->
+                let flashMessage = "Internal error: " ++ errMsg
                     errorFields =
                         [ ("where", JE.string "IdentifyView.init")
-                        , ("what", JE.string "Authentication method not supported by IdentifyView")
+                        , ("what", JE.string errMsg)
                         ]
                 in criticalError flashMessage errorFields
 

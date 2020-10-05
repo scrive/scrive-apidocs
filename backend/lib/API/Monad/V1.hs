@@ -28,7 +28,7 @@ module API.Monad.V1 (
                  getAPIUser,
                  getAPIUserWithPrivileges,
                  getAPIUserWithAnyPrivileges,
-                 getAPIUserWithPad,
+                 getAPIUserWithPad
                  )
   where
 
@@ -301,6 +301,8 @@ getAPIUserWithAnyPrivileges = getAPIUserWithPrivileges allPrivileges
 -- Only returns if *any* of the privileges in privs are issued.
 getAPIUserWithPrivileges :: Kontrakcja m => [APIPrivilege] -> m (User, Actor, Bool)
 getAPIUserWithPrivileges privs = do
+  -- APIFullAccess is not being added as a fallback OAuth Scope for API V1.
+  -- This is intentional.
   moauthuser <- getOAuthUser privs
   case moauthuser of
     Just (Left err) -> (throwM . SomeDBExtraException) . notLoggedIn $ unpack err
@@ -313,6 +315,8 @@ getAPIUserWithPrivileges privs = do
 
 getAPIUserWithPad :: Kontrakcja m => APIPrivilege -> m (User, Actor, Bool)
 getAPIUserWithPad priv = do
+  -- APIFullAccess is not being added as a fallback OAuth Scope for API V1.
+  -- This is intentional.
   moauthuser <- getOAuthUser [priv]
   case moauthuser of
     Just (Left err) -> (throwM . SomeDBExtraException) . notLoggedIn $ unpack err

@@ -1,5 +1,20 @@
 # API specification changelog
 
+## 0.10.7
+
+* Add support for SMS OTP (one-time password) authentication via EID Hub.
+
+## 0.10.6
+
+* Add Onfido authentication `method` to `AuthenticationOnfido` schema, can be
+  either `document` or `document_and_photo`.
+  `AuthenticationOnfido` is part of the `/templates/{template_id}/start` endpoint.
+
+## 0.10.5
+
+* Add `message` parameter for flow instance rejection API.
+* Send `flow_rejected` callback event when a flow instance is rejected.
+
 ## 0.10.4
 
 * Add `CallbackEventFailedVersion1` schema.

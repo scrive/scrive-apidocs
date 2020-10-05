@@ -562,9 +562,7 @@ Subscription.initCurrentSubscription = function (subscriptionData, currentUserIs
 
 Subscription.currentSubscription = function () {
   if (_.isUndefined(window.currentSubscription)) {
-    var user = new User({});
-    user.set({"ready": false}, {silent: true});
-    user.fetch({cache: false, processData: true});
+    var user = User.currentUser();
     var subscription = new Subscription({current_user_is_admin: user.companyadmin()});
     window.currentSubscription = subscription;
     subscription.reload();

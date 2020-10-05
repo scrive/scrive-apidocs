@@ -8,35 +8,46 @@ import Data.Aeson
 import Doc.Types.SignatoryLink
 import EID.EIDService.Conf
 import EID.EIDService.Types
+import Flow.Core.Type.AuthenticationConfiguration
 import Flow.Id
 import Flow.Names
 import Kontra
 import qualified Flow.EID.EIDService.Provider.Onfido as Onfido
+import qualified Flow.EID.EIDService.Provider.SmsOtp as SmsOtp
 
 beginEIDServiceTransaction
   :: Kontrakcja m
   => EIDServiceConf
   -> EIDServiceTransactionProvider
   -> AuthenticationKind
+  -> AuthenticationConfiguration
   -> InstanceId
   -> UserName
   -> m (EIDServiceTransactionID, Value, EIDServiceTransactionStatus)
-beginEIDServiceTransaction conf provider authKind instanceId userName = do
-  case provider of
-    EIDServiceTransactionProviderVerimi ->
-      unexpectedError "Verimi auth not supported for Flow via EID service"
-    EIDServiceTransactionProviderNLIDIN ->
-      unexpectedError "NLIDIN auth not supported for Flow via EID service"
-    EIDServiceTransactionProviderDKNemID ->
-      unexpectedError "DKNemID auth not supported for Flow via EID service"
-    EIDServiceTransactionProviderNOBankID ->
-      unexpectedError "NOBankID auth not supported for Flow via EID service"
-    EIDServiceTransactionProviderFITupas ->
-      unexpectedError "FITupas auth not supported for Flow via EID service"
-    EIDServiceTransactionProviderOnfido ->
-      Onfido.beginEIDServiceTransaction conf authKind instanceId userName
-    EIDServiceTransactionProviderSEBankID ->
-      unexpectedError "SEBankID auth not supported for Flow via EID service"
+beginEIDServiceTransaction conf provider authKind authenticationConfig instanceId userName
+  = case (provider, authenticationConfig ^. #provider) of
+    (EIDServiceTransactionProviderVerimi, _) ->
+      unexpectedError "Verimi authentication not supported for Flow via EID service"
+    (EIDServiceTransactionProviderNLIDIN, _) ->
+      unexpectedError "NLIDIN authentication not supported for Flow via EID service"
+    (EIDServiceTransactionProviderDKNemID, _) ->
+      unexpectedError "DKNemID authentication not supported for Flow via EID service"
+    (EIDServiceTransactionProviderNOBankID, _) ->
+      unexpectedError "NOBankID authentication not supported for Flow via EID service"
+    (EIDServiceTransactionProviderFITupas, _) ->
+      unexpectedError "FITupas authentication not supported for Flow via EID service"
+    (EIDServiceTransactionProviderOnfido, Onfido onfidoAuthenticationData) ->
+      Onfido.beginEIDServiceTransaction conf
+                                        authKind
+                                        onfidoAuthenticationData
+                                        instanceId
+                                        userName
+    (EIDServiceTransactionProviderSEBankID, _) ->
+      unexpectedError "SEBankID authentication not supported for Flow via EID service"
+    (EIDServiceTransactionProviderSmsOtp, SmsOtp) ->
+      SmsOtp.beginEIDServiceTransaction conf authKind instanceId userName
+    _ -> unexpectedError
+      "Authentication provider has to match Flow participant provider configuration"
 
 completeEIDServiceAuthTransaction
   :: Kontrakcja m
@@ -47,16 +58,18 @@ completeEIDServiceAuthTransaction
   -> m (Maybe EIDServiceTransactionStatus)
 completeEIDServiceAuthTransaction conf provider instanceId userName = case provider of
   EIDServiceTransactionProviderDKNemID ->
-    unexpectedError "DKNemID sign not supported via EID service"
+    unexpectedError "DKNemID authentication not supported via EID service"
   EIDServiceTransactionProviderNLIDIN ->
-    unexpectedError "NLIDIN sign not supported via EID service"
+    unexpectedError "NLIDIN authentication not supported via EID service"
   EIDServiceTransactionProviderNOBankID ->
-    unexpectedError "NOBankID sign not supported via EID service"
+    unexpectedError "NOBankID authentication not supported via EID service"
   EIDServiceTransactionProviderVerimi ->
-    unexpectedError "Verimi sign not supported via EID service"
+    unexpectedError "Verimi authentication not supported via EID service"
   EIDServiceTransactionProviderFITupas ->
-    unexpectedError "FITupas sign not supported via EID service"
+    unexpectedError "FITupas authentication not supported via EID service"
   EIDServiceTransactionProviderOnfido ->
     Onfido.completeEIDServiceAuthTransaction conf instanceId userName
   EIDServiceTransactionProviderSEBankID ->
-    unexpectedError "SEBankID sign not supported via EID service"
+    unexpectedError "SEBankID authentication not supported via EID service"
+  EIDServiceTransactionProviderSmsOtp ->
+    SmsOtp.completeEIDServiceAuthTransaction conf instanceId userName

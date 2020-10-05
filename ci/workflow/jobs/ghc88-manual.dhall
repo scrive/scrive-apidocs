@@ -10,11 +10,10 @@ in
 BackendWorkflow.createWorkflow
   BackendWorkflow.Args ::
   { name = "GHC 8.8 Backend Tests (Manual)"
-  , ghcVersion = GHCVersion.Type.ghc88
-  , nixShell = "manual-backend-shell"
-  , cacheCabal = True
---   , runs-on = default-runner
-  , runs-on = [ "ubuntu-latest" ]
+  , ghc-version = GHCVersion.Type.ghc88
+  , nix-shell = "manual-backend-shell"
+  , cache-cabal = True
+  , runs-on = default-runner
   , triggers = Workflow.Triggers ::
       { push = Some (Workflow.BranchSpec ::
           { branches = Some [ "master", "staging", "production" ]

@@ -7,11 +7,10 @@ import Text.RawString.QQ
 import qualified Data.Map as Map
 
 import DB hiding (JSON)
-import Doc.Types.Document
+import Doc.Types.Document hiding (Document)
 import Doc.Types.DocumentStatus
 import Doc.Types.SignatoryLink
 import Flow.Client
-import Flow.EID.AuthConfig
 import Flow.Model.Types.FlowUserId
 import Flow.OrphanTestInstances ()
 import Flow.Process.Internal
@@ -23,8 +22,9 @@ import TestKontra
 import Util.HasSomeUserInfo
 
 tests :: TestEnvSt -> Test
-tests env = testGroup "Flow EID Integration"
-                      [testThat "EID authentication config works" env testAuthConfig]
+tests env = testGroup
+  "Flow EID Integration"
+  [testThat "EID authentication config works" env testAuthenticationConfiguration]
 
 processWithAuth :: Process
 processWithAuth = Process [r|
@@ -38,8 +38,8 @@ stages:
           documents: [doc]
 |]
 
-testAuthConfig :: TestEnv ()
-testAuthConfig = do
+testAuthenticationConfiguration :: TestEnv ()
+testAuthenticationConfiguration = do
   TestEnvSt {..} <- ask
   user           <- instantiateRandomUser
   oauth          <- getToken (user ^. #id)
@@ -62,10 +62,14 @@ testAuthConfig = do
 
   let
     [authorSigLink, signatorySigLink] = documentsignatorylinks doc
-    authorConfig    = UserConfig (Email $ getEmail authorSigLink) Nothing Nothing
-    signatoryConfig = UserConfig (Email $ getEmail signatorySigLink)
-                                 (Just $ AuthConfig Onfido 1)
-                                 (Just $ AuthConfig SmsPin 3)
+    authorConfig    = UserConfiguration (Email $ getEmail authorSigLink) Nothing Nothing
+    signatoryConfig = UserConfiguration
+      (Email $ getEmail signatorySigLink)
+      (Just $ AuthenticationConfiguration
+        (Onfido $ AuthenticationProviderOnfidoData Document)
+        1
+      )
+      (Just $ AuthenticationConfiguration SmsOtp 3)
     userConfigs = Map.fromList [("author", authorConfig), ("signatory", signatoryConfig)]
     templateParams =
       TemplateParameters (Map.fromList [("doc", documentid doc)]) userConfigs mempty

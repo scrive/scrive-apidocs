@@ -1,7 +1,8 @@
 module IdentifyView.View exposing (..)
 
-import Html exposing (Html, div, text, img, h4, b, a)
+import Html exposing (Html, div, text, img, h4, b, a, p, textarea)
 import Html.Attributes exposing (class, src, style, href)
+import Html.Events exposing (onClick)
 
 import Lib.Components.FlashMessage as FlashMessage
 import Lib.Types.Document exposing (Document(..))
@@ -13,6 +14,7 @@ import Utils exposing (stringNonEmpty)
 
 import IdentifyView.SMSPin.SMSPin as SMSPin
 import IdentifyView.GenericEidService.GenericEidService as GenericEidService
+import IdentifyView.Rejection.Rejection as Rejection
 import IdentifyView.Model exposing (..)
 
 view : Model -> Html Msg
@@ -27,8 +29,6 @@ view {flashMessages, state} = case state of
 
   IdentifyView {flags, innerModel} ->
     div [] [
-      underConstructionNotice flags.location,
-
       FlashMessage.view {embed = FlashMessageMsg} flashMessages,
 
       div [ class "identify-content"] [
@@ -41,11 +41,15 @@ view {flashMessages, state} = case state of
         div [ class "identify-box" ] [
           div [ class "identify-box-header" ] [ text flags.welcomeText ],
 
-          case innerModel of
-            IdentifySMSPin innerState ->
-              SMSPin.viewContent (toSMSPinParams flags) innerState
-            IdentifyGenericEidService provider innerState ->
-              GenericEidService.viewContent (toGenericEidServiceParams flags provider) innerState,
+          case (innerModel, flags.maxFailuresExceeded) of
+            (IdentifyRejection params innerState, _) ->
+                Rejection.viewContent params innerState
+            (_, True) ->
+                maxFailuresExceededContent
+            (IdentifySMSPin params innerState, False) ->
+                SMSPin.viewContent params innerState rejectionLink
+            (IdentifyGenericEidService params innerState, False) ->
+                GenericEidService.viewContent params innerState rejectionLink,
 
           div [ class "identify-box-footer" ] [
             div [ class "identify-box-footer-text" ] [
@@ -61,34 +65,41 @@ view {flashMessages, state} = case state of
                 b [] [ text <| Maybe.withDefault "Untitled" <| stringNonEmpty flags.entityTitle ] ],
 
               case innerModel of
-                IdentifySMSPin _ -> SMSPin.viewFooter (toSMSPinParams flags)
-                IdentifyGenericEidService provider _ -> GenericEidService.viewFooter (toGenericEidServiceParams flags provider)
+                IdentifySMSPin params _ -> SMSPin.viewFooter params
+                IdentifyGenericEidService params _ -> GenericEidService.viewFooter params
+                IdentifyRejection params _ -> Rejection.viewFooter params
             ],
 
             div [ class "identify-box-footer-logo" ] [
               case innerModel of
-                IdentifySMSPin _ -> div [] []
-                IdentifyGenericEidService provider _ -> GenericEidService.viewLogo (toGenericEidServiceParams flags provider)
+                IdentifySMSPin _ _ -> div [] []
+                IdentifyGenericEidService params _ -> GenericEidService.viewLogo params
+                IdentifyRejection _ _ -> div [] []
             ] ] ] ]
     ]
 
--- TODO: Temporary: Remove this when the app is usable with Flow.
-underConstructionNotice : String -> Html Msg
-underConstructionNotice currentUrl =
-    div [ style "background" "#EDA621"
-        , style "color" "#fff"
-        , style "position" "absolute"
-        , style "top" "0"
-        , style "left" "0"
-        , style "height" "40px"
-        , style "line-height" "40px"
-        , style "text-align" "center"
-        , style "width" "100%"
-        ]
-        [ text "This authentication page is under construction. You can "
-        , a [ href <| currentUrl ++ "?bypass_identify"
-            , style "color" "#fff"
-            , style "text-decoration" "underline"
+maxFailuresExceededContent : Html Msg
+maxFailuresExceededContent =
+    div [ class "identify-box-content" ]
+        [ p [ style "margin-bottom" "1em" ]
+            [ text """We are sorry but you have exceeded the maximum number of
+                      authentication attempts."""
             ]
-            [ text "go directly to the Flow overview page" ]
+        , p []
+            [ a [ class "button"
+                , onClick EnterRejectionClickedMsg
+                ]
+                [ text "Reject the documents and contact us" ]
+            ]
         ]
+
+rejectionLink : Html Msg
+rejectionLink =
+    div [ style "margin-top" "1em"]
+        [ text "You can also "
+        , a [ class "text-positivecolor"
+            , onClick <| EnterRejectionClickedMsg
+            ]
+            [ text "reject the documents and contact us." ]
+        ]
+

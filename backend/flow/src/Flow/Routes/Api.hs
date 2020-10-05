@@ -5,8 +5,9 @@ module Flow.Routes.Api
     , GetTemplate(..)
     , PatchTemplate(..)
     , CreateInstance(..)
+    , RejectParam(..)
     , TemplateParameters(TemplateParameters)
-    , UserConfig(..)
+    , UserConfiguration(..)
     , InstanceEventAction(..)
     , InstanceEvent(..)
     , InstanceState(..)
@@ -21,6 +22,10 @@ module Flow.Routes.Api
     , Status(..)
     , InstanceApi
     , TemplateApi
+    , AuthenticationProvider(..)
+    , AuthenticationProviderOnfidoData(..)
+    , OnfidoMethod(..)
+    , AuthenticationConfiguration(..)
     , apiProxy
     )
   where
@@ -36,9 +41,9 @@ import Servant.API
 
 import Doc.DocumentID (DocumentID)
 import Doc.SignatoryLinkID (SignatoryLinkID)
+import Flow.Core.Type.AuthenticationConfiguration
 import Flow.Core.Type.Callback
 import Flow.Core.Type.Url
-import Flow.EID.AuthConfig
 import Flow.HighTongue
 import Flow.Id
 import Flow.Message
@@ -87,7 +92,9 @@ type AllApis
         :<|>
             "instances"
             :> Capture "instance_id" InstanceId
-            :> "reject" :> PostNoContent '[JSON] NoContent
+            :> "reject"
+            :> ReqBody '[JSON] RejectParam
+            :> PostNoContent '[JSON] NoContent
         )
     :<|>
     -- No authentication
@@ -101,8 +108,8 @@ apiProxy :: Proxy FlowApi
 apiProxy = Proxy
 
 aesonOptions :: Options
-aesonOptions = defaultOptions { fieldLabelModifier = snakeCase }
-
+aesonOptions =
+  defaultOptions { fieldLabelModifier = snakeCase, constructorTagModifier = snakeCase }
 
 data CreateTemplate = CreateTemplate
     { name :: Text
@@ -156,6 +163,17 @@ instance ToJSON PatchTemplate where
   toEncoding = genericToEncoding aesonOptions
 
 
+newtype RejectParam = RejectParam
+  { message :: Maybe Text
+  }
+  deriving (Eq, Generic, Show)
+
+instance FromJSON RejectParam where
+  parseJSON = genericParseJSON aesonOptions
+
+instance ToJSON RejectParam where
+  toEncoding = genericToEncoding aesonOptions
+
 data CreateInstance = CreateInstance
     { title :: Maybe Text
     , templateParameters :: TemplateParameters
@@ -172,7 +190,7 @@ instance ToJSON CreateInstance where
 
 data TemplateParameters = TemplateParameters
   { documents :: Map DocumentName DocumentID
-  , users     :: Map UserName UserConfig
+  , users     :: Map UserName UserConfiguration
   , messages  :: Map MessageName Message
   } deriving (Eq, Generic, Show)
 
@@ -183,26 +201,26 @@ instance ToJSON TemplateParameters where
   toEncoding = genericToEncoding aesonOptions
 
 
-data UserConfig = UserConfig
+data UserConfiguration = UserConfiguration
     { flowUserId :: FlowUserId
-    , authToView :: Maybe AuthConfig
-    , authToViewArchived :: Maybe AuthConfig
+    , authenticationToView :: Maybe AuthenticationConfiguration
+    , authenticationToViewArchived :: Maybe AuthenticationConfiguration
     }
   deriving (Show, Eq, Generic)
 
-instance FromJSON UserConfig where
+instance FromJSON UserConfiguration where
   parseJSON = withObject "user config" $ \o ->
-    UserConfig
+    UserConfiguration
       <$> parseJSON (Object o)
       <*> (o .:? "auth_to_view")
       <*> (o .:? "auth_to_view_archived")
 
-instance ToJSON UserConfig where
+instance ToJSON UserConfiguration where
   toEncoding uc =
     pairs
       $  flowUserIdToSeries (flowUserId uc)
-      <> ("auth_to_view" .= authToView uc)
-      <> ("auth_to_view_archived" .= authToViewArchived uc)
+      <> ("auth_to_view" .= authenticationToView uc)
+      <> ("auth_to_view_archived" .= authenticationToViewArchived uc)
 
 data InstanceEventAction
     = Approve
@@ -212,10 +230,10 @@ data InstanceEventAction
   deriving (Eq, Ord, Generic, Show)
 
 instance FromJSON InstanceEventAction where
-  parseJSON = genericParseJSON defaultOptions { constructorTagModifier = snakeCase }
+  parseJSON = genericParseJSON aesonOptions
 
 instance ToJSON InstanceEventAction where
-  toEncoding = genericToEncoding defaultOptions { constructorTagModifier = snakeCase }
+  toEncoding = genericToEncoding aesonOptions
 
 
 data InstanceEvent = InstanceEvent
@@ -331,10 +349,10 @@ data DocumentState
   deriving (Eq, Generic, Ord, Show)
 
 instance FromJSON DocumentState where
-  parseJSON = genericParseJSON defaultOptions { constructorTagModifier = snakeCase }
+  parseJSON = genericParseJSON aesonOptions
 
 instance ToJSON DocumentState where
-  toEncoding = genericToEncoding defaultOptions { constructorTagModifier = snakeCase }
+  toEncoding = genericToEncoding aesonOptions
 
 
 data Status
@@ -344,10 +362,10 @@ data Status
   deriving (Eq, Generic, Ord, Show)
 
 instance FromJSON Status where
-  parseJSON = genericParseJSON defaultOptions { constructorTagModifier = snakeCase }
+  parseJSON = genericParseJSON aesonOptions
 
 instance ToJSON Status where
-  toEncoding = genericToEncoding defaultOptions { constructorTagModifier = snakeCase }
+  toEncoding = genericToEncoding aesonOptions
 
 
 data GetInstanceView = GetInstanceView
@@ -374,5 +392,6 @@ makeFieldLabelsWith noPrefixFieldLabels ''InstanceUserState
 makeFieldLabelsWith noPrefixFieldLabels ''InstanceUserAction
 makeFieldLabelsWith noPrefixFieldLabels ''GetInstance
 makeFieldLabelsWith noPrefixFieldLabels ''GetInstanceView
+makeFieldLabelsWith noPrefixFieldLabels ''RejectParam
 makeFieldLabelsWith noPrefixFieldLabels ''TemplateParameters
-makeFieldLabelsWith noPrefixFieldLabels ''UserConfig
+makeFieldLabelsWith noPrefixFieldLabels ''UserConfiguration

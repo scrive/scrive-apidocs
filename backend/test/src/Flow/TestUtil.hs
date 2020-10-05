@@ -133,7 +133,7 @@ toTemplateParameters (InstanceKeyValues documents users messages) = TemplatePara
   documents
   users'
   messages
-  where users' = Map.map (\id -> UserConfig id Nothing Nothing) users
+  where users' = Map.map (\id -> UserConfiguration id Nothing Nothing) users
 
 addRandomFlowDocumentWithSignatory :: User -> TestEnv Document
 addRandomFlowDocumentWithSignatory author = addRandomDocument (rdaDefault author)

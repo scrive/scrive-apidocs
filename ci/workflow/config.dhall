@@ -1,4 +1,4 @@
-{ self-hosted = True
-, nix-collect-garbage = True
+{ self-hosted = False
+, nix-collect-garbage = False
 , trigger-all-jobs-for-prs = False
 }

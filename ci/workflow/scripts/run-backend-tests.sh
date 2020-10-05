@@ -2,9 +2,13 @@
 
 set -eux
 
-set +x
-echo "$PDFTOOLS_CONFIG" > ./pdftools-lambda.local.json
-set -x
+if [[ -v PDFTOOLS_CONFIG ]]
+then
+  echo "Using PDF Tools at AWS Lambda"
+  set +x
+  echo "$PDFTOOLS_CONFIG" > ./pdftools-lambda.local.json
+  set -x
+fi
 
 ./scripts/workspace/generate-config.sh
 
@@ -21,6 +25,11 @@ supervisord -c "$supervisor_config"
 
 supervisorctl -c "$supervisor_config" start postgres fakes3
 
+if [[ ! -v PDFTOOLS_CONFIG ]]
+then
+  supervisorctl -c "$supervisor_config" start sam
+fi
+
 supervisorctl -c "$supervisor_config" status postgres fakes3
 
 createdb -h "$db_path" kontrakcja_test
@@ -35,7 +44,7 @@ then
   grep -n '\[Failed\]' logs/kontrakcja-test.log
 fi
 
-echo "Test completed. Outputting the last 50 lines of test. Full log is available in logs/kontrakcja-test.log"
-tail -n 50 logs/kontrakcja-test.log
+echo "Test completed. Outputting the last 20 lines of test. Full log is available in logs/kontrakcja-test.log"
+tail -n 20 logs/kontrakcja-test.log
 
 exit $exit_code

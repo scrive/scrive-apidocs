@@ -34,6 +34,7 @@ pagePrivilegesConfirm =$doctype()$
           sendPermission : $if(isDocumentSend)$ true $else$ false $endif$,
           createPermission : $if(isDocumentCreate)$ true $else$ false $endif$,
           readPermission : $if(isDocumentCheck)$ true $else$ false $endif$,
+          fullAccessPermission : $if(isFullAccess)$ true $else$ false $endif$,
           who : "$companyname$",
           token : "$token$"
         };

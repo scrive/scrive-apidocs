@@ -1353,8 +1353,7 @@ testDocumentFileAccessControl = do
 
   do -- Test attachment_id
     fileId2    <- addNewRandomFile
-    attachment <- dbUpdate
-      $ NewAttachment (author ^. #id) "shared" fileId2 (userActor authorCtx author)
+    attachment <- dbUpdate $ NewAttachment (author ^. #id) "shared" fileId2
     let attachmentId    = attachmentid attachment
 
     let attachmentParam = [("attachment_id", inText . showt $ attachmentId)]

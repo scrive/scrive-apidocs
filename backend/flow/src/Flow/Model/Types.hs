@@ -12,7 +12,8 @@ module Flow.Model.Types
     , FullInstance(..)
     , InstanceSession(InstanceSession)
     , InstanceAccessToken(InstanceAccessToken)
-    , UserAuthConfig(UserAuthConfig)
+    , EventDetails(..)
+    , UserAuthenticationConfiguration(..)
     , UserAuthenticationConfigurationData(..)
     , fetchInstance
     , fetchTemplate
@@ -23,6 +24,7 @@ module Flow.Model.Types
     , fetchInstanceSession
     , fetchInstanceAccessToken
     , fetchUserAuthConfig
+    , getAuthenticationKindAndConfiguration
     )
  where
 
@@ -35,14 +37,14 @@ import Data.Text
 import Data.Time.Clock
 import Database.PostgreSQL.PQTypes
 import GHC.Generics
-import qualified Data.Set as Set
 
 import Auth.MagicHash
 import Auth.Session.SessionID
+import Doc.Types.SignatoryLink
 import Flow.Aggregator
+import Flow.Core.Type.AuthenticationConfiguration
 import Flow.Core.Type.Callback
 import Flow.Core.Type.Url
-import Flow.EID.AuthConfig
 import Flow.Id
 import Flow.Machinize
 import Flow.Model.Types.Internal
@@ -103,20 +105,47 @@ fetchInstance (id, templateId, title, currentState, started, lastEvent, maybeCal
     in  Instance { .. }
 
 fetchEvent
-  :: (EventId, InstanceId, UserName, Maybe DocumentName, UserAction, UTCTime) -> Event
-fetchEvent (id, instanceId, userName, documentName, userAction, created) = Event { .. }
+  :: ( EventId
+     , InstanceId
+     , UserName
+     , Maybe DocumentName
+     , UserAction
+     , UTCTime
+     , Maybe (JSONB Value)
+     )
+  -> Event
+fetchEvent (id, instanceId, userName, documentName, userAction, created, detailsJson) =
+  Event { .. }
+  where
+    eventDetails :: Maybe EventDetails
+    eventDetails = do
+      parsed <- mParsed
+      case parsed of
+        Success details -> return details
+        Error   _       -> Nothing
+
+    mParsed :: Maybe (Result EventDetails)
+    mParsed = fromJSON @EventDetails . unJSONB <$> detailsJson
 
 toEventInfo :: Event -> EventInfo
-toEventInfo Event {..} = EventInfo userAction userName documentName
+toEventInfo Event { userAction, userName, documentName, eventDetails } =
+  EventInfo userAction userName documentName eventDetails
 
 toInsertEvent :: InstanceId -> EventInfo -> InsertEvent
-toInsertEvent instanceId EventInfo {..} =
-  InsertEvent instanceId eventInfoUser eventInfoDocument eventInfoAction
+toInsertEvent instanceId EventInfo { eventInfoUser, eventInfoDocument, eventInfoAction, eventInfoDetails }
+  = InsertEvent instanceId
+                eventInfoUser
+                eventInfoDocument
+                eventInfoAction
+                eventInfoDetails
 
 instanceToAggregator :: FullInstance -> AggregatorState
 instanceToAggregator FullInstance {..} = aggregator
   where
-    eventInfos = Set.fromList $ fmap toEventInfo aggregatorEvents
+    eventInfos :: [EventInfo]
+    eventInfos = fmap toEventInfo aggregatorEvents
+
+    aggregator :: AggregatorState
     aggregator = AggregatorState eventInfos $ flowInstance ^. #currentState
 
 fetchInstanceSession :: (SessionID, InstanceId, UserName) -> InstanceSession
@@ -126,40 +155,33 @@ fetchInstanceAccessToken
   :: (InstanceAccessTokenId, InstanceId, UserName, MagicHash) -> InstanceAccessToken
 fetchInstanceAccessToken (id, instanceId, userName, hash) = InstanceAccessToken { .. }
 
+fetchUserAuthConfig
+  :: (InstanceId, UserName, JSONB ByteString) -> UserAuthenticationConfiguration
+fetchUserAuthConfig (instanceId, userName, configurationDataByteString) =
+  UserAuthenticationConfiguration
+    { instanceId
+    , userName
+    , configurationData =
+      fromEither
+      . left
+          (\e ->
+            unexpectedError
+              $  "Can't decode UserAuthenticationConfigurationData: "
+              <> pack e
+          )
+      . eitherDecodeStrict'
+      $ unJSONB configurationDataByteString
+    }
 
-data UserAuthenticationConfigurationData = UserAuthenticationConfigurationData
-    { authenticationToView :: Maybe AuthConfig
-    , authenticationToViewArchived :: Maybe AuthConfig
-    } deriving (Eq, Generic, Show)
+-- TODO: Add a type alias or a record instead of passing this tuple around.
+getAuthenticationKindAndConfiguration
+  :: FullInstance
+  -> UserAuthenticationConfiguration
+  -> Maybe (AuthenticationKind, AuthenticationConfiguration)
+getAuthenticationKindAndConfiguration fullInstance uac =
+  if isComplete $ instanceToAggregator fullInstance
+    then confData ^. #authenticationToViewArchived >>= \conf ->
+      pure (AuthenticationToViewArchived, conf)
+    else confData ^. #authenticationToView >>= \conf -> pure (AuthenticationToView, conf)
+  where confData = uac ^. #configurationData
 
-instance FromJSON UserAuthenticationConfigurationData where
-  parseJSON = genericParseJSON $ defaultOptions { fieldLabelModifier     = snakeCase
-                                                , constructorTagModifier = snakeCase
-                                                }
-
-instance ToJSON UserAuthenticationConfigurationData where
-  toEncoding = genericToEncoding $ defaultOptions { fieldLabelModifier     = snakeCase
-                                                  , constructorTagModifier = snakeCase
-                                                  }
-
-fetchUserAuthConfig :: (InstanceId, UserName, JSONB ByteString) -> UserAuthConfig
-fetchUserAuthConfig (instanceId, userName, configurationDataByteString) = UserAuthConfig
-  { instanceId
-  , userName
-  , authToView         = authToView
-  , authToViewArchived = authToViewArchived
-  }
-  where
-    (authToView, authToViewArchived) =
-      let
-        UserAuthenticationConfigurationData {..} =
-          fromEither
-            . left
-                (\e ->
-                  unexpectedError
-                    $  "Can't decode UserAuthenticationConfigurationData: "
-                    <> pack e
-                )
-            . eitherDecodeStrict'
-            $ unJSONB configurationDataByteString
-      in  (authenticationToView, authenticationToViewArchived)

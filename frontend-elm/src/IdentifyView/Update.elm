@@ -13,6 +13,7 @@ import Lib.Misc.Http as Http
 import IdentifyView.Model exposing (..)
 import IdentifyView.SMSPin.SMSPin as SMSPin
 import IdentifyView.GenericEidService.GenericEidService as GenericEidService
+import IdentifyView.Rejection.Rejection as Rejection
 
 subscriptions : Model -> Sub Msg
 subscriptions _ = Sub.none
@@ -23,7 +24,6 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
   let errorFlashMessage str =
         update (AddFlashMessageMsg <| FlashError str) model
-
   in case msg of
 
   ErrorTraceMsg fields ->
@@ -54,9 +54,9 @@ update msg model =
 
   SMSPinMsg msg_ -> case model.state of
     IdentifyView { flags, innerModel } -> case innerModel of
-      IdentifySMSPin state ->
-        let (newInnerState, cmd) = SMSPin.update (toSMSPinParams flags) state msg_
-            newState = IdentifyView {flags = flags, innerModel = IdentifySMSPin newInnerState}
+      IdentifySMSPin params state ->
+        let (newInnerState, cmd) = SMSPin.update params state msg_
+            newState = IdentifyView {flags = flags, innerModel = IdentifySMSPin params newInnerState}
         in ( {model | state = newState}, cmd )
 
       _ -> errorFlashMessage "Internal error: got SMSPin message while in an incompatible state."
@@ -64,16 +64,33 @@ update msg model =
 
   GenericEidServiceMsg msg_ -> case model.state of
     IdentifyView {flags, innerModel} -> case innerModel of
-      IdentifyGenericEidService provider state ->
-        let (newInnerState, cmd) = GenericEidService.update (toGenericEidServiceParams flags provider) state msg_
+      IdentifyGenericEidService params state ->
+        let (newInnerState, cmd) = GenericEidService.update params state msg_
             newState = IdentifyView
                         { flags = flags
-                        , innerModel = IdentifyGenericEidService provider newInnerState
+                        , innerModel = IdentifyGenericEidService params newInnerState
                         }
         in ( {model | state = newState}, cmd )
 
       _ -> errorFlashMessage "Internal error: got GenericEidService message while in an incompatible state."
     _ -> errorFlashMessage "Internal error: got GenericEidService message while in an incompatible state."
+
+  RejectionMsg msg_ -> case model.state of
+    IdentifyView { flags, innerModel } -> case innerModel of
+      IdentifyRejection params state ->
+        let (newInnerState, cmd) = Rejection.update params state msg_
+            newState = IdentifyView {flags = flags, innerModel = IdentifyRejection params newInnerState}
+        in ( {model | state = newState}, cmd )
+
+      _ -> errorFlashMessage "Internal error: got Rejection message while in an incompatible state."
+    _ -> errorFlashMessage "Internal error: got Rejection message while in an incompatible state."
+
+  EnterRejectionClickedMsg -> case model.state of
+    IdentifyView { flags } ->
+        let innerModel = IdentifyRejection (toRejectionParams flags) (Rejection.EnterMessage {message = ""})
+            newState = IdentifyView {flags = flags, innerModel = innerModel}
+        in ( {model | state = newState}, Cmd.none )
+    _ -> errorFlashMessage "Internal error: got EnterRejectionClicked message while in an incompatible state."
 
   FlashMessageMsg msg_ ->
     let (newFlashMessages, cmd) = FlashMessage.update {embed = FlashMessageMsg} msg_ model.flashMessages

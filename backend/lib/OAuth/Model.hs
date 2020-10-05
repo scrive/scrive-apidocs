@@ -9,7 +9,6 @@ import Data.Aeson hiding ((<?>))
 import Data.Int
 import Data.Unjson
 import Network.URI
-import qualified Control.Exception.Lifted as E
 import qualified Data.Text as T
 
 import Auth.OAuth
@@ -18,48 +17,6 @@ import Log.Identifier
 import MagicHash
 import MinutesTime
 import User.Model
-
-data APIPrivilege = APIDocCreate
-                  | APIDocCheck
-                  | APIDocSend
-                  | APIPersonal  -- used only for personal access token
-  deriving (Eq, Enum)
-
-allPrivileges :: [APIPrivilege]
-allPrivileges = [toEnum 0 ..]
-
-instance Read APIPrivilege where
-  readsPrec _ "DOC_CREATE" = [(APIDocCreate, "")]
-  readsPrec _ "DOC_CHECK"  = [(APIDocCheck, "")]
-  readsPrec _ "DOC_SEND"   = [(APIDocSend, "")]
-  readsPrec _ _            = [] -- we should never read APIPersonal
-
-instance Show APIPrivilege where
-  showsPrec _ APIDocCreate = (++) "DOC_CREATE"
-  showsPrec _ APIDocCheck  = (++) "DOC_CHECK"
-  showsPrec _ APIDocSend   = (++) "DOC_SEND"
-  showsPrec _ APIPersonal  = (++) "PERSONAL"
-
-instance PQFormat APIPrivilege where
-  pqFormat = pqFormat @Int16
-
-instance FromSQL APIPrivilege where
-  type PQBase APIPrivilege = PQBase Int16
-  fromSQL mbase = do
-    n <- fromSQL mbase
-    case n :: Int16 of
-      0 -> return APIPersonal
-      1 -> return APIDocCreate
-      2 -> return APIDocCheck
-      3 -> return APIDocSend
-      _ -> E.throwIO $ RangeError { reRange = [(0, 3)], reValue = n }
-
-instance ToSQL APIPrivilege where
-  type PQDest APIPrivilege = PQDest Int16
-  toSQL APIPersonal  = toSQL (0 :: Int16)
-  toSQL APIDocCreate = toSQL (1 :: Int16)
-  toSQL APIDocCheck  = toSQL (2 :: Int16)
-  toSQL APIDocSend   = toSQL (3 :: Int16)
 
 data OAuthTempCredRequest = OAuthTempCredRequest
   { tcCallback   :: URI

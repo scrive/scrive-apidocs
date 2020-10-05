@@ -21,7 +21,6 @@ import DB
 import File.FileID
 import MinutesTime
 import User.UserID
-import Util.Actor
 
 data Attachment = Attachment
   { attachmentid      :: AttachmentID
@@ -69,10 +68,10 @@ fetchAttachment (aid, title, ctime, mtime, file_id, user_id, shared, deleted) =
              , attachmentdeleted = deleted
              }
 
-data NewAttachment = NewAttachment UserID Text FileID Actor
+data NewAttachment = NewAttachment UserID Text FileID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m NewAttachment Attachment where
-  dbUpdate (NewAttachment uid title fileid actor) = do
-    let ctime = actorTime actor
+  dbUpdate (NewAttachment uid title fileid) = do
+    ctime <- currentTime
     runQuery_ . sqlInsert "attachments" $ do
       sqlSet "user_id" uid
       sqlSet "title"   title
@@ -84,10 +83,10 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m NewAttachment Atta
       sqlAttachmentResults
     fetchOne fetchAttachment
 
-data DeleteAttachments = DeleteAttachments UserID [AttachmentID] Actor
-instance (CryptoRNG m, MonadDB m) => DBUpdate m DeleteAttachments () where
-  dbUpdate (DeleteAttachments uid attids actor) = do
-    let atime = actorTime actor
+data DeleteAttachments = DeleteAttachments UserID [AttachmentID]
+instance (CryptoRNG m, MonadDB m, MonadTime m) => DBUpdate m DeleteAttachments () where
+  dbUpdate (DeleteAttachments uid attids) = do
+    atime <- currentTime
     runQuery_ . sqlUpdate "attachments" $ do
       sqlSet "mtime"   atime
       sqlSet "deleted" True

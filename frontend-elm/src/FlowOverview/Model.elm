@@ -1,7 +1,10 @@
 module FlowOverview.Model exposing (..)
 
 import Dict exposing (Dict)
+import Json.Encode
 import Http
+import Lib.Components.FlashMessage as FlashMessage
+import Lib.Types.FlashMessage exposing (FlashMessage(..))
 
 
 
@@ -19,9 +22,21 @@ type alias Flags =
 type Msg
     = GetInstanceViewReceived (Result Http.Error GetInstanceView)
     | GetDocumentReceived (Result Http.Error Document)
+    | EnterRejectionClicked
+    | UpdateTextarea String
+    | RejectButtonClicked
+    | CancelButtonClicked
+    | RejectCallback (Result Http.Error ())
+    | AddFlashMessage FlashMessage
+    | ErrorTrace (List (String, Json.Encode.Value))
+    | FlashMessageMsg FlashMessage.Msg
 
+type alias Model =
+    { flashMessages : FlashMessage.State
+    , state : State
+    }
 
-type Model
+type State
     = Failure String
     | AppOk { flags : Flags, innerModel : InnerModel }
 
@@ -29,8 +44,10 @@ type Model
 type alias InnerModel =
     { mInstance : Maybe GetInstanceView
     , mDocuments : Maybe (Dict String Document) -- (Dict DocumentID Document)
+    , mRejection : Maybe Rejection
     }
 
+type Rejection = Rejection {message : String}
 
 type alias GetInstanceView =
     { id : String
@@ -103,12 +120,3 @@ type SignatoryField
 type alias Url =
     String
 
-
-updateModel : Model -> (InnerModel -> InnerModel) -> Model
-updateModel model f =
-    case model of
-        AppOk { flags, innerModel } ->
-            AppOk { flags = flags, innerModel = f innerModel }
-
-        Failure _ ->
-            model

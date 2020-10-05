@@ -18,6 +18,7 @@ let
   run-deps = [
     cabal-install
     vendor.fakes3
+    vendor.sam
     pkgs.sass
 
     elmPackages.elm

@@ -299,7 +299,7 @@ docApiV2FilesEvidence did secret = logDocument did . api . withDocumentID did $ 
 
 docApiV2SigningData :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigningData did slid = logDocument did . logSignatory slid . api $ do
-  user <- getAPIUserWithAPIPersonal
+  user <- getAPIUserWithFullAccess
   doc  <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkID did slid
   sl   <-
     apiGuardJust (signatoryLinkForDocumentNotFound (documentid doc) slid)

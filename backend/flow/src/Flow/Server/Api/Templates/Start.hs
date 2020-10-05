@@ -95,7 +95,8 @@ startTemplate account templateId (CreateInstance title templateParameters callba
 
   -- The ordering of operations here is crucial.
   Model.insertFlowInstanceKeyValues id keyValues
-  Model.insertUserAuthConfigs (userAuthConfigs id $ templateParameters ^. #users)
+  Model.insertUserAuthenticationConfigurations
+    (userAuthConfigs id $ templateParameters ^. #users)
 
   -- 1. Documents have to be started after storing the key values
   -- so that notifications are not sent out.
@@ -106,7 +107,7 @@ startTemplate account templateId (CreateInstance title templateParameters callba
   -- our foreign keys.
   let userMatchingResult = matchUsersWithSignatories documents variables keyValues
   logInfo "Matching result" userMatchingResult
-  if validate userMatchingResult
+  if validateMatching userMatchingResult
     then do
       let links =
             Set.toList . Set.map (createPair keyValues) $ matched userMatchingResult
@@ -141,9 +142,6 @@ startTemplate account templateId (CreateInstance title templateParameters callba
 
   pure $ GetInstance { .. }
   where
-    validate :: MatchingResult -> Bool
-    validate MatchingResult {..} = null unmatchedFlowUserIds && null unmatchedSignatories
-
     createPair :: InstanceKeyValues -> UserMatch -> (UserName, SignatoryLinkID)
     createPair keyValues UserMatch {..} = (name, DocumentChecker.id signatory)
       where name = fromJust . getUserName flowUserId $ keyValues ^. #users
@@ -162,13 +160,24 @@ startTemplate account templateId (CreateInstance title templateParameters callba
       messages
       where users' = Map.map Api.flowUserId users
 
-    userAuthConfigs :: InstanceId -> Map UserName UserConfig -> [UserAuthConfig]
+    userAuthConfigs
+      :: InstanceId -> Map UserName UserConfiguration -> [UserAuthenticationConfiguration]
     userAuthConfigs instanceId users =
       map
-          (\(userName, UserConfig _ authToView authToViewArchived) ->
-            UserAuthConfig instanceId userName authToView authToViewArchived
+          (\(userName, UserConfiguration _ authToView authToViewArchived) ->
+            UserAuthenticationConfiguration instanceId userName
+              $ UserAuthenticationConfigurationData authToView authToViewArchived
           )
         $ Map.toList users
+
+validateMatching :: MatchingResult -> Bool
+validateMatching MatchingResult {..} = null unmatchedFlowUserIds
+  && null unmatchedActiveSignatories
+  where
+    -- This is to allow silent document observers not having to be part of the Flow.
+    -- TODO perhaps it can be removed after we resolve viewing semantics in FLOW-291.
+    unmatchedActiveSignatories =
+      Set.filter (\dr -> role dr /= Viewer) unmatchedSignatories
 
 reportNotificationErrors :: MonadError ServerError m => Set MissingContactDetail -> m ()
 reportNotificationErrors errors =

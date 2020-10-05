@@ -16,6 +16,39 @@
   font-size: 27px;
   margin-bottom: 22px;
 }
+.flow-overview .section textarea {
+  margin-bottom: 1em;
+  width: 100%;
+  height: 6em;
+}
+.flow-overview .section .enter-rejection-button {
+  background-color: #d2d2d2;
+  font-size: 20px;
+  font-weight: 500;
+  padding: 20px;
+}
+.flow-overview .section .button-reject {
+  background-color: #a93636;
+  color: white;
+  font-size: 20px;
+  font-weight: 500;
+  padding: 18px;
+  margin: 10px;
+  margin-right: 0px !important;
+}
+.flow-overview .section .button-reject:hover {
+  background-color: #b51b1b;
+}
+.flow-overview .section .button-cancel {
+  background-color: #e2e2e2;
+  font-size: 18px;
+  font-weight: 500;
+  padding: 20px;
+  margin: 10px;
+}
+.flow-overview .section .button-cancel:hover {
+  background-color: #e6e6e6;
+}
 .flow-overview .table {
   border-radius: 0 0 5px 5px;
 }

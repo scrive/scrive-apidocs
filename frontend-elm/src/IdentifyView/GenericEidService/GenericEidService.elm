@@ -22,16 +22,7 @@ import Lib.Misc.Cmd exposing (perform)
 
 {- Provider specific stuff -}
 
-type Provider = DKNemID | FITupas | IDIN | NOBankID | SEBankID | Verimi
-
-endpointName : Provider -> String
-endpointName provider = case provider of
-  DKNemID -> "nemid"
-  FITupas -> "fitupas"
-  IDIN -> "idin"
-  NOBankID -> "nobankid"
-  SEBankID -> "sebankid"
-  Verimi -> "verimi"
+type Provider = DKNemID | FITupas | IDIN | NOBankID | SEBankID | Verimi | Onfido | SmsOtp
 
 type ProcessingAction = Embed | Redirect
 
@@ -44,6 +35,8 @@ processingAction provider = case provider of
   FITupas -> Redirect
   IDIN -> Redirect
   Verimi -> Redirect
+  Onfido -> Redirect
+  SmsOtp -> Redirect
 
 identifyButtonText : Params msg -> String
 identifyButtonText params = case params.provider of
@@ -53,15 +46,19 @@ identifyButtonText params = case params.provider of
   NOBankID -> params.localization.identifyBankId
   SEBankID -> params.localization.identifyBankId
   Verimi -> params.localization.identify.identifyWithVerimi
+  Onfido -> "Identify with Onfido" -- TODO: Localisation
+  SmsOtp -> "Identify with SMS" -- TODO: Localization
 
-logoSrc : Provider -> String
+logoSrc : Provider -> Maybe String
 logoSrc provider = case provider of
-  DKNemID -> "/img/nemid-dk.png"
-  NOBankID -> "/img/bankid-no.png"
-  SEBankID -> "/img/bankid2.png"
-  FITupas -> "/img/tupas-fi.png"
-  IDIN -> "/img/iDIN.png"
-  Verimi -> "/img/verimi.svg"
+  DKNemID -> Just "/img/nemid-dk.png"
+  NOBankID -> Just "/img/bankid-no.png"
+  SEBankID -> Just "/img/bankid2.png"
+  FITupas -> Just "/img/tupas-fi.png"
+  IDIN -> Just "/img/iDIN.png"
+  Verimi -> Just "/img/verimi.svg"
+  Onfido -> Just "/img/onfido.png"
+  SmsOtp -> Nothing
 
 {- Params / State -}
 
@@ -113,15 +110,19 @@ update params _ msg = case msg of
 
 {- view -}
 
-viewContent : Params msg -> State -> Html msg
-viewContent params state = case state of
+viewContent : Params msg -> State -> Html msg -> Html msg
+viewContent params state rejectionLink = case state of
   Idle ->
     div [ class "identify-box-content" ] [
-      div [ class "identify-box-button" ] [
-        a [ class "button", class "button-large", class "action"
-          , onClick <| params.embed IdentifyButtonClickedMsg ] [
-          div [ class "label" ] [
-            text <| identifyButtonText params ] ] ]
+      div [ class "identify-box-button" ]
+          [ a [ class "button"
+              , class "button-large"
+              , class "action"
+              , onClick <| params.embed IdentifyButtonClickedMsg
+              ]
+              [ div [ class "label" ] [ text <| identifyButtonText params ] ]
+          , rejectionLink
+          ]
     ]
 
   Loading -> div [ class "loadingSpinner" ] []
@@ -152,5 +153,9 @@ viewLogo params = case params.provider of
       img [ src <| params.cdnBaseUrl ++ "/img/bankid2.png" ] []
     ]
 
-  _ -> img [ src <| params.cdnBaseUrl ++ logoSrc params.provider ] []
+
+  _ ->
+    case logoSrc params.provider of
+      Just logo -> img [ src <| params.cdnBaseUrl ++ logo] []
+      Nothing -> div [] []
 

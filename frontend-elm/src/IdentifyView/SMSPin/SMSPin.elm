@@ -93,17 +93,20 @@ update params state msg = case msg of
            , Cmd.batch [ perform <| params.addFlashMessageMsg <| FlashError flashMessage
                        , perform <| params.errorTraceMsg errorFields ] )
 
-viewContent : Params msg -> State -> Html msg
-viewContent params state = case state of
+viewContent : Params msg -> State -> Html msg -> Html msg
+viewContent params state rejectionLink = case state of
   -- Identify button.
   Idle ->
     div [ class "identify-box-content" ] [
-      div [ class "identify-box-button" ] [
-        a [ class "button", class "button-large", class "action"
-          , onClick <| params.embed IdentifyButtonClickedMsg ] [
-          div [ class "label" ] [
-            text params.localization.identifyBankId ] ]
-      ]
+      div [ class "identify-box-button" ]
+          [ a [ class "button"
+              , class "button-large"
+              , class "action"
+              , onClick <| params.embed IdentifyButtonClickedMsg
+              ]
+              [ div [ class "label" ] [ text params.localization.identifyBankId ] ]
+          , rejectionLink
+          ]
     ]
 
   -- "Enter pin"; pin input box; confirm button.

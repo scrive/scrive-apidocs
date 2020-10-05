@@ -779,11 +779,22 @@ VisitedViewForAuthenticationEvidenceLog=The party <span class="actor"/> opened t
 ###
 VisitedViewForAuthenticationEvidenceArchive=$_VisitedViewForAuthenticationEvidenceArchive()$
 ###
-AuthenticatedToViewEvidenceLog=$if(provider_sms_pin)$ $AuthenticatedToViewEvidenceLogWithSMSPin()$ $else$ $AuthenticatedToViewEvidenceLogWithEID()$ $endif$
+AuthenticatedToViewEvidenceLog=*
+$if(provider_sms_pin)$
+  $AuthenticatedToViewEvidenceLogWithSMSPin()$
+$elseif(provider_sms_otp)$
+  $AuthenticatedToViewEvidenceLogWithSmsOtp()$
+$else$
+  $AuthenticatedToViewEvidenceLogWithEID()$
+$endif$
 ###
 AuthenticatedToViewEvidenceLogWithSMSPin=<span class="actor"/> verified their identity through “PIN by SMS” to access the document.
 ###
-AuthenticatedToViewEvidenceLogWithEID=<span class="actor"/> verified their $providerType()$ identity through $provider()$ to access the document. $elegVerificationAuth()$
+AuthenticatedToViewEvidenceLogWithSmsOtp=<span class="actor"/> verified their identity through “PIN by SMS” $FlowAuthToView()$ to access the document.
+###
+AuthenticatedToViewEvidenceLogWithEID=<span class="actor"/> verified their $providerType()$ identity through $provider()$ $FlowAuthToView()$ to access the document. $elegVerificationAuth()$
+###
+FlowAuthToView=$if(flow_auth_to_view)$as part of a Scrive Flow$endif$
 ###
 elegVerificationAuth=
 <br/>
@@ -857,6 +868,8 @@ $elseif(provider_idin)$
   $_AuthenticatedToViewEvidenceArchiveIDIN()$
 $elseif(provider_onfido)$
   $_AuthenticatedToViewEvidenceArchiveOnfido()$
+$elseif(provider_sms_otp)$
+  $_AuthenticatedToViewEvidenceArchiveSmsOtp()$
 $endif$
 ###
 UpdateMobileAfterIdentificationToViewWithNetsLog=The party <span class="signatory"/> wrote the number "$oldphone$" in the field "Mobile". Scrive eSign changed it from "$oldphone$" to "$newphone$".

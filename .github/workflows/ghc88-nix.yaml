@@ -25,11 +25,6 @@ jobs:
         run: "./ci/workflow/scripts/setup-ssh.sh"
       - name: Load Nix Shell
         run: |
-          df -h
-          nix-collect-garbage
-          rm -rf ~/.cabal
-          df -h
-          
           nix-shell -j4 -A ghc88.backend-shell release.nix --run true
       - name: Build Kontrakcja
         run: |
@@ -60,6 +55,7 @@ on:
       - "**.hs"
       - "**.cabal"
       - cabal.project.freeze
+      - "texts/**"
   push:
     branches:
       - master

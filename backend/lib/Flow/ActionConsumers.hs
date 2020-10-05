@@ -12,6 +12,7 @@ module Flow.ActionConsumers
   , consumeFlowAction
   , consumeNotifyAction
   , consumeRejectionAction
+  , sendEventCallback
   ) where
 
 import Control.Monad.Catch
@@ -50,7 +51,7 @@ import Flow.CallbackPayload
 import Flow.Core.Type.Callback
 import Flow.Core.Type.Url
 import Flow.Id
-import Flow.Machinize (EventInfo(..))
+import Flow.Machinize (EventInfo(..), getRejectMessageFromEvent)
 import Flow.Message.Internal
 import Flow.Model
 import Flow.Model.InstanceSession
@@ -99,21 +100,29 @@ data CloseAllAction = CloseAllAction
   }
   deriving (Show, Generic, ToJSON)
 
--- A rejection action can be performed by a signatory.
--- When triggered, all documents that involves the signatory
--- is rejected, and the flow fails.
+-- A rejection action can be performed by a flow participant.
+-- When triggered, all pending documents that involve the signatory
+-- is cancelled, and the flow fails.
 data RejectAction = RejectAction
   { rejector :: UserName
   , instanceId :: InstanceId
+
+  -- documents to be cancelled
   , documentIds :: [DocumentID]
+
+  -- The name of the document that triggers the rejection action,
+  -- if it is triggered from rejecting a document instead of a flow instance.
+  , documentName :: Maybe DocumentName
+
+  , rejectMessage :: Maybe Text
   }
   deriving (Show, Generic, ToJSON)
 
 newtype FailAction = FailAction
   { instanceId :: InstanceId
   }
-  deriving stock (Show, Generic)
-  deriving anyclass ToJSON
+  deriving (Show, Generic)
+  deriving newtype ToJSON
 
 data ActionsError
     = UserNotFound HighTongue.UserName
@@ -214,18 +223,20 @@ toConsumableAction baseUrl instanceId eventInfo = \case
     (users, emailMessage, smsMessage) <- notifyAction baseUrl instanceId userNames methods
     return . Notify $ NotifyAction { users, emailMessage, smsMessage }
 
-  Machinize.Reject ->
-    Reject <$> toConsumableRejectAction instanceId (eventInfoUser eventInfo)
+  Machinize.Reject -> Reject <$> toConsumableRejectAction
+    instanceId
+    eventInfo
+    (getRejectMessageFromEvent eventInfo)
 
   Machinize.Fail -> pure . Fail $ FailAction instanceId
 
 toConsumableRejectAction
-  :: (MonadThrow m, MonadDB m) => InstanceId -> UserName -> m RejectAction
-toConsumableRejectAction instanceId username = do
+  :: (MonadThrow m, MonadDB m) => InstanceId -> EventInfo -> Maybe Text -> m RejectAction
+toConsumableRejectAction instanceId EventInfo {..} rejectMessage = do
   signatoryMapping <- selectSignatoryInfo instanceId
 
   docIds           <- mapMaybeM
-    (\(username2, _, docId) -> if username2 == username
+    (\(username2, _, docId) -> if username2 == eventInfoUser
       then do
         doc <- dbQuery $ GetDocumentByDocumentID docId
         if documentstatus doc == Pending
@@ -235,7 +246,12 @@ toConsumableRejectAction instanceId username = do
     )
     signatoryMapping
 
-  return $ RejectAction { rejector = username, instanceId, documentIds = docIds }
+  return $ RejectAction { rejector      = eventInfoUser
+                        , instanceId
+                        , documentName  = eventInfoDocument
+                        , documentIds   = docIds
+                        , rejectMessage = rejectMessage
+                        }
 
 sendEmailNotification
   :: ( CryptoRNG m
@@ -375,16 +391,6 @@ sendEventCallback instanceId event = do
           V1 -> FlowCallbackEventV1Envelope now instanceId event
     void $ scheduleNewCallback (fromUrl url) NoAuth payload
 
-    -- CloseAll (CloseAllAction documentIds) -> forM_ documentIds $ \docId -> do
-    --   doc <- dbQuery $ GetDocumentByDocumentID docId
-    --   withDocument doc $ commonDocumentClosingActions doc
-
-
-    -- Notify (NotifyAction users memailMsg msmsMsg) ->
-    --   consumeNotifyAction users memailMsg msmsMsg
-
-    -- Fail -> logInfo "Flow process failed" action
-
 consumeNotifyAction
   :: ( MonadLog m
      , CryptoRNG m
@@ -408,14 +414,21 @@ consumeRejectionAction
   :: (MonadDB m, MonadIO m, MonadLog m, MonadMask m, TemplatesMonad m)
   => RejectAction
   -> m ()
-consumeRejectionAction RejectAction { rejector, documentIds, instanceId } = do
+consumeRejectionAction RejectAction {..} = do
+  logInfo "Cancelling documents for rejection of flow instance, and send event callback"
+    $ object
+        [ "document_ids" .= documentIds
+        , "instance_id" .= instanceId
+        , "document_name" .= documentName
+        , "reject_message" .= rejectMessage
+        ]
+
   forM_ documentIds $ \docId -> do
     -- Use the system actor for now as otherwise it requires
     -- additional monad constraints
     actor <- systemActor <$> currentTime
     withDocumentID docId . dbUpdate $ CancelDocument actor
 
-  -- TODO: allow message to be specified from the API and propagated here
-  sendEventCallback instanceId . Callback.Rejected $ RejectedEvent { userName = rejector
-                                                                   , message  = ""
-                                                                   }
+  let event = RejectedEvent { userName = rejector, rejectMessage, documentName }
+
+  sendEventCallback instanceId $ Callback.Rejected event

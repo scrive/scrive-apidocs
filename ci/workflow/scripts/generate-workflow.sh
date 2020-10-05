@@ -2,7 +2,6 @@
 
 jobs=(
   ghc88-nix
-  ghc86-nix
   ghc88-manual
   formatting
   quick-formatting
@@ -10,6 +9,7 @@ jobs=(
   nix-deps
   nix-deps-mac
   nix-dist
+  docker-lambda
   migration-test
   selenium-staging
   shake-dist-master

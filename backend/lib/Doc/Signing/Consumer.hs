@@ -659,8 +659,9 @@ signFromESignature DocumentSigning {..} now = do
   -- If document is part of a flow instance, send relevant event.
   whenJustM (Flow.selectInstanceIdByDocumentId documentid) $ \instanceId -> do
     Flow.processFlowEventForSignatory $ Flow.EngineEvent
-      { instanceId  = instanceId
-      , userAction  = Flow.Signature
-      , signatoryId = signingSignatoryID
-      , documentId  = documentid
+      { instanceId   = instanceId
+      , userAction   = Flow.Signature
+      , signatoryId  = signingSignatoryID
+      , documentId   = documentid
+      , eventDetails = Nothing
       }

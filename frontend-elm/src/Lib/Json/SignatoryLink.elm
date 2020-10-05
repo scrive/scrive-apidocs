@@ -99,7 +99,7 @@ authenticationToViewMethodDecoder =
         "nl_idin" -> JD.succeed IDINAuthenticationToView
         "onfido_document_check" -> JD.succeed OnfidoDocumentCheckAuthenticationToView
         "onfido_document_and_photo_check" -> JD.succeed OnfidoDocumentAndPhotoCheckAuthenticationToView
-        _ -> JD.fail <| "Cannot parse DeliveryMethod: " ++ s
+        _ -> JD.fail <| "Cannot parse AuthenticationToViewMethod: " ++ s
       )
 
 signatoryLinkDecoder : Decoder SignatoryLink
@@ -116,5 +116,5 @@ signatoryLinkDecoder =
   |> JDP.required "mobile_delivery_status" deliveryStatusDecoder
   |> JDP.required "delivery_method" deliveryMethodDecoder
   |> JDP.required "authentication_method_to_view" authenticationToViewMethodDecoder
-  |> JDP.required "authentication_method_to_view" authenticationToViewMethodDecoder
+  |> JDP.required "authentication_method_to_view_archived" authenticationToViewMethodDecoder
   |> JD.map SignatoryLink

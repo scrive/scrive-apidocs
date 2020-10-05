@@ -21,8 +21,8 @@ let Args =
 let createWorkflow =
   \(args: Args.Type) ->
     let inArgs =
-      { ghcVersion = GHCVersion.Type.ghc88
-      , nixShell = "dev-shell"
+      { ghc-version = GHCVersion.Type.ghc88
+      , nix-shell = "dev-shell"
       , runs-on = args.runs-on
       }
 

@@ -93,6 +93,7 @@ data EIDServiceTransactionProvider =
   | EIDServiceTransactionProviderFITupas
   | EIDServiceTransactionProviderOnfido
   | EIDServiceTransactionProviderSEBankID
+  | EIDServiceTransactionProviderSmsOtp
   deriving (Eq, Ord, Show)
 
 toEIDServiceProviderName :: EIDServiceTransactionProvider -> Text
@@ -103,6 +104,7 @@ toEIDServiceProviderName EIDServiceTransactionProviderNOBankID = "noBankID"
 toEIDServiceProviderName EIDServiceTransactionProviderFITupas  = "fiTupas"
 toEIDServiceProviderName EIDServiceTransactionProviderOnfido   = "onfido"
 toEIDServiceProviderName EIDServiceTransactionProviderSEBankID = "seBankID"
+toEIDServiceProviderName EIDServiceTransactionProviderSmsOtp   = "smsOtp"
 
 toRedirectURLName :: EIDServiceTransactionProvider -> Text
 toRedirectURLName EIDServiceTransactionProviderVerimi   = "verimi"
@@ -112,6 +114,7 @@ toRedirectURLName EIDServiceTransactionProviderNOBankID = "nobankid"
 toRedirectURLName EIDServiceTransactionProviderFITupas  = "fitupas"
 toRedirectURLName EIDServiceTransactionProviderOnfido   = "onfido"
 toRedirectURLName EIDServiceTransactionProviderSEBankID = "sebankid"
+toRedirectURLName EIDServiceTransactionProviderSmsOtp   = "smsotp"
 
 instance FromReqURI EIDServiceTransactionProvider where
   fromReqURI = \case
@@ -122,6 +125,7 @@ instance FromReqURI EIDServiceTransactionProvider where
     "fitupas"  -> Just EIDServiceTransactionProviderFITupas
     "onfido"   -> Just EIDServiceTransactionProviderOnfido
     "sebankid" -> Just EIDServiceTransactionProviderSEBankID
+    "smsotp"   -> Just EIDServiceTransactionProviderSmsOtp
     _          -> Nothing
 
 instance PQFormat EIDServiceTransactionProvider where
@@ -139,7 +143,8 @@ instance FromSQL EIDServiceTransactionProvider where
       5 -> return EIDServiceTransactionProviderFITupas
       6 -> return EIDServiceTransactionProviderOnfido
       7 -> return EIDServiceTransactionProviderSEBankID
-      _ -> throwM RangeError { reRange = [(1, 7)], reValue = n }
+      8 -> return EIDServiceTransactionProviderSmsOtp
+      _ -> throwM RangeError { reRange = [(1, 8)], reValue = n }
 
 instance ToSQL EIDServiceTransactionProvider where
   type PQDest EIDServiceTransactionProvider = PQDest Int16
@@ -150,6 +155,7 @@ instance ToSQL EIDServiceTransactionProvider where
   toSQL EIDServiceTransactionProviderFITupas  = toSQL (5 :: Int16)
   toSQL EIDServiceTransactionProviderOnfido   = toSQL (6 :: Int16)
   toSQL EIDServiceTransactionProviderSEBankID = toSQL (7 :: Int16)
+  toSQL EIDServiceTransactionProviderSmsOtp   = toSQL (8 :: Int16)
 
 data EIDServiceEndpointType = EIDServiceAuthEndpoint | EIDServiceSignEndpoint
 
@@ -236,6 +242,7 @@ instance FromJSON EIDServiceTransactionProvider where
     "fiTupas"  -> return EIDServiceTransactionProviderFITupas
     "onfido"   -> return EIDServiceTransactionProviderOnfido
     "seBankID" -> return EIDServiceTransactionProviderSEBankID
+    "smsOtp"   -> return EIDServiceTransactionProviderSmsOtp
     _          -> fail "JSON is invalid: unrecognised value for \"provider\""
 
 -- | We redirect to "<domain>/eid-service/redirect-endpoint/<provider>/<view/sign>

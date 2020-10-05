@@ -2,6 +2,7 @@ module Flow.EID.EIDService.Control (
     eidServiceRoutes
   ) where
 
+import Control.Monad.Extra
 import Data.Aeson (Value)
 import Happstack.Server hiding (Expired, dir)
 import Happstack.StaticRouting
@@ -10,13 +11,14 @@ import qualified Data.Text as T
 import qualified Text.StringTemplates.Fields as F
 
 import Analytics.Include
+import API.V2.Errors
+import API.V2.MonadUtils
 import AppView
 import DB
-import Doc.DocStateData
 import Doc.DocStateQuery
 import EID.EIDService.Model (eidServiceConf)
 import EID.EIDService.Types hiding (EIDServiceTransactionFromDB(..))
-import Flow.Aggregator
+import Flow.EID.Authentication
 import Flow.EID.EIDService.Model
 import Flow.EID.EIDService.Provider
 import Flow.EID.EIDService.Types
@@ -24,6 +26,7 @@ import Flow.Id
 import Flow.Model
 import Flow.Model.Types
 import Flow.Names
+import Flow.Utils
 import Happstack.Fields
 import Kontra hiding (InternalError)
 import MinutesTime
@@ -55,32 +58,50 @@ startEIDServiceTransaction
 startEIDServiceTransaction provider instanceId (LocalUserName userName) = do
   let providerName = toEIDServiceProviderName provider
   logInfo_ $ "EID Service transaction start - for " <> providerName
-  (sl , did)   <- getAnyDocumentWithSl instanceId userName
-  (doc, _  )   <- getDocumentAndSignatoryForEIDAuth did (signatorylinkid sl) -- also access guard
+
   fullInstance <- fromJust <$> selectFullInstance instanceId
-  let authKind = if isComplete $ instanceToAggregator fullInstance
-        then AuthenticationToView
-        else AuthenticationToViewArchived
+  uac          <- fromMaybeM throwNoAuthentication
+    $ selectUserAuthenticationConfiguration instanceId userName
+  (authenticationKind, authenticationConfig) <-
+    maybe throwNoAuthentication pure
+      $ getAuthenticationKindAndConfiguration fullInstance uac
+
+  maxFailuresExceeded <- checkAuthMaxFailuresExceeded
+    instanceId
+    userName
+    (authenticationKind, authenticationConfig)
+  when maxFailuresExceeded
+    $ Kontra.unauthorized "Maximum number of authentication attempts exceeeded."
+
+  (did, slid)        <- findFirstSignatoryLink instanceId userName
+  (doc, _   )        <- getDocumentAndSignatoryForEIDAuth did slid -- also access guard
   conf               <- eidServiceConf doc
   (tid, val, status) <- beginEIDServiceTransaction conf
                                                    provider
-                                                   authKind
+                                                   authenticationKind
+                                                   authenticationConfig
                                                    instanceId
                                                    userName
-  sid <- getNonTempSessionID
   now <- currentTime
+  sid <- getNonTempSessionID
   let newTransaction = EIDServiceTransactionFromDB
         { estID         = tid
         , estStatus     = status
         , estInstanceId = instanceId
         , estUserName   = userName
-        , estAuthKind   = EIDServiceAuthToView authKind
+        , estAuthKind   = EIDServiceAuthToView authenticationKind
         , estProvider   = provider
         , estSessionID  = sid
         , estDeadline   = 60 `minutesAfter` now
         }
   dbUpdate $ MergeEIDServiceTransaction newTransaction
   return val
+  where
+    throwNoAuthentication :: Kontrakcja m => m a
+    throwNoAuthentication = do
+      let msg = "Participant doesn't have authentication configured."
+      logAttention msg $ object ["instance_id" .= instanceId, "user_name" .= userName]
+      apiError $ conflictError msg
 
 redirectEndpointFromEIDServiceTransaction
   :: Kontrakcja m
@@ -94,15 +115,14 @@ redirectEndpointFromEIDServiceTransaction provider instanceId (LocalUserName use
     -- TODO nicer logging
     logInfo_ $ "InstanceId: " <> showt instanceId
     logInfo_ $ "User name: " <> showt userName
-    (sl , did)   <- getAnyDocumentWithSl instanceId userName
-    (doc, _  )   <- getDocumentAndSignatoryForEIDAuth did (signatorylinkid sl) -- also access guard
-    conf         <- eidServiceConf doc
-    ad           <- getAnalyticsData
-    ctx          <- getContext
-    rd           <- guardJustM $ getField "redirect"
-    mts          <- completeEIDServiceAuthTransaction conf provider instanceId userName
-    redirectPage <- renderTextTemplate "postEIDAuthRedirect" $ do
+    (did, slid) <- findFirstSignatoryLink instanceId userName
+    (doc, _   ) <- getDocumentAndSignatoryForEIDAuth did slid
+    conf        <- eidServiceConf doc
+    ad          <- getAnalyticsData
+    ctx         <- getContext
+    rd          <- guardJustM $ getField "redirect"
+    mts         <- completeEIDServiceAuthTransaction conf provider instanceId userName
+    (simpleHtmlResponse =<<) . renderTextTemplate "postEIDAuthRedirect" $ do
       F.value "redirect" rd
       F.value "incorrect_data" (mts == Just EIDServiceTransactionStatusCompleteAndFailed)
       standardPageFields ctx Nothing ad
-    simpleHtmlResponse redirectPage

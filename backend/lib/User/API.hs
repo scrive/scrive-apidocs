@@ -295,7 +295,7 @@ apiCallGetSubscription = api $ do
 
 apiCallGetUsersFeatures :: Kontrakcja m => m Response
 apiCallGetUsersFeatures = V2.api $ do
-  user         <- V2.getAPIUserWithAPIPersonal
+  user         <- V2.getAPIUserWithFullAccess
   requiredPerm <- apiRequirePermission . canDo ReadA . UserR $ (user ^. #id)
   apiAccessControl user requiredPerm $ do
     jsonWithData <- getUserFeaturesJSON user
@@ -331,7 +331,7 @@ apiCallChangeUserPassword = api $ do
 apiCallLoginUser :: Kontrakcja m => m Response
 apiCallLoginUser = api $ do
   ctx         <- getContext
-  user        <- V2.getAPIUserWithAPIPersonal
+  user        <- V2.getAPIUserWithFullAccess
 
   redirectUrl <- apiGuardJustM (badInput "Redirect URL not provided or invalid.")
     $ getField "redirect"
@@ -342,7 +342,7 @@ apiCallLoginUser = api $ do
 
 apiCallUpdateUserProfile :: forall  m . Kontrakcja m => m Response
 apiCallUpdateUserProfile = api $ do
-  user         <- V2.getAPIUserWithAPIPersonal
+  user         <- V2.getAPIUserWithFullAccess
   ctx          <- getContext
   requiredPerm <- apiRequirePermission . canDo UpdateA . UserR $ (user ^. #id)
   apiAccessControl user requiredPerm $ do
@@ -448,7 +448,7 @@ apiCallUpdateUserProfile = api $ do
 apiCallChangeEmail :: Kontrakcja m => m Response
 apiCallChangeEmail = api $ do
   ctx          <- getContext
-  user         <- V2.getAPIUserWithAPIPersonal
+  user         <- V2.getAPIUserWithFullAccess
   mnewemail    <- getOptionalField asValidEmail "newemail"
   requiredPerm <- apiRequirePermission . canDo UpdateA . UserR $ (user ^. #id)
   apiAccessControl user requiredPerm $ do
@@ -606,7 +606,7 @@ sendPasswordReminder user = do
 
 apiCallUserGetCallbackScheme :: Kontrakcja m => m Response
 apiCallUserGetCallbackScheme = api $ do
-  user         <- V2.getAPIUserWithAPIPersonal
+  user         <- V2.getAPIUserWithFullAccess
   requiredPerm <- apiRequirePermission . canDo ReadA . UserR $ (user ^. #id)
   apiAccessControl user requiredPerm $ do
     scheme <- dbQuery . GetUserCallbackSchemeByUserID $ user ^. #id
@@ -716,7 +716,7 @@ apiCallLoginUserAndGetSession = V2.api $ do
 
 apiCallIsUserDeletable :: Kontrakcja m => m Response
 apiCallIsUserDeletable = V2.api $ do
-  user         <- V2.getAPIUserWithAPIPersonal
+  user         <- V2.getAPIUserWithFullAccess
   requiredPerm <- apiRequirePermission . canDo ReadA . UserR $ (user ^. #id)
   apiAccessControl user requiredPerm $ do
     mReason <- dbQuery $ IsUserDeletable user
@@ -729,7 +729,7 @@ apiCallIsUserDeletable = V2.api $ do
 
 apiCallDeleteUser :: Kontrakcja m => m Response
 apiCallDeleteUser = V2.api $ do
-  user         <- V2.getAPIUserWithAPIPersonal
+  user         <- V2.getAPIUserWithFullAccess
   ctx          <- getContext
   email        <- V2.apiV2ParameterObligatory $ V2.ApiV2ParameterText "email"
   requiredPerm <- apiRequirePermission . canDo DeleteA . UserR $ (user ^. #id)
@@ -756,7 +756,7 @@ apiCallDeleteUser = V2.api $ do
  -}
 apiCallGetDataRetentionPolicy :: Kontrakcja m => m Response
 apiCallGetDataRetentionPolicy = V2.api $ do
-  user         <- V2.getAPIUserWithAPIPersonal
+  user         <- V2.getAPIUserWithFullAccess
   requiredPerm <- apiRequirePermission . canDo ReadA . UserR $ (user ^. #id)
   apiAccessControl user requiredPerm $ do
     let drp = user ^. #settings % #dataRetentionPolicy
@@ -769,7 +769,7 @@ apiCallGetDataRetentionPolicy = V2.api $ do
 
 apiCallSetDataRetentionPolicy :: Kontrakcja m => m Response
 apiCallSetDataRetentionPolicy = V2.api $ do
-  user         <- V2.getAPIUserWithAPIPersonal
+  user         <- V2.getAPIUserWithFullAccess
   ugwp         <- dbQuery . UserGroupGetWithParentsByUserID $ user ^. #id
   requiredPerm <- apiRequirePermission . canDo UpdateA . UserR $ (user ^. #id)
   apiAccessControl user requiredPerm $ do
@@ -784,7 +784,7 @@ apiCallSetDataRetentionPolicy = V2.api $ do
 apiCallGetTokenForPersonalCredentials :: Kontrakcja m => UserID -> m Response
 apiCallGetTokenForPersonalCredentials uid = V2.api $ do
   -- Guards
-  user         <- V2.getAPIUserWithAPIPersonal
+  user         <- V2.getAPIUserWithFullAccess
   requiredPerm <- apiRequirePermission . canDo UpdateA $ UserR uid
   apiAccessControl user requiredPerm $ do
     minutes <- apiV2ParameterDefault defaultMinutes $ ApiV2ParameterInt "minutes"
@@ -825,7 +825,7 @@ guardCanChangeUser adminuser otheruser = do
 apiCallUpdateOtherUserProfile :: forall  m . Kontrakcja m => UserID -> m Response
 apiCallUpdateOtherUserProfile affectedUserID = V2.api $ do
   ctx             <- getContext
-  authorizingUser <- V2.getAPIUserWithAPIPersonal
+  authorizingUser <- V2.getAPIUserWithFullAccess
   mAffectedUser   <- dbQuery $ GetUserByID affectedUserID
   case mAffectedUser of
     Nothing           -> throwM . SomeDBExtraException $ forbidden "User doesn't exist"
@@ -875,7 +875,7 @@ apiCallUpdateOtherUserProfile affectedUserID = V2.api $ do
 apiCallChangeOtherUserEmail :: Kontrakcja m => UserID -> m Response
 apiCallChangeOtherUserEmail affectedUserID = V2.api $ do
   ctx             <- getContext
-  authorizingUser <- V2.getAPIUserWithAPIPersonal
+  authorizingUser <- V2.getAPIUserWithFullAccess
   mAffectedUser   <- dbQuery $ GetUserByID affectedUserID
   case mAffectedUser of
     Nothing           -> throwM . SomeDBExtraException $ forbidden "User doesn't exist"
@@ -960,12 +960,12 @@ apiCallActivateAccount = V2.api $ do
 
 apiCallGetTags :: Kontrakcja m => m Response
 apiCallGetTags = V2.api $ do
-  user <- V2.getAPIUserWithAPIPersonal
+  user <- V2.getAPIUserWithFullAccess
   return . V2.Ok $ toJSON (user ^. #externalTags)
 
 apiCallUpdateTags :: Kontrakcja m => m Response
 apiCallUpdateTags = V2.api $ do
-  user       <- V2.getAPIUserWithAPIPersonal
+  user       <- V2.getAPIUserWithFullAccess
   tagUpdates <- V2.apiV2ParameterObligatory $ V2.ApiV2ParameterAeson "tags"
   let tags = updateTags (user ^. #externalTags) tagUpdates
   void . dbUpdate $ SetUserTags (user ^. #id) (user ^. #internalTags) tags

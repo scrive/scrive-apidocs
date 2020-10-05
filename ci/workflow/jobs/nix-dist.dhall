@@ -10,8 +10,7 @@ let Json = ../type/Json.dhall
 let build-kontrakcja-dist = Job.Job ::
     { runs-on = default-runner
     , steps = setupSteps.setup-steps #
-      [ setupSteps.nix-gc-step
-      , Step ::
+      [ Step ::
           { name = "Build Kontrakcja Dist"
           , run = Some ''
               nix-build -o result -A ghc88.dist release.nix
@@ -33,10 +32,7 @@ Workflow.Workflow ::
   { name = "Build Nix Dist"
   , on = Some Workflow.Triggers ::
       { push = Some (Workflow.BranchSpec ::
-          -- Disabling this workflow on main branches because Nix dist is broken.
-          -- Ses [FLOW-366].
-          -- { branches = Some [ "master", "staging", "production" ]
-          { branches = Some [ "nix" ]
+          { branches = Some [ "master", "staging", "production" ]
           })
       -- Uncomment this line to temporary enable running this workflow in PR
       -- , pull_request = Some Workflow.BranchSpec.default
