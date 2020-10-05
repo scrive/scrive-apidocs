@@ -21,7 +21,6 @@ let
 
   elmDeps = [
     elmPackages.elm
-    elmPackages.elm-format
   ];
 
   nodeDeps = [
