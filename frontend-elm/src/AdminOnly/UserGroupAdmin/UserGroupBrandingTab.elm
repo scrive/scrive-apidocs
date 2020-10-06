@@ -15,7 +15,7 @@ import Html.Attributes exposing (class)
 import Http
 import Json.Decode as JD
 import Json.Encode as JE
-import Lib.Components.EditTheme as EditTheme
+import Lib.Components.EditTheme as EditTheme exposing (EditThemeState)
 import Lib.Components.PreviewTheme exposing (..)
 import Lib.Json.Theme exposing (..)
 import Lib.Types.Theme exposing (..)
@@ -73,11 +73,7 @@ type alias State =
     , userGroupThemes : List Theme
     , inheritedThemes : List Theme
     , domainThemes : Enum.Dict ThemeKind Theme
-    , editThemeState :
-        { themeBeingEdited : Theme
-        , colorPickers : Enum.Dict ColorIdentifier ColorPicker.State
-        , popovers : Enum.Dict ColorIdentifier Popover.State
-        }
+    , editThemeState : EditThemeState
     , editUserGroupBrandingState :
         { brandingBeingEdited : UserGroupBranding
         , inherit : Bool
@@ -236,6 +232,7 @@ init embed { page, ugid } =
                             )
                         <|
                             Enum.allValues enumColorIdentifier
+                , partialColors = Enum.empty enumColorIdentifier
                 , popovers =
                     Enum.fromList enumColorIdentifier <|
                         List.map (\ident -> ( ident, Popover.initialState )) <|

@@ -501,3 +501,8 @@ decodeDict e d =
                             )
     in
     go <| Enum.allValues e
+
+
+noCmd : a -> ( a, Cmd msg )
+noCmd state =
+    ( state, Cmd.none )

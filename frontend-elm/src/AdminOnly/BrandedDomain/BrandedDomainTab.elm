@@ -1,6 +1,6 @@
 module AdminOnly.BrandedDomain.BrandedDomainTab exposing (..)
 
-import AdminOnly.BrandedDomain.EditBrandedDomain as EditBrandedDomain
+import AdminOnly.BrandedDomain.EditBrandedDomain as EditBrandedDomain exposing (EditBrandedDomainState)
 import AdminOnly.BrandedDomain.Json exposing (..)
 import AdminOnly.BrandedDomain.Types exposing (..)
 import Bootstrap.Grid as Grid
@@ -15,7 +15,7 @@ import Html.Attributes exposing (class)
 import Http
 import Json.Decode as JD
 import Json.Encode as JE
-import Lib.Components.EditTheme as EditTheme
+import Lib.Components.EditTheme as EditTheme exposing (EditThemeState)
 import Lib.Components.PreviewTheme exposing (..)
 import Lib.Json.Theme as Theme
 import Lib.Types.Theme as Theme exposing (Theme, ThemeID)
@@ -69,16 +69,8 @@ type alias State =
     , previewTabState : Tab.State
     , loadingState : LoadingState
     , availableThemes : List Theme
-    , editBrandedDomainState :
-        { brandedDomainBeingEdited : BrandedDomain
-        , colorPickers : Enum.Dict ColorIdentifier ColorPicker.State
-        , popovers : Enum.Dict ColorIdentifier Popover.State
-        }
-    , editThemeState :
-        { themeBeingEdited : Theme
-        , colorPickers : Enum.Dict Theme.ColorIdentifier ColorPicker.State
-        , popovers : Enum.Dict Theme.ColorIdentifier Popover.State
-        }
+    , editBrandedDomainState : EditBrandedDomainState
+    , editThemeState : EditThemeState
     }
 
 
@@ -128,6 +120,7 @@ init embed page =
                             )
                         <|
                             Enum.allValues enumColorIdentifier
+                , partialColors = Enum.empty enumColorIdentifier
                 , popovers =
                     Enum.fromList enumColorIdentifier <|
                         List.map (\ident -> ( ident, Popover.initialState )) <|
@@ -143,6 +136,7 @@ init embed page =
                             )
                         <|
                             Enum.allValues Theme.enumColorIdentifier
+                , partialColors = Enum.empty Theme.enumColorIdentifier
                 , popovers =
                     Enum.fromList Theme.enumColorIdentifier <|
                         List.map (\ident -> ( ident, Popover.initialState )) <|

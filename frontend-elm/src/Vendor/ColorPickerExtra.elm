@@ -615,19 +615,32 @@ Used internally and exposed because the public alternative is a library with mul
 -}
 hex2Color : String -> Maybe Color
 hex2Color s =
-    if String.length s /= 7 then
-        Nothing
+    if String.startsWith "#" s then
+        hex2Color <| String.dropLeft 1 s
 
     else
-        let
-            hex =
-                String.toLower s
+        case String.length s of
+            3 ->
+                let
+                    -- expand 'def' to 'ddeeff'
+                    duplicatedDigits =
+                        String.split "" s |> List.concatMap (\x -> [ x, x ]) |> String.join ""
+                in
+                hex2Color duplicatedDigits
 
-            conv begin end =
-                String.slice begin end >> Hex.fromString >> Result.map (toFloat >> (\x -> x / 255))
-        in
-        Result.map3 Color.rgb (conv 1 3 hex) (conv 3 5 hex) (conv 5 7 hex)
-            |> Result.toMaybe
+            6 ->
+                let
+                    hex =
+                        String.toLower s
+
+                    conv begin end =
+                        String.slice begin end >> Hex.fromString >> Result.map (toFloat >> (\x -> x / 255))
+                in
+                Result.map3 Color.rgb (conv 0 2 hex) (conv 2 4 hex) (conv 4 6 hex)
+                    |> Result.toMaybe
+
+            _ ->
+                Nothing
 
 
 padHex : Int -> String

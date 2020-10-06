@@ -13,9 +13,10 @@ import File exposing (File)
 import File.Select as FileSelect
 import Html exposing (Html, div, img, text)
 import Html.Attributes exposing (class, selected, src, style, type_, value)
-import Html.Events exposing (onClick, onInput)
+import Html.Events exposing (onBlur, onClick, onInput)
 import Lib.Types.Theme exposing (Theme, ThemeID)
 import Task
+import Utils exposing (noCmd)
 import Vendor.ColorPickerExtra as ColorPicker
 import Vendor.Popover as Popover
 
@@ -23,6 +24,7 @@ import Vendor.Popover as Popover
 type alias EditBrandedDomainState =
     { brandedDomainBeingEdited : BrandedDomain
     , colorPickers : Enum.Dict ColorIdentifier ColorPicker.State
+    , partialColors : Enum.Dict ColorIdentifier String
     , popovers : Enum.Dict ColorIdentifier Popover.State
     }
 
@@ -35,6 +37,11 @@ getDomainColor state ident =
 getColorPicker : EditBrandedDomainState -> ColorIdentifier -> ColorPicker.State
 getColorPicker state ident =
     Maybe.withDefault ColorPicker.empty <| Enum.get ident state.colorPickers
+
+
+getPartialColor : EditBrandedDomainState -> ColorIdentifier -> Maybe String
+getPartialColor state ident =
+    Enum.get ident state.partialColors
 
 
 getPopover : EditBrandedDomainState -> ColorIdentifier -> Popover.State
@@ -54,18 +61,28 @@ type Msg
     | SetFaviconMsg String
     | UpdateColorPickerMsg ColorIdentifier ColorPicker.Msg
     | SetPopoverMsg ColorIdentifier Popover.State
+    | OnColorTextChangedMsg ColorIdentifier String
+    | OnColorTextCommittedMsg ColorIdentifier
 
 
 update : (Msg -> msg) -> Msg -> EditBrandedDomainState -> ( EditBrandedDomainState, Cmd msg )
 update embed msg =
     let
+        modifyBrandedDomain : (BrandedDomain -> BrandedDomain) -> EditBrandedDomainState -> ( EditBrandedDomainState, Cmd msg )
         modifyBrandedDomain f state =
-            ( { state
-                | brandedDomainBeingEdited =
-                    f state.brandedDomainBeingEdited
-              }
-            , Cmd.none
-            )
+            noCmd <|
+                { state
+                    | brandedDomainBeingEdited =
+                        f state.brandedDomainBeingEdited
+                }
+
+        updateColorIfValidInput colorIdentifier colorText =
+            case ColorPicker.hex2Color colorText of
+                Nothing ->
+                    noCmd
+
+                Just color ->
+                    modifyBrandedDomain <| setColor colorIdentifier color
     in
     case msg of
         SetUrlMsg url ->
@@ -100,6 +117,13 @@ update embed msg =
 
         SetPopoverMsg colorIdentifier popover ->
             setPopover colorIdentifier popover
+
+        OnColorTextChangedMsg colorIdentifier colorText ->
+            updatePartialColor colorIdentifier colorText
+                >> updateColorIfValidInput colorIdentifier colorText
+
+        OnColorTextCommittedMsg colorIdentifier ->
+            commitPartialColor colorIdentifier >> noCmd
 
 
 
@@ -181,12 +205,11 @@ updateColorPicker colorIdentifier msg state =
         newColors =
             Enum.insert colorIdentifier newColor brandedDomain.colors
     in
-    ( { state
-        | colorPickers = newColorPickers
-        , brandedDomainBeingEdited = { brandedDomain | colors = newColors }
-      }
-    , Cmd.none
-    )
+    noCmd <|
+        { state
+            | colorPickers = newColorPickers
+            , brandedDomainBeingEdited = { brandedDomain | colors = newColors }
+        }
 
 
 
@@ -199,7 +222,7 @@ setPopover colorIdentifier popover state =
         newPopovers =
             Enum.insert colorIdentifier popover state.popovers
     in
-    ( { state | popovers = newPopovers }, Cmd.none )
+    noCmd <| { state | popovers = newPopovers }
 
 
 
@@ -216,6 +239,9 @@ viewEditColor embed colorIdentifier state =
 
         colorPicker =
             getColorPicker state colorIdentifier
+
+        colorText =
+            Maybe.withDefault (ColorPicker.color2Hex color) <| getPartialColor state colorIdentifier
 
         popover =
             getPopover state colorIdentifier
@@ -240,9 +266,11 @@ viewEditColor embed colorIdentifier state =
                     div []
                         [ Input.text
                             [ Input.attrs <|
-                                [ value <| ColorPicker.color2Hex color
+                                [ value <| colorText
                                 , style "width" "80%"
                                 , style "display" "inline-block"
+                                , onInput <| embed << OnColorTextChangedMsg colorIdentifier
+                                , onBlur <| embed <| OnColorTextCommittedMsg colorIdentifier
                                 ]
                                     ++ Popover.onClick popover (embed << SetPopoverMsg colorIdentifier)
                             ]
@@ -407,3 +435,21 @@ viewEditBrandedDomain { embed, doSaveBrandedDomain, availableThemes } state =
                         ]
                     ]
                ]
+
+
+
+-- implements OnColorTextChangedMsg
+
+
+updatePartialColor : ColorIdentifier -> String -> EditBrandedDomainState -> EditBrandedDomainState
+updatePartialColor ident colorText state =
+    { state | partialColors = Enum.insert ident colorText state.partialColors }
+
+
+
+-- implements OnColorTextCommittedMsg
+
+
+commitPartialColor : ColorIdentifier -> EditBrandedDomainState -> EditBrandedDomainState
+commitPartialColor ident state =
+    { state | partialColors = Enum.remove ident state.partialColors }
