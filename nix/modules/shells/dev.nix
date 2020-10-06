@@ -5,11 +5,14 @@
 , scrivepdftools
 , haskell-deps
 , kontrakcja-project
+, scrive-new-frontend
 }:
 let
   inherit (haskell-deps.exes)
     hlint brittany apply-refact
   ;
+
+  KONTRAKCJA_ROOT = builtins.toPath ../../..;
 
   deps = [
     hlint
@@ -22,9 +25,13 @@ let
     (pkg: if pkg == null then "" else "${pkg}/bin:")
     deps
   ;
+
+  link-frontend = "( cd \$KONTRAKCJA_ROOT && ./new-frontend/link-new-frontend.sh )";
 in
 kontrakcja-project.shellFor {
-  inherit scrivepdftools;
+  inherit KONTRAKCJA_ROOT scrivepdftools;
+
+  scrive_new_frontend = scrive-new-frontend;
 
   packages = hsPkgs: [
     hsPkgs.kontrakcja
@@ -40,5 +47,6 @@ kontrakcja-project.shellFor {
   shellHook = ''
     export LANG=''${LANG:-en_US.UTF-8}
     export PATH=${deps-path}$PATH
+    ${link-frontend}
     '';
 }

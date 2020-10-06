@@ -1,0 +1,10 @@
+{
+  "url": "ssh://git@github.com/scrive/new_frontend.git",
+  "rev": "56bb30978ce52b578271f3d301fe352ed603cd92",
+  "date": "2020-10-06T09:16:56+02:00",
+  "path": "/nix/store/yac87y9rdjc5yjpgabzxqvkb6ymb91b1-new_frontend",
+  "sha256": "15s9vrh32imdm572yz8hwvhm5hbdyxbm818jm4jm16l7g9idz38x",
+  "fetchSubmodules": false,
+  "deepClone": false,
+  "leaveDotGit": false
+}

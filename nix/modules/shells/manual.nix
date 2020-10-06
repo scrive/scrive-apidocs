@@ -4,7 +4,7 @@
 , haskell-deps
 }:
 let
-  inherit (nixpkgs) zlib icu curl libxml2;
+  inherit (nixpkgs) zlib icu curl libxml2 postgresql;
 
   inherit (haskell-deps.exes) cabal-install
     hlint brittany apply-refact;
@@ -14,7 +14,7 @@ in
 nixpkgs.mkShell {
   name = "kontrakcja-manual-shell";
 
-  LD_LIBRARY_PATH = "${zlib}/lib:${icu}/lib:${curl.out}/lib:${libxml2.out}/lib";
+  LD_LIBRARY_PATH = "${zlib}/lib:${icu}/lib:${curl.out}/lib:${libxml2.out}/lib:${postgresql.lib}/lib";
 
   buildInputs = [
     ghc

@@ -23,6 +23,7 @@ let cache-nix-deps = Job.Job ::
                 , "ghc88.selenium-shell"
                 , "ghc88.detect-unused-shell"
                 , "ghc88.manual-backend-shell"
+                , "ghc88.kontrakcja-frontend"
                 , "ghc86.backend-shell"
                 , "ghc86.manual-backend-shell"
                 ]
@@ -45,18 +46,53 @@ let cache-nix-deps = Job.Job ::
           }
       ]
     }
+
+let cache-new-frontend-deps = Job.Job ::
+  { runs-on = default-runner
+  , steps =
+      [ setupSteps.checkout-step
+      , setupSteps.nix-step
+      , setupSteps.cachix-step
+      , Step ::
+          { name = "Setup SSH (include frontend keys)"
+          , env = Some (toMap
+              { SSH_KEY_PDFTOOLS = "\${{ secrets.SSH_KEY_PDFTOOLS }}"
+              , SSH_KEY_NEW_FRONTEND = "\${{ secrets.SSH_KEY_NEW_FRONTEND }}"
+              , SSH_KEY_FLOW_FRONTEND = "\${{ secrets.SSH_KEY_FLOW_FRONTEND }}"
+              })
+          , run = Some "./ci/workflow/scripts/setup-ssh-frontend.sh"
+          }
+      , Step ::
+          { name = "Cache Nix Frontend Deps"
+          , timeout-minutes = Some 360
+          , env = Some (toMap
+              { CACHIX_SIGNING_KEY = "\${{ secrets.CACHIX_SIGNING_KEY }}"
+              , nix_collect_garbage =
+                  if config.nix-collect-garbage
+                  then "nix-collect-garbage"
+                  else "true"
+              })
+          , run = Some ''
+              ./ci/workflow/scripts/cache-nix-deps.sh new-frontend
+              ''
+          }
+      ]
+  }
 in
 Workflow.Workflow ::
   { name = "Cache Nix Dependencies"
   , on = Some Workflow.Triggers ::
-      { push = Some (Workflow.BranchSpec ::
+      { push = Some Workflow.BranchSpec ::
           { branches = Some [ "master", "nix" ]
           , paths = Some [ "nix/**", "**.cabal" ]
-          })
-        -- Uncomment this line to temporary enable running this workflow in PR
-        -- , pull_request = Some Workflow.BranchSpec.default
+          }
+        , pull_request = Some Workflow.BranchSpec ::
+          { branches = Some [ "master", "nix" ]
+          , paths = Some [ "nix/**", "**.cabal" ]
+          }
       }
   , jobs = toMap
       { cache-nix-deps = cache-nix-deps
+      , cache-new-frontend-deps = cache-new-frontend-deps
       }
   }

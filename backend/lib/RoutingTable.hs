@@ -59,7 +59,11 @@ import qualified UserGroupAccounts.UserGroupAccountsControl as UserGroupAccounts
 -}
 
 staticRoutes :: Bool -> Route (Kontra Response)
-staticRoutes production = choice
+staticRoutes production =
+  choice $ baseRoutes <> if production then prodAssetRoutes else devAssetRoutes
+
+baseRoutes :: [Route (Kontra Response)]
+baseRoutes =
   [ (allLangDirs . hGet . toK0) handleLoginGet
   , (allLangDirs . dir "pricing" . hGet . toK0)
     (sendRedirect $ LinkPermanentRedirect "/services/online/pricing/")
@@ -208,20 +212,46 @@ staticRoutes production = choice
   , (dir "favicon" . hGet . toK3) Branding.faviconIcon
   , (dir "api" . dir "v2" . remainingPath GET . toK0) noAPIV2CallFoundHandler
   , (dir "api" . dir "v2" . remainingPath POST . toK0) noAPIV2CallFoundHandler
-
-  -- api explorer
-  , (dir "api-explorer" . remainingPath GET . runSandbox)
-    $ serveDirectory EnableBrowsing ["index.html"] (staticDir ++ "/api-explorer")
-
-  -- static files
-  , (dir "elm-assets" . remainingPath GET . runSandbox)
-    $ serveDirectory DisableBrowsing [] adminElmStaticDir
-  , (remainingPath GET . runSandbox) $ serveDirectory DisableBrowsing [] staticDir
   ]
-  where
-    runSandbox m =
-      runWebSandboxT (runPlusSandboxT m) >>= either return (maybe respond404 return)
 
-    staticDir = if production then "frontend/dist" else "frontend/app"
-    adminElmStaticDir =
-      if production then "frontend/dist/elm-assets" else "frontend-elm/dist/elm-assets"
+devAssetRoutes :: [Route (Kontra Response)]
+devAssetRoutes =
+  [ (dir "api-explorer" . remainingPath GET . runSandbox)
+    $ serveDirectory EnableBrowsing ["index.html"] "frontend/app/api-explorer"
+  , (dir "elm-assets" . remainingPath GET . runSandbox)
+    $ serveDirectory DisableBrowsing [] "frontend-elm/dist/elm-assets"
+  -- Only serve new frontend from Kontrakcja in development mode
+  , dir "new" . remainingPath GET $ serveNewFrontend
+  , (remainingPath GET . runSandbox) $ serveDirectory DisableBrowsing [] "frontend/app"
+  ]
+
+prodAssetRoutes :: [Route (Kontra Response)]
+prodAssetRoutes =
+  [ (dir "api-explorer" . remainingPath GET . runSandbox)
+    $ serveDirectory EnableBrowsing ["index.html"] "frontend/dist/api-explorer"
+  , (dir "elm-assets" . remainingPath GET . runSandbox)
+    $ serveDirectory DisableBrowsing [] "frontend/dist/elm-assets"
+  , (remainingPath GET . runSandbox) $ serveDirectory DisableBrowsing [] "frontend/dist"
+  ]
+
+runSandbox :: PlusSandboxT (WebSandboxT Kontra) Response -> Kontra Response
+runSandbox m =
+  runWebSandboxT (runPlusSandboxT m) >>= either return (maybe respond404 return)
+
+-- Serve the new frontend files from new-frontend/dist. As new frontend
+-- is single page app, it serves index.html in paths such as /new/home and
+-- /new/dashboard. Since Happstack does not directly support serving
+-- a default file when a corresponding path is not found, we use technique
+-- similar to runSandbox to replace 404 response with index.html.
+serveNewFrontend :: Kontra Response
+serveNewFrontend = do
+  res :: Either Response (Maybe Response) <- runWebSandboxT (runPlusSandboxT serveDir)
+
+  either return (maybe serveIndex return) res
+  where
+    serveDir :: PlusSandboxT (WebSandboxT Kontra) Response
+    serveDir = serveDirectory DisableBrowsing ["index.html"] "new-frontend/dist"
+
+    serveIndex :: Kontra Response
+    serveIndex =
+      runSandbox $ serveFile (asContentType "text/html") "new-frontend/dist/index.html"
