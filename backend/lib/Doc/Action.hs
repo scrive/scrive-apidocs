@@ -56,7 +56,6 @@ import MailContext
 import PdfToolsLambda.Class
 import Templates (runTemplatesT)
 import ThirdPartyStats.Core
-import ThirdPartyStats.Planhat
 import User.Action
 import User.Email
 import User.Model
@@ -121,9 +120,6 @@ postDocumentPreparationChange authorsignsimmediately tzn = do
   case mauthor of
     Nothing     -> return ()
     Just author -> do
-      asyncLogEvent SetUserProps
-                    (simplePlanhatAction "Document started" author now)
-                    EventPlanhat
       asyncLogEvent SetUserProps (userMixpanelData author now) EventMixpanel
       theDocument >>= logDocEvent "Doc Sent" author []
 
@@ -280,9 +276,6 @@ commonDocumentClosingActions olddoc = do
       logDocEvent "Doc Closed" author [] document
       -- report
       now <- currentTime
-      asyncLogEvent SetUserProps
-                    (simplePlanhatAction "Document closed" author now)
-                    EventPlanhat
       asyncLogEvent SetUserProps (userMixpanelData author now) EventMixpanel
   dbUpdate . ScheduleDocumentSealing . view (#brandedDomain % #id) =<< getMailContext
   where

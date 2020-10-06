@@ -28,7 +28,6 @@ import LoginAuth.LoginAuthMethod
 import Redirect
 import Session.Cookies
 import ThirdPartyStats.Core
-import ThirdPartyStats.Planhat
 import User.Email
 import User.History.Model
 import User.Model
@@ -162,8 +161,6 @@ handleLoginPost = do
       case muuser of
         Just uuser -> do
           let uid = uuser ^. #id
-          now <- currentTime
-          asyncLogEvent SetUserProps (simplePlanhatAction "Login" user now) EventPlanhat
           asyncLogEvent
             "Login"
             [UserIDProp uid, IPProp $ ctx ^. #ipAddr, TimeProp $ ctx ^. #time]
