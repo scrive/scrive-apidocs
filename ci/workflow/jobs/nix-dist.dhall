@@ -9,11 +9,23 @@ let Json = ../type/Json.dhall
 
 let build-kontrakcja-dist = Job.Job ::
     { runs-on = default-runner
-    , steps = setupSteps.setup-steps #
-      [ Step ::
+    , steps =
+      [ setupSteps.checkout-step
+      , setupSteps.nix-step
+      , setupSteps.cachix-step
+      , Step ::
+          { name = "Setup SSH (include frontend keys)"
+          , env = Some (toMap
+              { SSH_KEY_PDFTOOLS = "\${{ secrets.SSH_KEY_PDFTOOLS }}"
+              , SSH_KEY_NEW_FRONTEND = "\${{ secrets.SSH_KEY_NEW_FRONTEND }}"
+              , SSH_KEY_FLOW_FRONTEND = "\${{ secrets.SSH_KEY_FLOW_FRONTEND }}"
+              })
+          , run = Some "./ci/workflow/scripts/setup-ssh-frontend.sh"
+          }
+      , Step ::
           { name = "Build Kontrakcja Dist"
           , run = Some ''
-              nix-build -o result -A ghc88.dist release.nix
+              nix-build -j4 -o result -A ghc88.dist release.nix
               ''
           }
       , Step ::

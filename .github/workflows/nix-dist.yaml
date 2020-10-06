@@ -20,12 +20,14 @@ jobs:
           cachix use scrive
           cachix use iohk
       - env:
+          SSH_KEY_FLOW_FRONTEND: "${{ secrets.SSH_KEY_FLOW_FRONTEND }}"
+          SSH_KEY_NEW_FRONTEND: "${{ secrets.SSH_KEY_NEW_FRONTEND }}"
           SSH_KEY_PDFTOOLS: "${{ secrets.SSH_KEY_PDFTOOLS }}"
-        name: Setup SSH
-        run: "./ci/workflow/scripts/setup-ssh.sh"
+        name: "Setup SSH (include frontend keys)"
+        run: "./ci/workflow/scripts/setup-ssh-frontend.sh"
       - name: Build Kontrakcja Dist
         run: |
-          nix-build -o result -A ghc88.dist release.nix
+          nix-build -j4 -o result -A ghc88.dist release.nix
       - env:
           PDFTOOLS_CONFIG: "${{ secrets.PDFTOOLS_CONFIG }}"
         name: Run Dist Tests
