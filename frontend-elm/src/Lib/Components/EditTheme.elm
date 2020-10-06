@@ -11,7 +11,7 @@ import File exposing (File)
 import File.Select as FileSelect
 import Html exposing (Html, div, img, text)
 import Html.Attributes exposing (class, disabled, selected, src, style, type_, value)
-import Html.Events exposing (onClick, onInput)
+import Html.Events exposing (onBlur, onClick, onInput)
 import Lib.Types.Theme exposing (..)
 import List exposing (map)
 import List.Extra as List
@@ -27,6 +27,7 @@ import Vendor.Popover as Popover
 type alias EditThemeState =
     { themeBeingEdited : Theme
     , colorPickers : Enum.Dict ColorIdentifier ColorPicker.State
+    , partialColors : Enum.Dict ColorIdentifier String
     , popovers : Enum.Dict ColorIdentifier Popover.State
     }
 
@@ -39,6 +40,11 @@ getThemeColor state ident =
 getColorPicker : EditThemeState -> ColorIdentifier -> ColorPicker.State
 getColorPicker state ident =
     withDefault ColorPicker.empty <| Enum.get ident state.colorPickers
+
+
+getPartialColor : EditThemeState -> ColorIdentifier -> Maybe String
+getPartialColor state ident =
+    Enum.get ident state.partialColors
 
 
 getPopover : EditThemeState -> ColorIdentifier -> Popover.State
@@ -60,6 +66,8 @@ type Msg
     | LoadLogoFileMsg File
     | SetLogoMsg String
     | SetFontMsg Font
+    | OnColorTextChangedMsg ColorIdentifier String
+    | OnColorTextCommittedMsg ColorIdentifier
 
 
 update : (Msg -> msg) -> Msg -> EditThemeReadonly -> EditThemeState -> ( EditThemeState, Cmd msg )
@@ -89,6 +97,14 @@ update embed msg read =
         SetFontMsg font ->
             setFont font
 
+        OnColorTextChangedMsg colorIdentifier colorText ->
+            updatePartialColor colorIdentifier colorText
+                >> updateColorIfValidInput colorIdentifier colorText
+                >> noCmd
+
+        OnColorTextCommittedMsg colorIdentifier ->
+            commitPartialColor colorIdentifier >> noCmd
+
 
 
 {- Theme selector -}
@@ -102,7 +118,7 @@ setActiveTheme read id state =
             withDefault state.themeBeingEdited <|
                 List.find (\theme -> theme.id == id) read.availableThemes
     in
-    ( { state | themeBeingEdited = activeTheme }, Cmd.none )
+    noCmd <| { state | themeBeingEdited = activeTheme }
 
 
 
@@ -141,7 +157,7 @@ setFont font state =
         theme =
             state.themeBeingEdited
     in
-    ( { state | themeBeingEdited = { theme | font = font } }, Cmd.none )
+    noCmd <| { state | themeBeingEdited = { theme | font = font } }
 
 
 
@@ -208,7 +224,7 @@ updateColorPicker colorIdentifier msg state =
         newColors =
             Enum.insert colorIdentifier newColor theme.colors
     in
-    ( { state | colorPickers = newColorPickers, themeBeingEdited = { theme | colors = newColors } }, Cmd.none )
+    noCmd <| { state | colorPickers = newColorPickers, themeBeingEdited = { theme | colors = newColors } }
 
 
 
@@ -221,7 +237,7 @@ setPopover colorIdentifier popover state =
         newPopovers =
             Enum.insert colorIdentifier popover state.popovers
     in
-    ( { state | popovers = newPopovers }, Cmd.none )
+    noCmd <| { state | popovers = newPopovers }
 
 
 
@@ -238,6 +254,9 @@ viewEditColor embed colorIdentifier state =
 
         colorPicker =
             getColorPicker state colorIdentifier
+
+        colorText =
+            Maybe.withDefault (ColorPicker.color2Hex color) <| getPartialColor state colorIdentifier
 
         popover =
             getPopover state colorIdentifier
@@ -265,10 +284,12 @@ viewEditColor embed colorIdentifier state =
                     div []
                         [ Input.text
                             [ Input.attrs <|
-                                [ value <| ColorPicker.color2Hex color
+                                [ value <| colorText
                                 , style "width" "80%"
                                 , style "display" "inline-block"
                                 , disabled readonly
+                                , onInput <| embed << OnColorTextChangedMsg colorIdentifier
+                                , onBlur <| embed <| OnColorTextCommittedMsg colorIdentifier
                                 ]
                                     ++ Popover.onClick popover (embed << SetPopoverMsg colorIdentifier)
                             ]
@@ -295,7 +316,7 @@ setThemeName name state =
         themeBeingEdited =
             state.themeBeingEdited
     in
-    ( { state | themeBeingEdited = { themeBeingEdited | name = name } }, Cmd.none )
+    noCmd <| { state | themeBeingEdited = { themeBeingEdited | name = name } }
 
 
 
@@ -336,7 +357,7 @@ setLogo content state =
         theme =
             state.themeBeingEdited
     in
-    ( { state | themeBeingEdited = { theme | logo = content } }, Cmd.none )
+    noCmd <| { state | themeBeingEdited = { theme | logo = content } }
 
 
 
@@ -491,3 +512,40 @@ viewEditTheme params read state =
                 ]
             ]
         ]
+
+
+setColor : ColorIdentifier -> Color -> EditThemeState -> EditThemeState
+setColor ident color state =
+    let
+        theme =
+            state.themeBeingEdited
+    in
+    { state | themeBeingEdited = { theme | colors = Enum.insert ident color theme.colors } }
+
+
+
+-- implements OnColorTextChangedMsg
+
+
+updatePartialColor : ColorIdentifier -> String -> EditThemeState -> EditThemeState
+updatePartialColor ident colorText state =
+    { state | partialColors = Enum.insert ident colorText state.partialColors }
+
+
+updateColorIfValidInput : ColorIdentifier -> String -> EditThemeState -> EditThemeState
+updateColorIfValidInput colorIdentifier colorText =
+    case ColorPicker.hex2Color colorText of
+        Nothing ->
+            identity
+
+        Just color ->
+            setColor colorIdentifier color
+
+
+
+-- implements OnColorTextCommittedMsg
+
+
+commitPartialColor : ColorIdentifier -> EditThemeState -> EditThemeState
+commitPartialColor ident state =
+    { state | partialColors = Enum.remove ident state.partialColors }
