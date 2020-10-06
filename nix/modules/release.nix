@@ -55,6 +55,9 @@ let
         kontrakcja-src kontrakcja-project;
     };
 
+  scrive-new-frontend = import ./new-frontend.nix
+    { inherit nixpkgs; };
+
   pdftools-src = import ../source/pdftools.nix;
 
   scrivepdftools = import ./scrive-pdf-tools.nix
@@ -69,6 +72,7 @@ let
         cabal-install
         scrivepdftools
         kontrakcja-project
+        scrive-new-frontend
       ;
     };
 
@@ -163,6 +167,7 @@ let
         kontrakcja-src
         kontrakcja-frontend
         kontrakcja-project
+        scrive-new-frontend
       ;
     };
 in

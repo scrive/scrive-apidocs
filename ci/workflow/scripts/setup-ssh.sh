@@ -4,6 +4,7 @@ set -eux
 
 eval $(ssh-agent)
 ssh-add - <<< "$SSH_KEY_PDFTOOLS"
+
 echo "::set-env name=SSH_AUTH_SOCK::$SSH_AUTH_SOCK"
 
 mkdir -p ~/.ssh

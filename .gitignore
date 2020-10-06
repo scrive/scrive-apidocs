@@ -75,6 +75,7 @@ backend/test/e-legitimation/Test-certificates/Åke Jansson.p12
 _shake/
 _build/
 db-docs/
+.ssh/
 ghc-pkg.list
 *.log
 

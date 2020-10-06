@@ -3,6 +3,7 @@
 , scrivepdftools
 , kontrakcja-project
 , kontrakcja-frontend
+, scrive-new-frontend
 }:
 let
   inherit (nixpkgs) pkgs lib stdenv;
@@ -94,10 +95,11 @@ stdenv.mkDerivation {
   unpackPhase = "true";
 
   installPhase = ''
-    mkdir -p $out/bin $out/backend/test
+    mkdir -p $out/bin $out/backend/test $out/new-frontend
 
     ${copyDirs}
     cp -r ${kontrakcja-frontend} $out/frontend
+    cp -r ${scrive-new-frontend} $out/new-frontend/dist
 
     ls -la $out/scrivepdftools
     chmod 755 $out/scrivepdftools
