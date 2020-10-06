@@ -26,6 +26,7 @@ encodeUserGroup inheritable ugwp children =
     $  ("id" .= (ug ^. #id))
     <> ("parent_id" .= (ug ^. #parentGroupID))
     <> ("name" .= (ug ^. #name))
+    <> ("home_folder_id" .= (ug ^. #homeFolderID))
     <> pair "children"        childrenEncoding
     <> pair "contact_details" (encodeUserGroupContactDetails inheritable ugwp)
     <> pair "settings" (encodeUserGroupSettings inheritable ugwp)
