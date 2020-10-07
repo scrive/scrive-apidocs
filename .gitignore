@@ -1,5 +1,6 @@
 /supervisor/logs
 _local/
+BUILD_VCS_NUMBER
 /dist/
 /dist-newstyle/
 /workspace/
