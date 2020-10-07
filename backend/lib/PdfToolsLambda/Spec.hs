@@ -92,6 +92,8 @@ verimiQesSetupSpecToLambdaSpec spec = do
   evidenceAttachment <- sealSpecForSealAttachment $ vqsEvidenceAttachment spec
   filesList          <- mapM sealSpecForFile (vqsFilesList spec)
   persons_           <- mapM sealSpecForPerson (vqsPersons spec)
+  metadata_          <- mapM sealSpecForMetadata (vqsMetadata spec)
+
   return . Aeson.encode $ Aeson.object
     [ "fields" .= fields_
     , "mainFileInput" .= Aeson.object ["base64Content" .= T.decodeUtf8 (B64.encode mfc)]
@@ -108,6 +110,7 @@ verimiQesSetupSpecToLambdaSpec spec = do
                , "linkWord" .= vqsLinkWord linkText
                , "lastWord" .= vqsLastWord linkText
                ]
+    , "metadata" .= metadata_
     ]
 
 sealSpecForPerson :: (MonadLog m, MonadBase IO m) => Person -> m Aeson.Value

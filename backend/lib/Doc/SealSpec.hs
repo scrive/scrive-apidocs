@@ -124,6 +124,7 @@ data VerimiQesSetupSpec = VerimiQesSetupSpec
     , vqsStaticTexts :: SealingTexts
     , vqsPersons :: [Person]
     , vqsLinkText       :: VerimiQesLinkText
+    , vqsMetadata       :: [(Text,Text)]
     }
     deriving (Eq,Ord,Show,Read)
 
