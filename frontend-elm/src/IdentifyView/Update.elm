@@ -111,7 +111,7 @@ update msg model =
                         IdentifyRejection params state ->
                             let
                                 ( newInnerState, cmd ) =
-                                    Rejection.update params state msg_
+                                    Rejection.update params state msg_ ExitRejectionMsg
 
                                 newState =
                                     IdentifyView { flags = flags, innerModel = IdentifyRejection params newInnerState }
@@ -126,18 +126,32 @@ update msg model =
 
         EnterRejectionClickedMsg ->
             case model.state of
-                IdentifyView { flags } ->
+                IdentifyView { flags, innerModel } ->
                     let
-                        innerModel =
-                            IdentifyRejection (toRejectionParams flags) (Rejection.EnterMessage { message = "" })
+                        newInnerModel =
+                            IdentifyRejection
+                                (toRejectionParams flags (Just innerModel))
+                                (Rejection.EnterMessage { message = "" })
 
                         newState =
-                            IdentifyView { flags = flags, innerModel = innerModel }
+                            IdentifyView { flags = flags, innerModel = newInnerModel }
                     in
                     ( { model | state = newState }, Cmd.none )
 
                 _ ->
                     errorFlashMessage "Internal error: got EnterRejectionClicked message while in an incompatible state."
+
+        ExitRejectionMsg prevProviderModel ->
+            case model.state of
+                IdentifyView { flags } ->
+                    let
+                        newState =
+                            IdentifyView { flags = flags, innerModel = prevProviderModel }
+                    in
+                    ( { model | state = newState }, Cmd.none )
+
+                _ ->
+                    errorFlashMessage "Internal error: got ExitRejection message while in an incompatible state."
 
         FlashMessageMsg msg_ ->
             let

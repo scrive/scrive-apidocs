@@ -11,7 +11,7 @@ import Lib.Types.FlashMessage exposing (FlashMessage(..))
 import Lib.Types.Localization exposing (Localization)
 
 
-type alias Params msg =
+type alias Params msg model =
     { embed : Msg -> msg
     , addFlashMessageMsg : FlashMessage -> msg
     , errorTraceMsg : List ( String, JE.Value ) -> msg
@@ -19,6 +19,7 @@ type alias Params msg =
     , localization : Localization
     , participantEmail : String
     , rejectUrl : String
+    , previousProviderModel : Maybe model
     }
 
 
@@ -36,10 +37,11 @@ type Msg
     = RejectButtonClickedMsg
     | RejectCallbackMsg (Result Error ())
     | UpdateTextareaMsg String
+    | BackButtonClickedMsg
 
 
-update : Params msg -> State -> Msg -> ( State, Cmd msg )
-update params state msg =
+update : Params msg model -> State -> Msg -> (model -> msg) -> ( State, Cmd msg )
+update params state msg exitRejectionMsg =
     case msg of
         RejectButtonClickedMsg ->
             case state of
@@ -88,8 +90,16 @@ update params state msg =
                 _ ->
                     ( state, Cmd.none )
 
+        BackButtonClickedMsg ->
+            case params.previousProviderModel of
+                Just providerModel ->
+                    ( state, perform <| exitRejectionMsg providerModel )
 
-viewContent : Params msg -> State -> Html msg
+                Nothing ->
+                    ( state, Cmd.none )
+
+
+viewContent : Params msg model -> State -> Html msg
 viewContent params state =
     case state of
         Complete ->
@@ -98,26 +108,29 @@ viewContent params state =
                 ]
 
         EnterMessage { message } ->
-            div [ class "identify-box-content" ]
+            -- TODO: Maybe put this form in Lib and share it with FlowOverview?
+            div [ class "identify-box-content rejection" ]
                 [ p [ style "margin-bottom" "1em" ]
-                    [ text """Please let us know why you reject this Flow.""" ]
+                    [ text """Please let us know why you are rejecting the Flow.""" ]
                 , textarea
-                    [ style "margin-bottom" "1em"
-                    , style "width" "100%"
-                    , style "height" "6em"
-                    , placeholder "Enter message..." -- TODO: Localisation
+                    [ placeholder "Enter message..." -- TODO: Localisation
                     , autocomplete False
                     , value message
                     , onInput <| params.embed << UpdateTextareaMsg
                     ]
                     []
-                , a
-                    [ class "button"
-                    , class "button-large"
-                    , class "action"
-                    , onClick <| params.embed RejectButtonClickedMsg
+                , div [ class "button-group" ]
+                    [ a
+                        [ class "button button-large button-cancel"
+                        , onClick <| params.embed BackButtonClickedMsg
+                        ]
+                        [ text "Back" ]
+                    , a
+                        [ class "button button-large button-reject"
+                        , onClick <| params.embed RejectButtonClickedMsg
+                        ]
+                        [ text "Reject" ]
                     ]
-                    [ text "Reject" ]
                 ]
 
         AlreadyRejected ->
@@ -127,7 +140,7 @@ viewContent params state =
                 ]
 
 
-viewFooter : Params msg -> Html msg
+viewFooter : Params msg model -> Html msg
 viewFooter { localization, participantEmail } =
     div []
         [ text localization.yourEmail
