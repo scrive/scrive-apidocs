@@ -794,9 +794,14 @@ distributionRules newBuild opt = do
 
   copyBinariesRules binaryNames
 
+  "BUILD_VCS_NUMBER" %> \_ -> do
+    build_vcs_number <- fromMaybe "\"BUILD_VCS_NUMBER\" was not set"
+      <$> getEnv "BUILD_VCS_NUMBER"
+    writeFileLines "BUILD_VCS_NUMBER" [build_vcs_number]
+
   "_build/kontrakcja.tar.gz" %> \_ -> do
     let binaries = map binaryPath binaryNames
-    need $ ["all", "urls.txt"] <> binaries
+    need $ ["all", "urls.txt", "BUILD_VCS_NUMBER"] <> binaries
     let distFiles =
           binaries
             <> [ "evidence-package/samples.p"
@@ -814,6 +819,7 @@ distributionRules newBuild opt = do
                , "build-scripts/deployDevNginxRules.sh"
                , "certs"
                , "reporting"
+               , "BUILD_VCS_NUMBER"
                ]
     command_ [Shell] "tar" $ ["-czf", "_build/kontrakcja.tar.gz"] <> distFiles
 
