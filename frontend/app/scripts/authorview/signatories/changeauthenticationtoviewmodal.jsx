@@ -213,6 +213,8 @@ var Modal = require("../../common/modal");
         text = localization.docview.changeAuthenticationToView.flashMessageInvalidDKCVR;
       } else if (this.isAuthenticationFITupas() && !this.isPersonalNumberValid()) {
         text = localization.docview.changeAuthenticationToView.flashMessageInvalidFISSN;
+      } else if (this.isAuthenticationSMSPin() && !this.isMobileNumberValid()) {
+        text = localization.docview.changeAuthenticationToView.flashMessageInvalidNOPhone;
       }
       return text;
     }
