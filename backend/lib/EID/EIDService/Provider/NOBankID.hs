@@ -187,7 +187,11 @@ beginEIDServiceTransaction conf authKind doc sl = do
         }
   tid  <- cestRespTransactionID <$> createTransactionWithEIDService conf createReq
   turl <- snoestURL <$> startTransactionWithEIDService conf provider tid
-  chargeForItemSingle CINOBankIDAuthenticationStarted $ documentid doc
+  case authKind of
+    EIDServiceAuthToView _ ->
+      chargeForItemSingle CINOBankIDAuthenticationStarted $ documentid doc
+    EIDServiceAuthToSign ->
+      chargeForItemSingle CINOBankIDSignatureStarted $ documentid doc
   return (tid, object ["accessUrl" .= turl], EIDServiceTransactionStatusStarted)
 
 data NOBankIDEIDServiceCompletionData = NOBankIDEIDServiceCompletionData
