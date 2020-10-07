@@ -1115,6 +1115,7 @@ verimiQesSetupSpecFromDocument checkboxMapping radiobuttonMapping document tmppa
       , Seal.vqsStaticTexts        = staticTexts
       , Seal.vqsPersons            = persons
       , Seal.vqsLinkText           = linkText
+      , Seal.vqsMetadata           = documentMetadata document
       }
 
 -- | Render fields and attach evidence log etc. ('sealing' is old terminology).
