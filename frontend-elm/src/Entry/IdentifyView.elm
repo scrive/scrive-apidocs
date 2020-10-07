@@ -69,7 +69,9 @@ init value =
 
                 rInnerModel =
                     if flags.rejectionAlreadyRejected then
-                        Ok <| IdentifyRejection (toRejectionParams flags) Rejection.AlreadyRejected
+                        Ok <|
+                            IdentifyRejection (toRejectionParams flags Nothing)
+                                Rejection.AlreadyRejected
 
                     else
                         case flags.authenticationMethod of

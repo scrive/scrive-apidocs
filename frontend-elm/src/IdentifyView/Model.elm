@@ -19,12 +19,13 @@ import Utils exposing (stringNonEmpty)
 type Msg
     = AddFlashMessageMsg FlashMessage
     | ErrorTraceMsg (List ( String, Json.Encode.Value ))
+    | EnterRejectionClickedMsg
+    | ExitRejectionMsg ProviderModel
       -- embedded messages
     | SMSPinMsg SMSPin.Msg
     | FlashMessageMsg FlashMessage.Msg
     | GenericEidServiceMsg GenericEidService.Msg
     | RejectionMsg Rejection.Msg
-    | EnterRejectionClickedMsg
 
 
 
@@ -99,11 +100,11 @@ type State
 type ProviderModel
     = IdentifySMSPin (SMSPin.Params Msg) SMSPin.State
     | IdentifyGenericEidService (GenericEidService.Params Msg) GenericEidService.State
-    | IdentifyRejection (Rejection.Params Msg) Rejection.State
+    | IdentifyRejection (Rejection.Params Msg ProviderModel) Rejection.State
 
 
-toRejectionParams : Flags -> Rejection.Params Msg
-toRejectionParams f =
+toRejectionParams : Flags -> Maybe ProviderModel -> Rejection.Params Msg ProviderModel
+toRejectionParams f mPreviousProviderModel =
     { embed = RejectionMsg
     , addFlashMessageMsg = AddFlashMessageMsg
     , errorTraceMsg = ErrorTraceMsg
@@ -111,6 +112,7 @@ toRejectionParams f =
     , localization = f.localization
     , participantEmail = f.participantEmail
     , rejectUrl = f.rejectionRejectUrl
+    , previousProviderModel = mPreviousProviderModel
     }
 
 
