@@ -163,7 +163,7 @@ mkLogRunner component LogConfig {..} = do
 
   let toWithLoggerFun :: LoggerDef -> IO (Either Text WithLoggerFun)
       toWithLoggerFun StandardOutput =
-        return . Right $ WithLoggerFun { withLoggerFun = withSimpleStdOutLogger }
+        return . Right $ WithLoggerFun { withLoggerFun = withStdOutLogger }
       toWithLoggerFun (ElasticSearch ec) = checkElasticSearchConnection ec >>= \case
         Left _ ->
           return
