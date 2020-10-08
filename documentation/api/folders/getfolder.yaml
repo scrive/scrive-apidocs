@@ -35,6 +35,8 @@ get:
     and information about its children. Only the immediate children are
     included by default (see the `recursive` parameter).
 
+    *OAuth Privileges required: `FULL_ACCESS`*
+
   parameters:
     - name: folder_id
       in: url

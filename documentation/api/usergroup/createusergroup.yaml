@@ -43,6 +43,8 @@ post:
     the create operation has been performed. Performing `/update` and then
     using the `GET` endpoint should produce the same output both times.
 
+    *OAuth Privileges required: `FULL_ACCESS`*
+
   parameters:
     - name: usergroup
       in: formData

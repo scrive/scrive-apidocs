@@ -31,6 +31,8 @@ get:
     Note that this will only display Users that are in that User Group and will
     not show the Users who are members of any descendent User Groups.
 
+    *OAuth Privileges required: `FULL_ACCESS`*
+
   parameters:
     - name: user_group_id
       in: path

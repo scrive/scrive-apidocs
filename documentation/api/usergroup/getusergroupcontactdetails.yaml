@@ -122,6 +122,8 @@ get:
     inheritance calculation, ignoring whether or not the User Group already
     inherits.
 
+    *OAuth Privileges required: `FULL_ACCESS`*
+
   parameters:
     - name: user_group_id
       in: path

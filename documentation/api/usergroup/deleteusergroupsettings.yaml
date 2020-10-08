@@ -19,6 +19,8 @@ post:
 
     For more details on inheritance, see [View User Group Settings](#view-user-group-settings).
 
+    *OAuth Privileges required: `FULL_ACCESS`*
+
   parameters:
     - name: user_group_id
       in: path

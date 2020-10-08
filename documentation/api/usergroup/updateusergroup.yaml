@@ -65,6 +65,8 @@ post:
     **Important Note**: *You cannot move usergroups by updating the `children`
     field, it must be done via `parent_id`*.
 
+    *OAuth Privileges required: `FULL_ACCESS`*
+
   parameters:
     - name: user_group_id
       in: path

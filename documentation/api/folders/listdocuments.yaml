@@ -26,6 +26,8 @@ get:
     document. _(See the [Document Definition](#document-3) documentation for
     details)._
 
+    *OAuth Privileges required: `FULL_ACCESS`*
+
   parameters:
     - name: folder_id
       in: url
