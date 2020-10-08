@@ -25,6 +25,7 @@ import Servant.Server.Experimental.Auth
 import qualified Text.StringTemplates.TemplatesLoader as TL
 
 import AccessControl.Types
+import Auth.Session.SessionID
 import EventStream.Kinesis
 import Flow.Id
 import Flow.Names
@@ -75,9 +76,13 @@ instance ToJSON Account where
 
 type instance AuthServerData (AuthProtect "account") = Account
 
+-- TODO: Get rid of the InstanceUser. We just need to pass the SessionID to
+-- authenticated endpoints. UserName/InstanceId should be URL parameters
+-- to those endpoints.
 data InstanceUser = InstanceUser
     { userName :: UserName
     , instanceId :: InstanceId
+    , sessionId :: SessionID
     }
   deriving (Generic, Show)
 

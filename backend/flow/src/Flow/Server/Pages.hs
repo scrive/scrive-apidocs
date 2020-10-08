@@ -122,106 +122,92 @@ instanceOverviewMagicHash instanceId userName hash mCookies mHost isSecure = do
         Nothing -> dbUpdate $ AddDocumentSession sid slid
 
 instanceOverview
-  :: InstanceUserHTML
-  -> InstanceId
-  -> UserName
-  -> Maybe Cookies'
-  -> Maybe Host
-  -> IsSecure
-  -> AppM Html
-instanceOverview (InstanceUserHTML InstanceUser {..}) instanceId' _ mCookies mHost isSecure
-  = do
-    FlowContext { mainDomainUrl, cdnBaseUrl, production } <- ask
-    let baseUrl = mkBaseUrl mainDomainUrl (isSecure == Secure) mHost
-    bd <- dbQuery $ GetBrandedDomainByURL baseUrl
+  :: InstanceUserHTML -> InstanceId -> UserName -> Maybe Host -> IsSecure -> AppM Html
+instanceOverview (InstanceUserHTML InstanceUser {..}) instanceId' _ mHost isSecure = do
+  FlowContext { mainDomainUrl, cdnBaseUrl, production } <- ask
+  let baseUrl = mkBaseUrl mainDomainUrl (isSecure == Secure) mHost
+  bd <- dbQuery $ GetBrandedDomainByURL baseUrl
 
-    when (instanceId /= instanceId') $ throwAuthenticationErrorHTML bd AccessControlError
+  when (instanceId /= instanceId') $ throwAuthenticationErrorHTML bd AccessControlError
 
-    sessionId <-
-      getMSessionID mCookies mHost
-      -- The error handling is not necessary, this is authenticated endpoint already.
-      -- When there is a better way to get sessionId, then it will be possible to fix this.
-        >>= maybe (throwAuthenticationErrorHTML bd InvalidAuthCookiesError) return
+  -- We know the instance exists because of the authenticated InstanceUser
+  fullInstance <- fromJust <$> Model.selectFullInstance instanceId
+  let authorUserId = fullInstance ^. #template % #userId
 
-    -- We know the instance exists because of the authenticated InstanceUser
-    fullInstance <- fromJust <$> Model.selectFullInstance instanceId
-    let authorUserId = fullInstance ^. #template % #userId
+  brandingDocId <- head <$> Model.selectDocumentIdsByInstanceId instanceId
+  brandingUgwp  <- dbQuery $ UserGroupGetWithParentsByUserID authorUserId
+  brandingHash  <- brandingAdler32 bd Nothing (Just $ ugwpUIWithID brandingUgwp)
+  -- brandingHash is used for browser cache busting
 
-    brandingDocId <- head <$> Model.selectDocumentIdsByInstanceId instanceId
-    brandingUgwp  <- dbQuery $ UserGroupGetWithParentsByUserID authorUserId
-    brandingHash  <- brandingAdler32 bd Nothing (Just $ ugwpUIWithID brandingUgwp)
-    -- brandingHash is used for browser cache busting
+  let cdnBaseUrl'    = fromMaybe "" cdnBaseUrl
 
-    let cdnBaseUrl'    = fromMaybe "" cdnBaseUrl
+      brandingCssUrl = T.intercalate
+        "/"
+        [ cdnBaseUrl'
+        , "document_signview_branding"
+        , showt (bd ^. #id)
+        , showt brandingDocId
+        , brandingHash <> "-branding.css"
+        ]
 
-        brandingCssUrl = T.intercalate
-          "/"
-          [ cdnBaseUrl'
-          , "document_signview_branding"
-          , showt (bd ^. #id)
-          , showt brandingDocId
-          , brandingHash <> "-branding.css"
-          ]
+      logoUrl = T.intercalate
+        "/"
+        [ cdnBaseUrl'
+        , "signview_logo"
+        , showt (bd ^. #id)
+        , showt brandingDocId
+        , brandingHash
+        ]
 
-        logoUrl = T.intercalate
-          "/"
-          [ cdnBaseUrl'
-          , "signview_logo"
-          , showt (bd ^. #id)
-          , showt brandingDocId
-          , brandingHash
-          ]
+      mainCssUrl = if production
+        then cdnBaseUrl' <> "/" <> versionCode <> ".signview-all-styling-minified.css"
+        else "/less/signview-less-compiled.css"
 
-        mainCssUrl = if production
-          then cdnBaseUrl' <> "/" <> versionCode <> ".signview-all-styling-minified.css"
-          else "/less/signview-less-compiled.css"
+      versionCode = T.decodeUtf8 . B16.encode $ BS.fromString versionID
 
-        versionCode = T.decodeUtf8 . B16.encode $ BS.fromString versionID
+      commonVars  = Html.CommonPageVars
+        { cdnBaseUrl     = cdnBaseUrl'
+        , mainCssUrl     = mainCssUrl
+        , brandingCssUrl = brandingCssUrl
+        , logoUrl        = logoUrl
+        , versionCode    = versionCode
+        , browserTitle   = brandedPageTitle bd (Just $ ugwpUI brandingUgwp)
+        }
 
-        commonVars  = Html.CommonPageVars
-          { cdnBaseUrl     = cdnBaseUrl'
-          , mainCssUrl     = mainCssUrl
-          , brandingCssUrl = brandingCssUrl
-          , logoUrl        = logoUrl
-          , versionCode    = versionCode
-          , browserTitle   = brandedPageTitle bd (Just $ ugwpUI brandingUgwp)
-          }
+      instanceOverviewVars = Html.InstanceOverviewPageVars { commonVars     = commonVars
+                                                           , kontraApiUrl   = "/api/v2"
+                                                           , flowApiUrl = "/" <> flowPath
+                                                           , flowInstanceId = instanceId'
+                                                           }
 
-        instanceOverviewVars = Html.InstanceOverviewPageVars
-          { commonVars     = commonVars
-          , kontraApiUrl   = "/api/v2"
-          , flowApiUrl     = "/" <> flowPath
-          , flowInstanceId = instanceId'
-          }
+  mUserAuthConfig <- Model.selectUserAuthenticationConfiguration instanceId userName
+  let mAuthKindAndConfig =
+        mUserAuthConfig >>= getAuthenticationKindAndConfiguration fullInstance
 
-    mUserAuthConfig <- Model.selectUserAuthenticationConfiguration instanceId userName
-    let mAuthKindAndConfig =
-          mUserAuthConfig >>= getAuthenticationKindAndConfiguration fullInstance
+  mIdentifyViewVars <- case mAuthKindAndConfig of
+    Just (authenticationKind, authenticationConfig) -> do
+      needsToIdentify <- participantNeedsToIdentifyToView
+        (authenticationKind, authenticationConfig)
+        instanceId
+        userName
+        sessionId
+      if needsToIdentify
+        then do
+          appConfig <- mkIdentifyViewAppConfig
+            cdnBaseUrl'
+            logoUrl
+            (fullInstance ^. #flowInstance)
+            userName
+            authorUserId
+            (authenticationKind, authenticationConfig)
+            sessionId
+          pure . Just $ Html.IdentifyViewVars commonVars appConfig
+        else pure Nothing
+    Nothing -> pure Nothing
 
-    mIdentifyViewVars <- case mAuthKindAndConfig of
-      Just (authenticationKind, authenticationConfig) -> do
-        needsToIdentify <- participantNeedsToIdentifyToView
-          (authenticationKind, authenticationConfig)
-          instanceId
-          userName
-          sessionId
-        if needsToIdentify
-          then do
-            appConfig <- mkIdentifyViewAppConfig
-              cdnBaseUrl'
-              logoUrl
-              (fullInstance ^. #flowInstance)
-              userName
-              authorUserId
-              (authenticationKind, authenticationConfig)
-              sessionId
-            pure . Just $ Html.IdentifyViewVars commonVars appConfig
-          else pure Nothing
-      Nothing -> pure Nothing
-
-    case mIdentifyViewVars of
-      Just identifyViewVars -> return $ Html.renderIdentifyView identifyViewVars
-      Nothing               -> return $ Html.renderInstanceOverview instanceOverviewVars
+  case mIdentifyViewVars of
+    Just identifyViewVars -> return $ Html.renderIdentifyView identifyViewVars
+    Nothing               -> return $ Html.renderInstanceOverview instanceOverviewVars
 
 participantNeedsToIdentifyToView
   :: (MonadDB m, MonadThrow m, MonadMask m)

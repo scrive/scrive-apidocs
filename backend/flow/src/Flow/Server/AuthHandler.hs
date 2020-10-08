@@ -131,8 +131,9 @@ instanceUserHandler runLogger flowConfiguration errorThrower req =
           maybe (errorThrower (Just bd) InvalidAuthCookiesError InvalidAuthCookiesError)
                 pure
                 mInstanceSession
-        pure
-          $ InstanceUser (instanceSession ^. #userName) (instanceSession ^. #instanceId)
+        pure $ InstanceUser (instanceSession ^. #userName)
+                            (instanceSession ^. #instanceId)
+                            (instanceSession ^. #sessionId)
 
 type ErrorThrower
   =  forall a b m
