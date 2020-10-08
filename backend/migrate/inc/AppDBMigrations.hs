@@ -306,4 +306,5 @@ kontraMigrations =
   , addDetailsJsonColumnToFlowEvents
   , moveFlowUserAuthConfigsToJson
   , createTableFlowAuthenticationFailures
+  , updateLegacyAuthenticationToViewInTemplates
   ]
