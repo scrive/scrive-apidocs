@@ -109,7 +109,7 @@ var Modal = require("../../common/modal");
     },
 
     isAuthenticationDKNemIDPID: function () {
-      return this.authenticationMethod() == this.DKNemIDCPRAuthenticationValue();
+      return this.authenticationMethod() == this.DKNemIDPIDAuthenticationValue();
     },
 
     DKNemIDCVRAuthenticationValue: function () {
@@ -117,7 +117,7 @@ var Modal = require("../../common/modal");
     },
 
     isAuthenticationDKNemIDCVR: function () {
-      return this.authenticationMethod() == this.DKNemIDCPRAuthenticationValue();
+      return this.authenticationMethod() == this.DKNemIDCVRAuthenticationValue();
     },
 
     FITupasAuthenticationValue: function () {
