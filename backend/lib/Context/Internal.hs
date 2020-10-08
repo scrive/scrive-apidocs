@@ -81,6 +81,8 @@ data Context = Context
     -- api/frontend) This might be the user from session, if the OAuth
     -- authorization was missing.
     , postSignViewRedirectURL :: Text
+    -- ^ When New Frontend is being used, some links need to be different.
+    , useNewFrontendLinks :: Bool
     }
 
 makeFieldLabelsWith noPrefixFieldLabels ''Context

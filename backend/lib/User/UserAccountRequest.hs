@@ -19,6 +19,7 @@ import qualified Control.Exception.Lifted as E
 
 import DB
 import KontraLink
+import KontraMonad
 import Log.Identifier
 import MagicHash
 import MinutesTime
@@ -56,14 +57,19 @@ newUserAccountRequest uid = do
       dbUpdate . CreateUserAccountRequest $ UserAccountRequest uid expires token
 
 newUserAccountRequestLink
-  :: (MonadDB m, MonadThrow m, MonadTime m, CryptoRNG m)
+  :: (MonadDB m, MonadThrow m, MonadTime m, CryptoRNG m, KontraMonad m)
   => Lang
   -> UserID
   -> SignupMethod
   -> m KontraLink
 newUserAccountRequestLink lang uid sm = do
   uar <- newUserAccountRequest uid
-  return $ LinkAccountCreated lang (uarUserID uar) (uarToken uar) sm
+  ctx <- getContext
+  return $ LinkAccountCreated (ctx ^. #useNewFrontendLinks)
+                              lang
+                              (uarUserID uar)
+                              (uarToken uar)
+                              sm
 
 selectUserAccountRequestSelectorsList :: [SQL]
 selectUserAccountRequestSelectorsList = ["user_id", "expires", "token"]

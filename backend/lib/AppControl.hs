@@ -430,4 +430,5 @@ createContext appConf appGlobals session = do
                  , ssoConf                 = ssoConf appConf
                  , maybeApiUser            = Nothing
                  , postSignViewRedirectURL = postSignViewRedirectURL appConf
+                 , useNewFrontendLinks     = useNewFrontendLinks appConf
                  }

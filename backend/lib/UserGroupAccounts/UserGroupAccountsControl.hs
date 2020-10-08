@@ -305,7 +305,8 @@ sendNewUserGroupUserMail :: Kontrakcja m => User -> UserGroup -> User -> m ()
 sendNewUserGroupUserMail inviter ug user = do
   ctx <- getContext
   uar <- newUserAccountRequest $ user ^. #id
-  let al = LinkAccountCreated (user ^. #settings % #lang)
+  let al = LinkAccountCreated (ctx ^. #useNewFrontendLinks)
+                              (user ^. #settings % #lang)
                               (uarUserID uar)
                               (uarToken uar)
                               CompanyInvitation

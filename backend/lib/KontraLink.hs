@@ -43,7 +43,7 @@ data KontraLink
     | LinkCompanyTakeover UserGroupID
     | LinkAcceptTOS
     | LinkPasswordReminder UserID MagicHash
-    | LinkAccountCreated Lang UserID MagicHash SignupMethod -- email
+    | LinkAccountCreated Bool Lang UserID MagicHash SignupMethod -- email
     | LoopBack
     | LinkDaveDocument DocumentID
     | LinkDaveFile FileID Text
@@ -102,15 +102,25 @@ instance Show KontraLink where
     (<>) $ "/z/" <> T.unpack (SMSLinkShortening.short (signatorylinkid, mh))
   showsPrec _ (LinkPasswordReminder aid hash) =
     (<>) $ "/amnesia/" <> show aid <> "/" <> show hash
-  showsPrec _ (LinkAccountCreated lang uid hash sm) =
-    (<>)
-      $  T.unpack (langFolder lang)
-      <> "/accountsetup/"
-      <> show uid
-      <> "/"
-      <> show hash
-      <> "/"
-      <> show sm
+  showsPrec _ (LinkAccountCreated useNewFrontendLinks lang uid hash sm) =
+    (<>) $ if useNewFrontendLinks
+      then
+        "/new/accountsetup/"
+        <> show uid
+        <> "/"
+        <> show hash
+        <> "/"
+        <> show sm
+        <> "?lang="
+        <> T.unpack (codeFromLang lang)
+      else
+        T.unpack (langFolder lang)
+        <> "/accountsetup/"
+        <> show uid
+        <> "/"
+        <> show hash
+        <> "/"
+        <> show sm
   showsPrec _ LoopBack                 = (<>) "/" -- this should never be used
   showsPrec _ (LinkDaveDocument docid) = (<>) ("/dave/document/" <> show docid <> "/")
   showsPrec _ (LinkDaveFile fileid filename) =
