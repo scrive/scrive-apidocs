@@ -43,6 +43,7 @@ module Doc.Migrations
   , updateDocumentCompositeWithNewMainFile
   , addSeparateEvidenceFileToMainFiles
   , addEvidenceSecretToDocuments
+  , updateLegacyAuthenticationToViewInTemplates
 ) where
 
 import Data.Int
@@ -51,6 +52,8 @@ import Database.PostgreSQL.PQTypes.Checks
 import DB
 import Doc.Tables
 import Doc.Tokens.Tables
+import Doc.Types.Document
+import Doc.Types.SignatoryLink
 
 addAuthorDeletedFlags :: MonadDB m => Migration m
 addAuthorDeletedFlags = Migration
@@ -1586,4 +1589,25 @@ addEvidenceSecretToDocuments = Migration
           , CompositeColumn { ccName = "evidence_file_secret", ccType = BigIntT }
           ]
         }
+  }
+
+updateLegacyAuthenticationToViewInTemplates :: MonadDB m => Migration m
+updateLegacyAuthenticationToViewInTemplates = Migration
+  { mgrTableName = tblName tableSignatoryLinks
+  , mgrFrom      = 39
+  , mgrAction    =
+    StandardMigration $ do
+      runQuery_ . sqlUpdate "signatory_links" $ do
+        sqlFrom "documents"
+        sqlWhere "document_id = documents.id"
+        sqlWhereEq "documents.type"                Template
+        sqlWhereEq "authentication_to_view_method" LegacyDKNemIDAuthenticationToView
+        sqlSet "authentication_to_view_method" DKNemIDCPRAuthenticationToView
+      runQuery_ . sqlUpdate "signatory_links" $ do
+        sqlFrom "documents"
+        sqlWhere "document_id = documents.id"
+        sqlWhereEq "documents.type" Template
+        sqlWhereEq "authentication_to_view_archived_method"
+                   LegacyDKNemIDAuthenticationToView
+        sqlSet "authentication_to_view_archived_method" DKNemIDCPRAuthenticationToView
   }
