@@ -51,8 +51,7 @@ var Modal = require("../../common/modal");
           this.setPersonalNumber(signatory.personalnumber());
           this.setMobileNumber(signatory.mobile());
         } else if (this.isAuthenticationDKNemIDCPR()
-                   || this.isAuthenticationDKNemIDPID()
-                   || this.isAuthenticationLegacyDKNemID()) {
+                   || this.isAuthenticationDKNemIDPID()) {
           this.setPersonalNumber(signatory.personalnumber());
         } else if (this.isAuthenticationDKNemIDCVR()) {
           this.setPersonalNumber(signatory.personalnumber());
@@ -94,14 +93,6 @@ var Modal = require("../../common/modal");
 
     isAuthenticationDKNemIDCPR: function () {
       return this.authenticationMethod() == this.DKNemIDCPRAuthenticationValue();
-    },
-
-    LegacyDKNemIDAuthenticationValue: function () {
-      return "dk_nemid";
-    },
-
-    isAuthenticationLegacyDKNemID: function () {
-      return this.authenticationMethod() == this.LegacyDKNemIDAuthenticationValue();
     },
 
     DKNemIDPIDAuthenticationValue: function () {
@@ -250,7 +241,7 @@ var Modal = require("../../common/modal");
         return localization.docview.signatory.authenticationToViewSEBankID;
       } else if (model.isAuthenticationNOBankID()) {
         return localization.docview.signatory.authenticationToViewNOBankID;
-      } else if (model.isAuthenticationDKNemIDCPR() || model.isAuthenticationLegacyDKNemID()) {
+      } else if (model.isAuthenticationDKNemIDCPR()) {
         return localization.docview.signatory.authenticationToViewDKNemIDCPR;
       } else if (model.isAuthenticationDKNemIDPID()) {
         return localization.docview.signatory.authenticationToViewDKNemIDPID;
@@ -437,8 +428,7 @@ var Modal = require("../../common/modal");
           />
           {/* if */ (model.isAuthenticationSEBankID() || model.isAuthenticationNOBankID()
                      || model.isAuthenticationDKNemIDCPR() || model.isAuthenticationDKNemIDPID()
-                     || model.isAuthenticationDKNemIDCVR() || model.isAuthenticationLegacyDKNemID()
-                     || model.isAuthenticationFITupas()) &&
+                     || model.isAuthenticationDKNemIDCVR() || model.isAuthenticationFITupas()) &&
             <div>
               <label>{this.getPersonalNumberLabelText()}</label>
               <InfoTextInput

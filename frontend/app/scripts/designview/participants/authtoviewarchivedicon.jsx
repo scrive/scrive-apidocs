@@ -62,8 +62,7 @@ module.exports = React.createClass({
       return "design-view-action-participant-icon-auth-to-view-icon-se-bankid";
     } else if (sig.noBankIDAuthenticationToViewArchived()) {
       return "design-view-action-participant-icon-auth-to-view-icon-no-bankid";
-    } else if (sig.legacyDkNemIDAuthenticationToViewArchived()
-              || sig.dkNemIDCPRAuthenticationToViewArchived()
+    } else if (sig.dkNemIDCPRAuthenticationToViewArchived()
               || sig.dkNemIDPIDAuthenticationToViewArchived()
               || sig.dkNemIDCVRAuthenticationToViewArchived()) {
       return "design-view-action-participant-icon-auth-to-view-icon-dk-nemid";
@@ -96,9 +95,6 @@ module.exports = React.createClass({
       title.push(
         localization.designview.addParties.authenticationToViewNOBankID
       );
-    } else if (authMethod == "dk_nemid") {
-      // legacy support
-      title.push("NemID");
     } else if (authMethod == "dk_nemid_cpr") {
       title.push(
         localization.designview.addParties.authenticationToViewDKNemIDCPR

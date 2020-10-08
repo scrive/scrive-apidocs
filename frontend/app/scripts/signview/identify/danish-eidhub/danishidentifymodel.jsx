@@ -30,10 +30,7 @@ var link = link;
     },
     isCPR: function () {
       var sig = this.doc().currentSignatory();
-      return sig.legacyDkNemIDAuthenticationToView()
-             || sig.dkNemIDCPRAuthenticationToView()
-             || sig.legacyDkNemIDAuthenticationToViewArchived()
-             || sig.dkNemIDCPRAuthenticationToViewArchived();
+      return sig.dkNemIDCPRAuthenticationToView() || sig.dkNemIDCPRAuthenticationToViewArchived();
     },
     isPID: function () {
       var sig = this.doc().currentSignatory();

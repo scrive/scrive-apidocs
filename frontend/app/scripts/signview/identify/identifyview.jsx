@@ -53,8 +53,7 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
           }
         } else if (sig.noBankIDAuthenticationToViewArchived()) {
           model = new NorwegianEIDHubIdentifyModel(args);
-        } else if (sig.legacyDkNemIDAuthenticationToView()
-                   || sig.dkNemIDCPRAuthenticationToViewArchived()
+        } else if (sig.dkNemIDCPRAuthenticationToViewArchived()
                    || sig.dkNemIDPIDAuthenticationToViewArchived()
                    || sig.dkNemIDCVRAuthenticationToViewArchived()) {
           model = new DanishEIDHubIdentifyModel(args);
@@ -80,10 +79,9 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
           }
         } else if (sig.noBankIDAuthenticationToView()) {
           model = new NorwegianEIDHubIdentifyModel(args);
-        } else if (sig.legacyDkNemIDAuthenticationToView()
-                    || sig.dkNemIDCPRAuthenticationToView()
-                    || sig.dkNemIDPIDAuthenticationToView()
-                    || sig.dkNemIDCVRAuthenticationToView()) {
+        } else if (sig.dkNemIDCPRAuthenticationToView()
+                   || sig.dkNemIDPIDAuthenticationToView()
+                   || sig.dkNemIDCVRAuthenticationToView()) {
           model = new DanishEIDHubIdentifyModel(args);
         } else if (sig.fiTupasAuthenticationToView()) {
           if (this.props.useEIDHubForFITupasView) {

@@ -544,17 +544,14 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     noBankIDAuthenticationToView: function() {
           return this.get("authentication_method_to_view") == "no_bankid";
     },
-    legacyDkNemIDAuthenticationToView: function() {
-          return this.get("authentication_method_to_view") == "dk_nemid";
-    },
     dkNemIDCPRAuthenticationToView: function() {
-          return this.get("authentication_method_to_view") == "dk_nemid_cpr";
+          return this.authenticationToView() == "dk_nemid_cpr";
     },
     dkNemIDPIDAuthenticationToView: function() {
-          return this.get("authentication_method_to_view") == "dk_nemid_pid";
+          return this.authenticationToView() == "dk_nemid_pid";
     },
     dkNemIDCVRAuthenticationToView: function() {
-          return this.get("authentication_method_to_view") == "dk_nemid_cvr";
+          return this.authenticationToView() == "dk_nemid_cvr";
     },
     fiTupasAuthenticationToView: function() {
           return this.get("authentication_method_to_view") == "fi_tupas";
@@ -577,17 +574,14 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     noBankIDAuthenticationToViewArchived: function() {
         return this.get("authentication_method_to_view_archived") == "no_bankid";
     },
-    legacyDkNemIDAuthenticationToViewArchived: function() {
-        return this.get("authentication_method_to_view_archived") == "dk_nemid";
-    },
     dkNemIDCPRAuthenticationToViewArchived: function() {
-        return this.get("authentication_method_to_view_archived") == "dk_nemid_cpr";
+        return this.authenticationToViewArchived() == "dk_nemid_cpr";
     },
     dkNemIDPIDAuthenticationToViewArchived: function() {
-        return this.get("authentication_method_to_view_archived") == "dk_nemid_pid";
+        return this.authenticationToViewArchived() == "dk_nemid_pid";
     },
     dkNemIDCVRAuthenticationToViewArchived: function() {
-        return this.get("authentication_method_to_view_archived") == "dk_nemid_cvr";
+        return this.authenticationToViewArchived() == "dk_nemid_cvr";
     },
     fiTupasAuthenticationToViewArchived: function() {
         return this.get("authentication_method_to_view_archived") == "fi_tupas";
@@ -619,9 +613,6 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     },
     noBankIDAuthenticationToSign: function() {
           return this.get("authentication_method_to_sign") == "no_bankid" && this.canHaveAuthenticationToSign();
-    },
-    dkNemIDAuthenticationToSign: function() {
-          return this.get("authentication_method_to_sign") == "dk_nemid" && this.canHaveAuthenticationToSign();
     },
     smsPinAuthenticationToSign: function() {
           return this.get("authentication_method_to_sign") == "sms_pin" && this.canHaveAuthenticationToSign();
@@ -964,10 +955,20 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
       return this.get('notification_delivery_method');
     },
     authenticationToView: function() {
-      return this.get('authentication_method_to_view');
+      var val = this.get('authentication_method_to_view');
+      // TODO remove this code when legacy nemid support is finally removed
+      if (val === "dk_nemid") {
+        val = "dk_nemid_cpr";
+      }
+      return val;
     },
     authenticationToViewArchived: function() {
-      return this.get('authentication_method_to_view_archived');
+      var val = this.get('authentication_method_to_view_archived');
+      // TODO remove this code when legacy nemid support is finally removed
+      if (val === "dk_nemid") {
+        val = "dk_nemid_cpr";
+      }
+      return val;
     },
     authenticationMethodsCanMix: function(authToView, authToSign, authToViewArchived) {
       var intersect = function(as, bs) {
@@ -975,15 +976,14 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
           return bs.indexOf(item) > -1;
         });
       }
-      // TODO remove this code when auth to sign with eid hub is in place
-      // this will allow legacy dk_nemid to sign to only mix with dk_nemid_cpr
-      if (authToSign === "dk_nemid") {
-        authToSign = "dk_nemid_cpr";
-      }
       // maximum of 1 national EID is allowed per signatory
       var eids = ["se_bankid", "no_bankid", "dk_nemid_cpr", "dk_nemid_pid", "dk_nemid_cvr",  "fi_tupas", "nl_idin", "verimi", "verimi_qes"];
-      var isection = intersect( eids, [authToSign, authToView, authToViewArchived]);
-      return isection.length <= 1;
+      if (authToSign === "dk_nemid") {
+        // TODO this code will disappear when new nemid authentication to sign is developed
+        return (1 >= intersect( eids, ["dk_nemid_cpr", authToView, authToViewArchived]).length);
+      } else {
+        return (1 >= intersect( eids, [authToSign, authToView, authToViewArchived]).length);
+      }
     },
     setAuthenticationToView: function(a) {
         var canMix = this.authenticationMethodsCanMix(a, this.authenticationToSign(), this.authenticationToViewArchived());
@@ -1123,11 +1123,9 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         || this.dkNemIDCPRAuthenticationToView()
         || this.dkNemIDPIDAuthenticationToView()
         || this.dkNemIDCVRAuthenticationToView()
-        || this.legacyDkNemIDAuthenticationToView()
         || this.dkNemIDCPRAuthenticationToViewArchived()
         || this.dkNemIDPIDAuthenticationToViewArchived()
         || this.dkNemIDCVRAuthenticationToViewArchived()
-        || this.legacyDkNemIDAuthenticationToViewArchived()
         || this.fiTupasAuthenticationToSign()
         || this.fiTupasAuthenticationToView()
         || this.fiTupasAuthenticationToViewArchived();
@@ -1138,13 +1136,11 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
              || this.dkNemIDCPRAuthenticationToView()
              || this.dkNemIDPIDAuthenticationToView()
              || this.dkNemIDCVRAuthenticationToView()
-             || this.legacyDkNemIDAuthenticationToView()
              || (this.views() && this.seBankIDAuthenticationToViewArchived())
              || (this.views() && this.noBankIDAuthenticationToViewArchived())
              || (this.views() && this.dkNemIDCPRAuthenticationToViewArchived())
              || (this.views() && this.dkNemIDPIDAuthenticationToViewArchived())
              || (this.views() && this.dkNemIDCVRAuthenticationToViewArchived())
-             || (this.views() && this.legacyDkNemIDAuthenticationToViewArchived())
              || (this.views() && this.fiTupasAuthenticationToViewArchived()));
     },
     ensureMobile: function() {
