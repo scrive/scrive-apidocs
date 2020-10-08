@@ -549,7 +549,14 @@ makeMailAttachments doc withAttachments = do
           | otherwise = documentauthorattachments doc
     forM attachments $ \attachment -> do
       file <- dbQuery . GetFileByFileID $ authorattachmentfileid attachment
-      return (authorattachmentname attachment, file)
+      -- attachments do not contain pdf extension
+      -- assume for now that we can add it (important when attaching to confirmation emails)
+      -- needs to be resolved before adding support for different types of attachments
+      let name
+            | ".pdf" `T.isSuffixOf` authorattachmentname attachment = authorattachmentname
+              attachment
+            | otherwise = authorattachmentname attachment <> ".pdf"
+      return (name, file)
 
   separateSignatoryAttachments <- do
     let attachmentfileids
