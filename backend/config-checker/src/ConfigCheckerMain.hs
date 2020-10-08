@@ -108,7 +108,7 @@ checkFieldsEqualAppConfCronConf
     salesforceConf      _netsConfig         _monitoringConfig   _isAPILogEnabled
     netsSignConfig      pdfToolsLambdaConf  _passwordServiceConf eidServiceConf
     _ssoConf            kinesisStream       _postSignViewRedirectURL
-    useFolderListCallsByDefault _flowPort _runFlowServer)
+    useFolderListCallsByDefault _flowPort   _runFlowServer      _useNewFrontendLinks)
   (CronConf
      cronAmazonConfig              cronDBConfig                   _cronMaxDBConnections
      cronRedisCacheConfig         _cronLocalFileCacheSize         _cronLogConfig
@@ -157,7 +157,7 @@ checkFieldsEqualAppConfMailerConf
     _hubspotConf        _salesforceConf     _netsConfig         _monitoringConfig
     _isAPILogEnabled    _netsSignConfig     _pdfToolsLambdaConf _passwordServiceConf
     _eidServiceConf     _ssoConf            _kinesisStream      _postSignViewRedirectURL
-    _useFolderListCallsByDefault _flowPort _runFlowServer)
+    _useFolderListCallsByDefault _flowPort  _runFlowServer      _useNewFrontendLinks)
   (MailingServerConf
     _mailerHttpBindAddress     mailerDBConfig
     _mailerMaxDBConnections    mailerRedisCacheConfig
@@ -187,7 +187,7 @@ checkFieldsEqualAppConfMessengerConf
     _hubspotConf        _salesforceConf     _netsConfig         _monitoringConfig
     _isAPILogEnabled    _netsSignConfig     _pdfToolsLambdaConf _passwordServiceConf
     _eidServiceConf     _ssoConf            _kinesisStream      _postSignViewRedirectURL
-    _useFolderListCallsByDefault _flowPort _runFlowServer)
+    _useFolderListCallsByDefault _flowPort  _runFlowServer      _useNewFrontendLinks)
   (MessengerServerConf
     _messengerHttpBindAddress   messengerDBConfig
     _messengerMaxDBConnections _messengerLogConfig

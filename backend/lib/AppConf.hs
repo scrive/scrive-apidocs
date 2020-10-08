@@ -111,6 +111,7 @@ data AppConf = AppConf
   , useFolderListCallsByDefault :: Bool
   , flowPort :: Int
   , servicesToRun :: ServicesToRun
+  , useNewFrontendLinks :: Bool
   } deriving (Eq, Show)
 
 unjsonAppConf :: UnjsonDef AppConf
@@ -183,6 +184,10 @@ unjsonAppConf =
                  RunOnlyKontrakcja
                  servicesToRun
                  "Which services should be started: `kontrakcja`, `flow`, or `both`"
+    <*> fieldDef "use_new_frontend_links"
+                 False
+                 useNewFrontendLinks
+                 "Whether to use New Frontend version of some links."
 
 instance Unjson AppConf where
   unjsonDef = unjsonAppConf

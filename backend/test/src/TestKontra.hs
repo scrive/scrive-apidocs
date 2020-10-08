@@ -482,6 +482,7 @@ mkContext' pdfToolsLambdaEnv globalTemplates time bd fileCache lang = Context
   , eidServiceConf          = Nothing
   , ssoConf                 = Nothing
   , postSignViewRedirectURL = ""
+  , useNewFrontendLinks     = False
   }
 
 mkContextWithUser :: Lang -> User -> TestEnv Context
