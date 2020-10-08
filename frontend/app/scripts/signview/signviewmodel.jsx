@@ -228,10 +228,8 @@ var moment = require("moment");
                    || signatory.seBankIDAuthenticationToViewArchived()
                    || signatory.seBankIDAuthenticationToSign()) {
           return !new SSNForSEBankIDValidation().validateData(field.value());
-        } else if (signatory.legacyDkNemIDAuthenticationToView()
-                   || signatory.dkNemIDCPRAuthenticationToView()
+        } else if (signatory.dkNemIDCPRAuthenticationToView()
                    || signatory.dkNemIDPIDAuthenticationToView()
-                   || signatory.legacyDkNemIDAuthenticationToViewArchived()
                    || signatory.dkNemIDCPRAuthenticationToViewArchived()
                    || signatory.dkNemIDPIDAuthenticationToViewArchived()
                    || signatory.dkNemIDAuthenticationToSign()) {

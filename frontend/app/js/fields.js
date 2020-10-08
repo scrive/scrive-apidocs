@@ -192,10 +192,8 @@ var Field = exports.Field = Backbone.Model.extend({
         if (this.isSSN() && (this.signatory().dkNemIDAuthenticationToSign()
                              || this.signatory().dkNemIDCPRAuthenticationToView()
                              || this.signatory().dkNemIDPIDAuthenticationToView()
-                             || this.signatory().legacyDkNemIDAuthenticationToView()
                              || this.signatory().dkNemIDCPRAuthenticationToViewArchived()
-                             || this.signatory().dkNemIDPIDAuthenticationToViewArchived()
-                             || this.signatory().legacyDkNemIDAuthenticationToViewArchived())) {
+                             || this.signatory().dkNemIDPIDAuthenticationToViewArchived())) {
           return new SSNForDKNemIDValidation().validateData(this.value());
         }
         if (this.isSSN() && (this.signatory().dkNemIDCVRAuthenticationToView() || this.signatory().dkNemIDCVRAuthenticationToViewArchived())) {
@@ -300,7 +298,6 @@ var Field = exports.Field = Backbone.Model.extend({
                                                                             signatory.dkNemIDCPRAuthenticationToViewArchived() ||
                                                                             signatory.dkNemIDPIDAuthenticationToViewArchived() ||
                                                                             signatory.dkNemIDCVRAuthenticationToViewArchived() ||
-                                                                            signatory.legacyDkNemIDAuthenticationToViewArchived() ||
                                                                             signatory.fiTupasAuthenticationToViewArchived());
       var willSignNowAndFieldNeeded = signatory.author()
         && signatory.ableToSign()
@@ -444,10 +441,8 @@ var Field = exports.Field = Backbone.Model.extend({
       return this.signatory().dkNemIDAuthenticationToSign()
                              || this.signatory().dkNemIDCPRAuthenticationToView()
                              || this.signatory().dkNemIDPIDAuthenticationToView()
-                             || this.signatory().legacyDkNemIDAuthenticationToView()
                              || this.signatory().dkNemIDCPRAuthenticationToViewArchived()
-                             || this.signatory().dkNemIDPIDAuthenticationToViewArchived()
-                             || this.signatory().legacyDkNemIDAuthenticationToViewArchived();
+                             || this.signatory().dkNemIDPIDAuthenticationToViewArchived();
     },
     isCVR : function() {
       return this.signatory().dkNemIDCVRAuthenticationToView() || this.signatory().dkNemIDCVRAuthenticationToViewArchived();

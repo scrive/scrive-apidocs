@@ -219,11 +219,6 @@ module.exports = React.createClass({
       }
     });
 
-    if (sig.authenticationToView() == "dk_nemid") {
-      // legacy support
-      result.push({name: "NemID", value: "dk_nemid"});
-    }
-
     return result;
   },
   authenticationToViewArchivedOptions: function () {
@@ -282,11 +277,6 @@ module.exports = React.createClass({
         result.push(option);
       }
     });
-
-    if (sig.authenticationToViewArchived() == "dk_nemid") {
-      // legacy support
-      result.push({name: "NemID", value: "dk_nemid"});
-    }
 
     return result;
   },
@@ -476,7 +466,6 @@ module.exports = React.createClass({
   render: function () {
     var self = this;
     var sig = this.props.model;
-    console.log(sig.authenticationToView());
     var userFeatures = Subscription.currentSubscription().currentUserFeatures();
     return (
       <div className="design-view-action-participant-details-participation">

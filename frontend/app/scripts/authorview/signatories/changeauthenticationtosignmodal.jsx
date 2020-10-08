@@ -135,7 +135,7 @@ var Modal = require("../../common/modal");
         }
       } else if (this.isNewAuthenticationDKNemID()) {
         // If DK NemID to view is set, then SSN needs to be valid and not empty
-        if (this.signatory().authenticationToView() === "dk_nemid") {
+        if (this.signatory().dkNemIDCPRAuthenticationToView() || this.signatory().dkNemIDPIDAuthenticationToView()) {
           return !new SSNForDKNemIDValidation().validateData(authvalue);
           // Else valid or empty
         } else {
