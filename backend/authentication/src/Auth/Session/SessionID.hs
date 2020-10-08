@@ -5,14 +5,12 @@ module Auth.Session.SessionID (
   , tempSessionID
   ) where
 
+import Data.Aeson
 import Data.Int
 import Database.PostgreSQL.PQTypes
 
 newtype SessionID = SessionID Int64
-  deriving (Eq, Ord)
-deriving newtype instance Read SessionID
-deriving newtype instance Show SessionID
-deriving newtype instance TextShow SessionID
+  deriving (Eq, Ord, Read, Show, TextShow, ToJSON)
 
 instance PQFormat SessionID where
   pqFormat = pqFormat @Int64

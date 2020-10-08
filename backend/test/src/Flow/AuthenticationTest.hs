@@ -179,18 +179,13 @@ testInvitationLinkLogin = do
         instanceOverview $ mkPageClient (Just authCookieSession, Just authCookieXToken)
   void $ assertRight
     "instanceOverview with auth cookies should succeed"
-    ( request
-    . instanceOverviewAuth instanceId "signatory" (Just $ Cookies' cookies)
-    $ Just flowTestCookieDomain
-    )
+    (request . instanceOverviewAuth instanceId "signatory" $ Just flowTestCookieDomain)
 
   -- Without the auth cookies the overview page should be inaccessible
   let instanceOverviewNoAuth = instanceOverview $ mkPageClient (Nothing, Nothing)
   void $ assertLeft
     "instanceOverview without auth cookies should fail"
-    (request . instanceOverviewNoAuth instanceId "signatory" Nothing $ Just
-      flowTestCookieDomain
-    )
+    (request . instanceOverviewNoAuth instanceId "signatory" $ Just flowTestCookieDomain)
 
   where
     mapping uid doc = InstanceKeyValues documents users messages

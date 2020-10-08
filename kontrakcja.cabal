@@ -1545,7 +1545,8 @@ Library authentication
                     , Auth.Session.Constant
                     , Auth.Session.SessionID
                     , Auth.Utils
-  Build-Depends:      base-noprelude
+  Build-Depends:    , aeson
+                    , base-noprelude
                     , kontrakcja-prelude
                     , bytestring
                     , cond
