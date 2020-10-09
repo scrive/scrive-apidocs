@@ -12,7 +12,6 @@ module ThirdPartyStats.Core (
     someProp,
     numProp,
     stringProp,
-    asyncLogEvent,
     asyncProcessEvents,
     (@@),
     catEventProcs
@@ -258,7 +257,7 @@ asyncProcessEvents getEventProcessor numEvts = do
         Nothing      -> return . Ignored $ "No event processor defined"
         Just process -> unEventProcessor process ename eprops
       case result of
-        PutBack    -> asyncLogEvent ename eprops etype
+        PutBack    -> legacyAsyncLogEvent ename eprops etype
         Failed msg -> logInfo "Event processing failed" $ object
           ["event_name" .= show ename, "event_type" .= show etype, "reason" .= msg]
         Ignored msg -> logInfo "Event processing ignored " $ object
@@ -294,8 +293,9 @@ asyncProcessEvents getEventProcessor numEvts = do
 --
 --   "Special" properties should be identified using the proper `EventProperty`
 --   constructor, whereas others may be arbitrarily named using `someProp`.
-asyncLogEvent :: (MonadDB m) => EventName -> [EventProperty] -> EventType -> m ()
-asyncLogEvent ename eprops etype = do
+-- RENAMED TO legacyAsyncLogEvent, PENDING REMOVAL
+legacyAsyncLogEvent :: (MonadDB m) => EventName -> [EventProperty] -> EventType -> m ()
+legacyAsyncLogEvent ename eprops etype = do
   runQuery_ . sqlInsert "async_event_queue" $ do
     sqlSet "event" . mkBinary $ AsyncEvent ename eprops etype
   where mkBinary = B.concat . BL.toChunks . encode

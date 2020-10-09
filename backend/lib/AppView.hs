@@ -47,7 +47,6 @@ import Branding.Adler32
 import DB
 import Kontra
 import Templates (renderTextTemplate)
-import ThirdPartyStats.Core
 import User.Lang
 import UserGroup.Model
 import UserGroup.Types
@@ -165,26 +164,21 @@ enableCookiesPage = do
         Just (HeaderPair _ (x : _)) -> TE.decodeUtf8 x
         _ -> "<unknown>"
   let cookieNames = showt $ map fst cookies
-      mixpanel event = asyncLogEvent
-        (NamedEvent event)
-        [ SomeProp "cookies" $ PVString cookieNames
-        , SomeProp "browser" $ PVString ua
-        , SomeProp "host" $ PVString hostname
-        ]
-        EventMixpanel
+      logEvent event = logInfo event $ object
+        ["cookies" .= show cookieNames, "browser" .= show ua, "host" .= show hostname]
   logInfo "Current cookies" $ object ["cookies" .= map (second cookieToJson) cookies]
   ctx <- getContext
   ad  <- getAnalyticsData
   case cookies of
     [] -> do
       -- there are still no cookies, client probably disabled them
-      mixpanel "Enable cookies page load"
+      logEvent "Enable cookies page load"
       content <- renderTextTemplate "enableCookies" $ do
         standardPageFields ctx Nothing ad
       simpleHtmlResponse content
     _ -> do
       -- there are some cookies after all, so no point in telling them to enable them
-      mixpanel "Enable cookies page load attempt with cookies"
+      logEvent "Enable cookies page load attempt with cookies"
       -- internalServerError is a happstack function, it's not our internalError
       -- this will not rollback the transaction
       let fields = standardPageFields ctx Nothing ad

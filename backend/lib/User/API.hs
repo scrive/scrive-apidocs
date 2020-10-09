@@ -59,7 +59,6 @@ import Salesforce.AuthorizationWorkflow
 import Session.Cookies
 import Session.Model
 import Tag
-import ThirdPartyStats.Core
 import User.Action
 import User.CallbackScheme.Model
 import User.Email
@@ -542,25 +541,6 @@ apiCallSignup = api $ do
         (user ^. #id)
         ((user ^. #info) & (#phone .~ phone) & (#companyPosition .~ companyPosition))
       sendNewUserMail user
-      l <- newUserAccountRequestLink lang (user ^. #id) AccountRequest
-      asyncLogEvent
-        "Send account confirmation email"
-        [ UserIDProp $ user ^. #id
-        , IPProp $ ctx ^. #ipAddr
-        , TimeProp $ ctx ^. #time
-        , someProp "Context" ("Acount request" :: String)
-        ]
-        EventMixpanel
-      asyncLogEvent
-        SetUserProps
-        [ UserIDProp $ user ^. #id
-        , someProp "Account confirmation email" $ ctx ^. #time
-        , NameProp (firstname <> " " <> lastname)
-        , FirstNameProp firstname
-        , LastNameProp lastname
-        , someProp "Confirmation link" $ show l
-        ]
-        EventMixpanel
       runJSONGenT $ value "sent" True
 
 apiCallSendPasswordReminder :: Kontrakcja m => m Response
@@ -702,14 +682,6 @@ apiCallLoginUserAndGetSession = V2.api $ do
   case euser of
     Left  err            -> V2.apiError $ V2.invalidAuthorizationWithMsg err
     Right (user, _actor) -> do
-      ctx <- getContext
-      asyncLogEvent
-        "Login"
-        [UserIDProp $ user ^. #id, IPProp $ ctx ^. #ipAddr, TimeProp $ ctx ^. #time]
-        EventMixpanel
-      asyncLogEvent SetUserProps
-                    [UserIDProp $ user ^. #id, someProp "Last login" $ ctx ^. #time]
-                    EventMixpanel
       session <- startNewSessionWithUser $ user ^. #id
       return . V2.Ok . runJSONGen $ do
         value "session_id" (showt $ sessionCookieInfoFromSession session)
