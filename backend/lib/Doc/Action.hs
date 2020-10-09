@@ -55,8 +55,6 @@ import Log.Identifier
 import MailContext
 import PdfToolsLambda.Class
 import Templates (runTemplatesT)
-import ThirdPartyStats.Core
-import ThirdPartyStats.Planhat
 import User.Action
 import User.Email
 import User.Model
@@ -69,41 +67,6 @@ import Util.SignatoryLinkUtils
 import qualified Flow.Model as Flow (selectInstanceIdByDocumentId)
 import qualified MailContext.Internal
 
--- | Log a document event, adding some standard properties.
-logDocEvent
-  :: (MonadDB m, MonadThrow m, MonadTime m)
-  => EventName
-  -> User
-  -> [EventProperty]
-  -> Document
-  -> m ()
-logDocEvent name user extraProps doc = do
-  ug  <- dbQuery . UserGroupGetByUserID $ user ^. #id
-  now <- currentTime
-  let uid      = user ^. #id
-      email    = Email $ getEmail user
-      fullname = getFullName user
-      deliverymethod =
-        maybe "undefined" (showt . signatorylinkdeliverymethod) (getSigLinkFor uid doc)
-  asyncLogEvent
-    name
-    (  extraProps
-    ++ [ UserIDProp uid
-       , DocIDProp (documentid doc)
-       , TimeProp now
-       , MailProp email
-       , NameProp fullname
-       , stringProp "Company Name" $ ug ^. #name
-       , stringProp "Delivery Method" deliverymethod
-       , stringProp "Type"            (showt $ documenttype doc)
-       , stringProp "Language"        (showt $ documentlang doc)
-       , numProp "Days to sign" (fromIntegral $ documentdaystosign doc)
-       , numProp "Signatories"  (fromIntegral . length $ documentsignatorylinks doc)
-       , stringProp "Signup Method" (showt $ user ^. #signupMethod)
-       ]
-    )
-    EventMixpanel
-
 postDocumentPreparationChange
   :: (Kontrakcja m, DocumentMonad m) => Bool -> TimeZoneName -> m ()
 postDocumentPreparationChange authorsignsimmediately tzn = do
@@ -115,27 +78,12 @@ postDocumentPreparationChange authorsignsimmediately tzn = do
   updateDocument $ const initialiseSignatoryAPIMagicHashes
   saveDocumentForSignatories
 
-  -- Stat logging
-  now     <- currentTime
-  mauthor <- getDocAuthor =<< theDocument
-  case mauthor of
-    Nothing     -> return ()
-    Just author -> do
-      asyncLogEvent SetUserProps
-                    (simplePlanhatAction "Document started" author now)
-                    EventPlanhat
-      asyncLogEvent SetUserProps (userMixpanelData author now) EventMixpanel
-      theDocument >>= logDocEvent "Doc Sent" author []
-
   did   <- documentid <$> theDocument
   mFlow <- selectInstanceIdByDocumentId did
   when (isNothing mFlow) $ do
     theDocument >>= \d -> logInfo "Sending invitation emails for document" $ logObject_ d
     sendInvitationEmails authorsignsimmediately
     theDocument >>= \d -> setAutomaticReminder (documentid d) (documentdaystoremind d) tzn
-  where
-    userMixpanelData author time =
-      [UserIDProp (author ^. #id), someProp "Last Doc Sent" time]
 
 initialiseSignatoryAPIMagicHashes :: (DocumentMonad m, Kontrakcja m) => m ()
 initialiseSignatoryAPIMagicHashes = do
@@ -155,11 +103,6 @@ postDocumentRejectedChange siglinkid customMessage doc@Document {..} =
     unless (isRejected doc) $ stateMismatchError "postDocumentRejectedChange" Rejected doc
     logInfo_ "Pending -> Rejected; send reject emails"
     logInfo "Sending rejection emails for document" $ logObject_ doc
-    ctx <- getContext
-    -- Log the fact that the current user rejected a document.
-    maybe (return ())
-          (\user -> logDocEvent "Doc Rejected" user [] doc)
-          (ctx ^. #maybeUser)
     sendRejectEmails customMessage (fromJust $ getSigLinkFor siglinkid doc) doc
     return ()
 
@@ -178,10 +121,6 @@ postDocumentCanceledChange doc@Document {..} = logDocument documentid $ do
   triggerAPICallbackIfThereIsOne doc
   unless (isCanceled doc) $ stateMismatchError "postDocumentCanceledChange" Canceled doc
   logInfo_ "Pending -> Canceled"
-  mauthor <- getDocAuthor doc
-  case mauthor of
-    Nothing     -> return ()
-    Just author -> logDocEvent "Doc Canceled" author [] doc
 
 
 -- | After a party has signed or approved - check if we need to close
@@ -273,21 +212,7 @@ commonDocumentClosingActions olddoc = do
   when (documentfromshareablelink olddoc)
     . chargeForItemSingle CIShareableLink
     $ documentid olddoc
-  mauthor <- getDocAuthor document
-  case mauthor of
-    Nothing     -> return ()
-    Just author -> do
-      logDocEvent "Doc Closed" author [] document
-      -- report
-      now <- currentTime
-      asyncLogEvent SetUserProps
-                    (simplePlanhatAction "Document closed" author now)
-                    EventPlanhat
-      asyncLogEvent SetUserProps (userMixpanelData author now) EventMixpanel
   dbUpdate . ScheduleDocumentSealing . view (#brandedDomain % #id) =<< getMailContext
-  where
-    userMixpanelData author time =
-      [UserIDProp (author ^. #id), someProp "Last Doc Closed" time]
 
 -- | Prepare final PDF if needed, apply digital signature, and send
 -- out confirmation emails if there has been a change in the seal status.  Precondition: document must be

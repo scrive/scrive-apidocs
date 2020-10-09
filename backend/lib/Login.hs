@@ -27,8 +27,6 @@ import Log.Identifier
 import LoginAuth.LoginAuthMethod
 import Redirect
 import Session.Cookies
-import ThirdPartyStats.Core
-import ThirdPartyStats.Planhat
 import User.Email
 import User.History.Model
 import User.Model
@@ -159,19 +157,6 @@ handleLoginPost = do
     logTheUserIn ctx user padlogin = do
       logInfo "User logged in" $ logObject_ user
       muuser <- dbQuery $ GetUserByID (user ^. #id)
-      case muuser of
-        Just uuser -> do
-          let uid = uuser ^. #id
-          now <- currentTime
-          asyncLogEvent SetUserProps (simplePlanhatAction "Login" user now) EventPlanhat
-          asyncLogEvent
-            "Login"
-            [UserIDProp uid, IPProp $ ctx ^. #ipAddr, TimeProp $ ctx ^. #time]
-            EventMixpanel
-          asyncLogEvent SetUserProps
-                        [UserIDProp uid, someProp "Last login" $ ctx ^. #time]
-                        EventMixpanel
-        _ -> return ()
       if padlogin
         then do
           void . dbUpdate $ LogHistoryPadLoginSuccess (user ^. #id)
