@@ -251,6 +251,7 @@
           };
         "authentication" = {
           depends = [
+            (hsPkgs."aeson" or (errorHandler.buildDepError "aeson"))
             (hsPkgs."base" or (errorHandler.buildDepError "base"))
             (hsPkgs."base-noprelude" or (errorHandler.buildDepError "base-noprelude"))
             (hsPkgs."kontrakcja-prelude" or (errorHandler.buildDepError "kontrakcja-prelude"))
