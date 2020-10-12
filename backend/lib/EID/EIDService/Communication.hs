@@ -78,9 +78,12 @@ cURLCall conf calltype provider endpoint mjsonData = do
   -- The curl output has the shape <content>\n<response code>.
   let (content, responseCodeLine) = BC.breakEnd (== '\n') $ BSL.toStrict stdout
   case maybeRead . T.decodeUtf8 $ responseCodeLine of
-    Just 200   -> return . Right $ BSL.fromStrict content
-    Just other -> return . Left $ HttpErrorCode other
-    Nothing    -> do
+    Just 200        -> return . Right $ BSL.fromStrict content
+    Just statusCode -> do
+      logAttention "Error when starting an eID transaction"
+        $ object ["statusCode" .= statusCode, "content" .= showt content]
+      return . Left $ HttpErrorCode statusCode
+    Nothing -> do
       logAttention_
         $  "Failed to parse http response code returned by cURL call: "
         <> T.decodeUtf8 responseCodeLine

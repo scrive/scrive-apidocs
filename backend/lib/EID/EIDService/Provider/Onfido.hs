@@ -7,10 +7,13 @@ module EID.EIDService.Provider.Onfido (
   , completionDataToName
   , OnfidoEIDServiceProviderParams(..)
   , validateCompletionData
+  , OnfidoDocumentType(..)
  ) where
 
 import Control.Monad.Trans.Maybe
 import Data.Aeson
+import Data.Set (Set)
+import GHC.Generics
 import Log
 import qualified Text.StringTemplates.Fields as F
 
@@ -35,10 +38,21 @@ import Util.MonadUtils
 provider :: EIDServiceTransactionProvider
 provider = EIDServiceTransactionProviderOnfido
 
+data OnfidoDocumentType
+  = NationalIdentityCard
+  | DrivingLicence
+  | Passport
+  | ResidencePermit
+  deriving (Eq, Generic, Ord)
+
+instance ToJSON OnfidoDocumentType where
+  toJSON = genericToJSON defaultOptions
+
 data OnfidoEIDServiceProviderParams = OnfidoEIDServiceProviderParams {
     onfidoparamMethod :: OnfidoMethod
   , onfidoparamFirstName :: Text
   , onfidoparamLastName :: Text
+  , onfidoparamAllowedDocumentTypes :: Maybe (Set OnfidoDocumentType)
   }
 
 instance ToJSON OnfidoEIDServiceProviderParams where
@@ -46,6 +60,7 @@ instance ToJSON OnfidoEIDServiceProviderParams where
     [ "report" .= onfidoparamMethod
     , "firstName" .= onfidoparamFirstName
     , "lastName" .= onfidoparamLastName
+    , "allowedDocumentTypes" .= onfidoparamAllowedDocumentTypes
     ]
 
 beginEIDServiceTransaction
@@ -83,9 +98,10 @@ beginEIDServiceTransaction conf authKind doc sl = do
         , cestMethod             = EIDServiceAuthMethod
         , cestRedirectUrl        = showt redirectUrl
         , cestProviderParameters = Just . toJSON $ OnfidoEIDServiceProviderParams
-                                     { onfidoparamMethod    = onfidoMethod
-                                     , onfidoparamFirstName = getFirstName sl
-                                     , onfidoparamLastName  = getLastName sl
+                                     { onfidoparamMethod               = onfidoMethod
+                                     , onfidoparamFirstName            = getFirstName sl
+                                     , onfidoparamLastName             = getLastName sl
+                                     , onfidoparamAllowedDocumentTypes = Nothing
                                      }
         }
   -- Onfido transactions are not started from the API, we get the URL via the create call
