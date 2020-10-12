@@ -226,7 +226,7 @@ isEligibleForReminder document@Document { documentstatus } siglink =
     dontShowAnyReminder = documentstatus `elem` [Timedout, Canceled, Rejected]
     documentDeliverableTosignatory =
       signatorylinkdeliverymethod siglink
-        `elem` [EmailDelivery, MobileDelivery, EmailAndMobileDelivery]
+        `elem` [EmailDelivery, MobileDelivery, EmailAndMobileDelivery, PortalDelivery]
 
 -- | Can author sign now according to sign order?
 canAuthorSignNow :: Document -> Bool
