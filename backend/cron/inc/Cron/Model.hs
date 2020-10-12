@@ -231,7 +231,7 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs =
               else RerunAt . nextDayMidnight <$> currentTime
           DocumentsPurge -> do
             runDB $ do
-              (purgedCount, time) <- timed . dbUpdate $ PurgeDocuments 50
+              (purgedCount, time) <- timed . dbUpdate $ PurgeDocuments 30
               logInfo "Purged documents"
                 $ object ["purged" .= purgedCount, "time" .= time]
             RerunAt . nextDayAtHour 2 <$> currentTime
