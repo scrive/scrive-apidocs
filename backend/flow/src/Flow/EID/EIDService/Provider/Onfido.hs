@@ -7,6 +7,7 @@ module Flow.EID.EIDService.Provider.Onfido (
 import Control.Monad.Trans.Maybe
 import Data.Aeson
 import Log
+import qualified Data.Set as Set
 import qualified Text.StringTemplates.Fields as F
 
 import Chargeable
@@ -18,9 +19,9 @@ import EID.Authentication.Model
 import EID.EIDService.Communication
 import EID.EIDService.Conf
 import EID.EIDService.Provider.Onfido
-  ( CompletionData(..), OnfidoEIDServiceCompletionData(..)
-  , OnfidoEIDServiceProviderParams(..), completionDataToName
-  , eidonfidoDateOfBirth, validateCompletionData
+  ( CompletionData(..), OnfidoDocumentType(..)
+  , OnfidoEIDServiceCompletionData(..), OnfidoEIDServiceProviderParams(..)
+  , completionDataToName, eidonfidoDateOfBirth, validateCompletionData
   )
 import EID.EIDService.Types hiding
   ( EIDServiceTransactionFromDB(..), UnifiedRedirectUrl(..)
@@ -73,19 +74,25 @@ beginEIDServiceTransaction conf authKind onfidoAuthenticationData instanceId use
     (did, slid) <- findFirstSignatoryLink instanceId userName
     sl          <- dbQuery $ GetSignatoryLinkByID did slid
 
+    let methodParam = case onfidoMethod of
+          Core.Document         -> OnfidoDocumentCheck
+          Core.DocumentAndPhoto -> OnfidoDocumentAndPhotoCheck
+
+    -- TODO FLOW-426: make document type configurable
+    let documentTypes = Set.fromList [DrivingLicence, Passport]
+
+    let providerParams = OnfidoEIDServiceProviderParams
+          { onfidoparamMethod               = methodParam
+          , onfidoparamFirstName            = getFirstName sl
+          , onfidoparamLastName             = getLastName sl
+          , onfidoparamAllowedDocumentTypes = Just documentTypes
+          }
+
     let createReq = CreateEIDServiceTransactionRequest
           { cestProvider           = eidProvider
           , cestMethod             = EIDServiceAuthMethod
           , cestRedirectUrl        = showt redirectUrl
-          , cestProviderParameters = Just . toJSON $ OnfidoEIDServiceProviderParams
-                                       { onfidoparamMethod    =
-                                         case onfidoMethod of
-                                           Core.Document -> OnfidoDocumentCheck
-                                           Core.DocumentAndPhoto ->
-                                             OnfidoDocumentAndPhotoCheck
-                                       , onfidoparamFirstName = getFirstName sl
-                                       , onfidoparamLastName  = getLastName sl
-                                       }
+          , cestProviderParameters = Just $ toJSON providerParams
           }
     -- Onfido transactions are not started from the API, we get the URL via the create call
     trans <- createTransactionWithEIDService conf createReq
