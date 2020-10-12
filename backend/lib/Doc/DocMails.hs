@@ -429,7 +429,7 @@ sendReminderEmail custommessage actor automatic siglink =
       confMethod           = signatorylinkconfirmationdeliverymethod siglink
       (sendemail, sendsms) = if useInvitationMethod
         then
-          ( invMethod `elem` [EmailDelivery, EmailAndMobileDelivery]
+          ( invMethod `elem` [EmailDelivery, EmailAndMobileDelivery, PortalDelivery]
           , invMethod `elem` [MobileDelivery, EmailAndMobileDelivery]
           )
         else
