@@ -18,7 +18,7 @@
 "_AuthenticatedToViewEvidenceArchiveOnfido":"Verifierade sin identitet med Onfido för att se dokumentet.",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"Verifierade sin identitet med svenskt BankID för att se dokumentet.",
 "_AuthenticatedToViewEvidenceArchiveSMSPin":"Verifierade sin identitet med PIN via SMS för att se dokumentet.",
-"_AuthenticatedToViewEvidenceArchiveSmsOtp":"",
+"_AuthenticatedToViewEvidenceArchiveSmsOtp":"Verifierade sin identitet med SMS OTP för att se dokumentet.",
 "_AuthenticatedToViewEvidenceArchiveVerimi":"Verifierade sin identitet med Verimi för att se dokumentet.",
 "_AutomaticReminderSentTextSimpleEmail":"En automatisk påminnelse att signera dokumentet skickades till $signatory$ via e-post.",
 "_AutomaticReminderSentTextSimpleEmailSMS":"En automatisk påminnelse att signera dokumentet skickades till $signatory$ via e-post och SMS.",
