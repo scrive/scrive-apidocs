@@ -89,7 +89,6 @@ module.exports = React.createClass({
                         sig.dkNemIDPIDAuthenticationToView() ||
                         sig.dkNemIDCPRAuthenticationToSign() ||
                         sig.dkNemIDPIDAuthenticationToSign() ||
-                        sig.dkNemIDAuthenticationToSign() ||
                         sig.dkNemIDCPRAuthenticationToViewArchived() ||
                         sig.dkNemIDPIDAuthenticationToViewArchived());
       const isDanishEmployee = sig.dkNemIDCVRAuthenticationToView()
