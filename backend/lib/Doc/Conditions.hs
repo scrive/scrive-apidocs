@@ -472,7 +472,7 @@ sqlWhereDocumentIsNotReallyDeletedByAuthor =
 data SignatoryAuthenticationToSignDoesNotMatch =
   SignatoryAuthenticationToSignDoesNotMatch
   DocumentID SignatoryLinkID
-  AuthenticationToSignMethod AuthenticationToSignMethod
+  [AuthenticationToSignMethod] AuthenticationToSignMethod
   deriving (Eq, Ord, Show, Typeable)
 
 instance ToJSValue SignatoryAuthenticationToSignDoesNotMatch where
@@ -489,12 +489,25 @@ instance DBExtraException SignatoryAuthenticationToSignDoesNotMatch
 sqlWhereSignatoryAuthenticationToSignMethodIs
   :: (MonadState v m, SqlWhere v) => AuthenticationToSignMethod -> m ()
 sqlWhereSignatoryAuthenticationToSignMethodIs am = sqlWhereEVVV
-  ( \did slid amact -> SignatoryAuthenticationToSignDoesNotMatch did slid am amact
+  ( \did slid amact -> SignatoryAuthenticationToSignDoesNotMatch did slid [am] amact
   , "signatory_links.document_id"
   , "signatory_links.id"
   , "signatory_links.authentication_to_sign_method"
   )
   ("signatory_links.authentication_to_sign_method =" <?> am)
+
+sqlWhereSignatoryAuthenticationToSignMethodIsIn
+  :: (MonadState v m, SqlWhere v) => [AuthenticationToSignMethod] -> m ()
+sqlWhereSignatoryAuthenticationToSignMethodIsIn ams = sqlWhereEVVV
+  ( \did slid amact -> SignatoryAuthenticationToSignDoesNotMatch did slid ams amact
+  , "signatory_links.document_id"
+  , "signatory_links.id"
+  , "signatory_links.authentication_to_sign_method"
+  )
+  (   "signatory_links.authentication_to_sign_method IN (SELECT UNNEST("
+  <?> Array1 ams
+  <+> "))"
+  )
 
 ------------------------------------------------------------
 

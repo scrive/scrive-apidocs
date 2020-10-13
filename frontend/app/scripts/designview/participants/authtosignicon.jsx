@@ -13,7 +13,11 @@ module.exports = React.createClass({
       return false;
     } else if (!ff.canUseNOAuthenticationToSign() && am == "no_bankid") {
       return false;
-    } else if (!ff.canUseDKAuthenticationToSign() && am == "dk_nemid") {
+    } else if (!ff.canUseDKCPRAuthenticationToSign() && am == "dk_nemid_cpr") {
+      return false;
+    } else if (!ff.canUseDKPIDAuthenticationToSign() && am == "dk_nemid_pid") {
+      return false;
+    } else if (!ff.canUseDKCVRAuthenticationToSign() && am == "dk_nemid_cvr") {
       return false;
     } else if (!ff.canUseSMSPinAuthenticationToSign() && am == "sms_pin") {
       return false;
@@ -74,7 +78,9 @@ module.exports = React.createClass({
       return "design-view-action-participant-icon-auth-to-sign-icon-se-bankid";
     } else if (sig.noBankIDAuthenticationToSign()) {
       return "design-view-action-participant-icon-auth-to-sign-icon-no-bankid";
-    } else if (sig.dkNemIDAuthenticationToSign()) {
+    } else if (sig.dkNemIDCPRAuthenticationToSign()
+      || sig.dkNemIDPIDAuthenticationToSign()
+      || sig.dkNemIDCVRAuthenticationToSign()) {
       return "design-view-action-participant-icon-auth-to-sign-icon-dk-nemid";
     } else if (sig.smsPinAuthenticationToSign()) {
       return "design-view-action-participant-icon-auth-to-sign-icon-sms-pin";
@@ -113,7 +119,19 @@ module.exports = React.createClass({
       title.push(
         localization.designview.addParties.authenticationToSignDKNemID
       );
-    } else if (authMethod == "fi_tupas") {
+   } else if (authMethod == "dk_nemid_cpr") {
+      title.push(
+        localization.designview.addParties.authenticationToSignDKNemIDCPR
+      );
+   } else if (authMethod == "dk_nemid_pid") {
+      title.push(
+        localization.designview.addParties.authenticationToSignDKNemIDPID
+      );
+   } else if (authMethod == "dk_nemid_cvr") {
+      title.push(
+        localization.designview.addParties.authenticationToSignDKNemIDCVR
+      );
+   } else if (authMethod == "fi_tupas") {
       title.push(
         localization.designview.addParties.authenticationToSignFITupas
       );

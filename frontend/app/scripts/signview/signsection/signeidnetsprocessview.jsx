@@ -98,29 +98,6 @@ var classNames = require("classnames");
           "canceled": localization.signNOBankIDCanceled
         };
       }
-      if (signatory.dkNemIDAuthenticationToSign()) {
-        return {
-          "buypass.certificatemissing": localization.signDKNemIDError.generic,
-          "cookienotfound": localization.signDKNemIDError.useragent,
-          "errorauthenticating": localization.signDKNemIDError.auth,
-          "errorsigningdocument": localization.signDKNemIDError.document,
-          "generalerror": localization.signDKNemIDError.generic,
-          "insufficientauthpermission": localization.signDKNemIDError.auth,
-          "insufficientsignpermission": localization.signDKNemIDError.auth,
-          "internalerror": localization.signDKNemIDError.generic,
-          "invalidid": localization.signDKNemIDError.auth,
-          "javanotfound": localization.signDKNemIDError.useragent,
-          "javascriptnotfound": localization.signDKNemIDError.useragent,
-          "servicenotavailable": localization.signDKNemIDError.generic,
-          "sessiontimeout": localization.signDKNemIDError.timeout,
-          "signrefnotfound": localization.signDKNemIDError.document,
-          "toooldjava": localization.signDKNemIDError.useragent,
-          "tooyoungsigner": localization.signDKNemIDError.age,
-          "unsupportedua": localization.signDKNemIDError.useragent,
-          "wrongmobdob": localization.signDKNemIDError.mobiledob,
-          "canceled": localization.signDKNemIDCanceled
-        };
-      }
     },
 
     onIFrameMessage: function (ev) {
@@ -202,11 +179,6 @@ var classNames = require("classnames");
         logoClass = classNames({"bankid-logo-nets": true, "no-bankid-logo": true});
         successText = localization.signNOBankIDSuccess;
       }
-      if (signatory.dkNemIDAuthenticationToSign()) {
-        confirmationTitle = localization.docsignview.eleg.bankid.signDKConfirmationTitle;
-        logoClass = classNames({"bankid-logo-nets": true, "dk-nemid-logo": true});
-        successText = localization.signDKNemIDSuccess;
-      }
       var transctionNumberText = localization.docsignview.eleg.bankid.transactionNumber;
       var transactionNumberFirst = String(document.id).slice(0, -4);
       var transactionNumberLast = String(document.id).slice(-4);
@@ -248,33 +220,6 @@ var classNames = require("classnames");
               <Button
                 text={localization.docsignview.eleg.bankid.signNOSignMethodMobile}
                 onClick={this.onNOBankIDSigningMethodMobile}
-                className="button-block"
-              />
-              <Button
-                text={localization.cancel}
-                className="transparent-button button-block"
-                onClick={this.onCancel}
-              />
-            </div>
-          }
-          {/* if */ (this.state.signStatus == "choose_signing_method") && signatory.dkNemIDAuthenticationToSign() &&
-            <div>
-              <div className="nets-sign-process">
-                {localization.docsignview.eleg.bankid.signChooseMethod}
-              </div>
-              <Button
-                text={localization.docsignview.eleg.bankid.signDKSignMethodPersonalKeycard}
-                onClick={this.onNemIDSigningMethodPersonalKeycard}
-                className="button-block"
-              />
-              <Button
-                text={localization.docsignview.eleg.bankid.signDKSignMethodEmployeeKeycard}
-                onClick={this.onNemIDSigningMethodEmployeeKeycard}
-                className="button-block"
-              />
-              <Button
-                text={localization.docsignview.eleg.bankid.signDKSignMethodEmployeeKeyfile}
-                onClick={this.onNemIDSigningMethodEmployeeKeyfile}
                 className="button-block"
               />
               <Button

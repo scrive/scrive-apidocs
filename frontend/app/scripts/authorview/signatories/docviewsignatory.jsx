@@ -539,8 +539,12 @@ var EmailModal = require("../../common/email_modal");
         return localization.docview.signatory.authenticationToSignSEBankID;
       } else if (signatory.noBankIDAuthenticationToSign()) {
         return localization.docview.signatory.authenticationToSignNOBankID;
-      } else if (signatory.dkNemIDAuthenticationToSign()) {
-        return localization.docview.signatory.authenticationToSignDKNemID;
+      } else if (signatory.dkNemIDCPRAuthenticationToSign()) {
+        return localization.docview.signatory.authenticationToSignDKNemIDCPR;
+      } else if (signatory.dkNemIDPIDAuthenticationToSign()) {
+        return localization.docview.signatory.authenticationToSignDKNemIDPID;
+      } else if (signatory.dkNemIDCVRAuthenticationToSign()) {
+        return localization.docview.signatory.authenticationToSignDKNemIDCVR;
       } else if (signatory.nlIDINAuthenticationToSign()) {
         return localization.docview.signatory.authenticationToSignIDIN;
       } else if (signatory.fiTupasAuthenticationToSign()) {
@@ -589,8 +593,10 @@ var EmailModal = require("../../common/email_modal");
     getSsnLabel: function () {
       var sig = this.props.signatory;
       switch (sig.authenticationToSign()) {
-        case "dk_nemid":
+        case "dk_nemid_cpr":
           return localization.eID.idName.cpr;
+        case "dk_nemid_cvr":
+          return localization.eID.idName.cvr;
         default:
           return localization.docsignview.personalNumberLabel;
       }

@@ -168,8 +168,10 @@ var classNames = require("classnames");
       var model = this.props.model;
       var sig = model.document().currentSignatory();
       switch (sig.authenticationToSign()) {
-        case "dk_nemid":
+        case "dk_nemid_cpr":
           return localization.eID.idName.cpr;
+        case "dk_nemid_cvr":
+          return localization.eID.idName.cvr;
         default:
           return localization.personalNumber;
       }
@@ -179,8 +181,10 @@ var classNames = require("classnames");
       var model = this.props.model;
       var sig = model.document().currentSignatory();
       switch (sig.authenticationToSign()) {
-        case "dk_nemid":
+        case "dk_nemid_cpr":
           return localization.eID.infoText.cpr;
+        case "dk_nemid_cvr":
+          return localization.eID.infoText.cvr;
         default:
           return localization.personalNumber;
       }

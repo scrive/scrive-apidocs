@@ -54,7 +54,9 @@ checkAuthenticationToSignMethodAndValue slid = do
     Nothing         -> return ()
     Just authMethod -> do
       siglink <- guardGetSignatoryFromIdForDocument slid
-      let authOK = authMethod == signatorylinkauthenticationtosignmethod siglink
+      let siglinkSignMethod = signatorylinkauthenticationtosignmethod siglink
+          authOK            = coerceLegacyDKNemIDMethod authMethod
+            == coerceLegacyDKNemIDMethod siglinkSignMethod
       unless authOK . apiError $ requestParameterInvalid "authentication_type"
                                                          "does not match with document"
       when (authToSignNeedsPersonalNumber authMethod)
@@ -83,6 +85,10 @@ checkAuthenticationToSignMethodAndValue slid = do
         else apiError $ requestParameterInvalid
           "authentication_value"
           "value for personal number does not match"
+    coerceLegacyDKNemIDMethod :: AuthenticationToSignMethod -> AuthenticationToSignMethod
+    coerceLegacyDKNemIDMethod = \case
+      LegacyDKNemIDAuthenticationToSign -> DKNemIDCPRAuthenticationToSign
+      m -> m
 
 getScreenshots :: (Kontrakcja m) => m SignatoryScreenshots
 getScreenshots = do

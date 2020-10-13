@@ -11,7 +11,7 @@ $(function () {
 
   var checkIfSigned = function () {
     var doRedirect = function () {
-      window.location = redirectUrl;
+      window.top.location = redirectUrl;
     };
     var onError = function () {
       new FlashMessageAfterReload({
@@ -57,7 +57,7 @@ $(function () {
 
   if (fromTemplate.incorrect_data) {
     new FlashMessageAfterReload({type : "error", content: localization.identify.authorizationDataMismatch});
-    window.location = redirectUrl; // not signed => back to signview
+    window.top.location = redirectUrl; // not signed => back to signview
   } else {
     checkIfSigned(redirectUrl);
     React.render(element, document.getElementById('body'));

@@ -371,6 +371,7 @@ instance Arbitrary FeatureFlags where
     (k , l , m , n , o , p , q , r , s , t ) <- arbitrary
     (u , v , w , x , z , y , aa, bb, cc, dd) <- arbitrary
     (ee, ff, gg, hh, ii, jj, kk, ll, mm, nn) <- arbitrary
+    oo <- arbitrary
     return $ FeatureFlags { ffCanUseTemplates                  = a
                           , ffCanUseBranding                   = b
                           , ffCanUseAuthorAttachments          = c
@@ -381,7 +382,9 @@ instance Arbitrary FeatureFlags where
                           , ffCanUseDKCPRAuthenticationToView  = h
                           , ffCanUseDKPIDAuthenticationToView  = ll
                           , ffCanUseDKCVRAuthenticationToView  = mm
-                          , ffCanUseDKAuthenticationToSign     = i
+                          , ffCanUseDKCPRAuthenticationToSign  = i
+                          , ffCanUseDKPIDAuthenticationToSign  = nn
+                          , ffCanUseDKCVRAuthenticationToSign  = oo
                           , ffCanUseNOAuthenticationToView     = j
                           , ffCanUseNOAuthenticationToSign     = k
                           , ffCanUseSEAuthenticationToView     = l
@@ -858,6 +861,14 @@ instance Arbitrary EIDServiceVerimiQesSignature where
       <*> arbitraryMaybe (arbText 20 30)
       <*> arbitraryMaybe (arbText 10 10)
 
+instance Arbitrary EIDServiceDKNemIDSignature where
+  arbitrary =
+    EIDServiceDKNemIDSignature
+      <$> arbText 20  30
+      <*> arbText 200 300
+      <*> arbText 10  20
+      <*> arbitraryMaybe (arbText 10 10)
+      <*> arbitraryMaybe (arbText 10 10)
 
 instance Arbitrary ESignature where
   arbitrary = oneof

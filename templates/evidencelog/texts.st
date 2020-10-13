@@ -84,7 +84,13 @@ ChangeAuthenticationToSignFromSEBankIDLog=$ChangeAuthenticationToSignFrom(auth='
 ###
 ChangeAuthenticationToSignFromNOBankIDLog=$ChangeAuthenticationToSignFrom(auth='“Norwegian BankID”')$
 ###
-ChangeAuthenticationToSignFromDKNemIDLog=$ChangeAuthenticationToSignFrom(auth='“Danish NemID”')$
+ChangeAuthenticationToSignFromLegacyDKNemIDLog=$ChangeAuthenticationToSignFrom(auth='“Danish NemID”')$
+###
+ChangeAuthenticationToSignFromDKNemIDCPRLog=$ChangeAuthenticationToSignFrom(auth='“Danish NemID”')$
+###
+ChangeAuthenticationToSignFromDKNemIDPIDLog=$ChangeAuthenticationToSignFrom(auth='“Danish NemID”')$
+###
+ChangeAuthenticationToSignFromDKNemIDCVRLog=$ChangeAuthenticationToSignFrom(auth='“Danish Employee NemID”')$
 ###
 ChangeAuthenticationToSignFromIDINLog=$ChangeAuthenticationToSignFrom(auth='“Dutch iDIN”')$
 ###
@@ -104,7 +110,13 @@ ChangeAuthenticationToSignToSEBankIDLog=$ChangeAuthenticationToSignTo(auth='“S
 ###
 ChangeAuthenticationToSignToNOBankIDLog=$ChangeAuthenticationToSignTo(auth='“Norwegian BankID”')$
 ###
-ChangeAuthenticationToSignToDKNemIDLog=$ChangeAuthenticationToSignTo(auth='“Danish NemID”')$
+ChangeAuthenticationToSignToLegacyDKNemIDLog=$ChangeAuthenticationToSignTo(auth='“Danish NemID”')$
+###
+ChangeAuthenticationToSignToDKNemIDPIDLog=$ChangeAuthenticationToSignTo(auth='“Danish NemID”')$
+###
+ChangeAuthenticationToSignToDKNemIDCPRLog=$ChangeAuthenticationToSignTo(auth='“Danish NemID”')$
+###
+ChangeAuthenticationToSignToDKNemIDCVRLog=$ChangeAuthenticationToSignTo(auth='“Danish Employee NemID”')$
 ###
 ChangeAuthenticationToSignToIDINLog=$ChangeAuthenticationToSignTo(auth='“Dutch iDIN”')$
 ###

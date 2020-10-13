@@ -287,8 +287,12 @@ module.exports = React.createClass({
       return localization.designview.addParties.authenticationToSignSEBankID;
     } else if (t == "no_bankid") {
       return localization.designview.addParties.authenticationToSignNOBankID;
-    } else if (t == "dk_nemid") {
-      return localization.designview.addParties.authenticationToSignDKNemID;
+    } else if (t == "dk_nemid_cpr") {
+      return localization.designview.addParties.authenticationToSignDKNemIDCPR;
+    } else if (t == "dk_nemid_pid") {
+      return localization.designview.addParties.authenticationToSignDKNemIDPID;
+    } else if (t == "dk_nemid_cvr") {
+      return localization.designview.addParties.authenticationToSignDKNemIDCVR;
     } else if (t == "sms_pin") {
       return localization.designview.addParties.authenticationToSignSMSPin;
     } else if (t == "nl_idin") {
@@ -307,9 +311,9 @@ module.exports = React.createClass({
     var self = this;
     var sig = this.props.model;
     var allAuthTypes = !sig.signs() ? ["standard"] : [
-      "standard", "se_bankid", "no_bankid", "dk_nemid", "nl_idin", "fi_tupas",
-      "onfido_document_check", "onfido_document_and_photo_check", "sms_pin",
-      "verimi_qes"
+      "standard", "se_bankid", "no_bankid", "dk_nemid_cpr", "dk_nemid_pid",
+      "dk_nemid_cvr", "nl_idin", "fi_tupas", "onfido_document_check",
+      "onfido_document_and_photo_check", "sms_pin", "verimi_qes"
     ];
     var authTypes = allAuthTypes.slice(0);
 
@@ -325,8 +329,14 @@ module.exports = React.createClass({
       if (!ff.canUseNOAuthenticationToSign() && !sig.noBankIDAuthenticationToSign()) {
         authTypes = _.without(authTypes, "no_bankid");
       }
-      if (!ff.canUseDKAuthenticationToSign() && !sig.dkNemIDAuthenticationToSign()) {
-        authTypes = _.without(authTypes, "dk_nemid");
+      if (!ff.canUseDKCPRAuthenticationToSign() && !sig.dkNemIDCPRAuthenticationToSign()) {
+        authTypes = _.without(authTypes, "dk_nemid_cpr");
+      }
+      if (!ff.canUseDKPIDAuthenticationToSign() && !sig.dkNemIDPIDAuthenticationToSign()) {
+        authTypes = _.without(authTypes, "dk_nemid_pid");
+      }
+      if (!ff.canUseDKCVRAuthenticationToSign() && !sig.dkNemIDCVRAuthenticationToSign()) {
+        authTypes = _.without(authTypes, "dk_nemid_cvr");
       }
       if (!ff.canUseSMSPinAuthenticationToSign() && !sig.smsPinAuthenticationToSign()) {
         authTypes = _.without(authTypes, "sms_pin");

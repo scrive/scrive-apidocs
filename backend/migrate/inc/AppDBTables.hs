@@ -77,7 +77,7 @@ kontraComposites = concat [otherComposites, userGroupComposites, mailerComposite
       , ctDocument
       , ctDocument1
       , ctFeatureFlags
-      , ctFeatureFlags10
+      , ctFeatureFlags11
       , ctKontraForMailAggregate
       , ctKontraForSMSAggregate
       ]

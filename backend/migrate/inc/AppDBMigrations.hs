@@ -310,4 +310,7 @@ kontraMigrations =
   , updateKontraInfoForMailsAggregate
   , updateKontraInfoForSMSesAggregate
   , addAttemptsToSMSPin
+  , featureFlagsRenameNemIDCPRAndAddPIDAndCVRToSign
+  , addNoDKNemIDPIDExceptionConstraint
+  , updateLegacyAuthenticationToSignInTemplates
   ]

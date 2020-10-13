@@ -130,7 +130,9 @@ setFreeFeatures features =
 
         adminFeatures2 =
             { adminFeatures1
-                | canUseDKAuthenticationToSign = False
+                | canUseDKCPRAuthenticationToSign = False
+                , canUseDKPIDAuthenticationToSign = False
+                , canUseDKCVRAuthenticationToSign = False
                 , canUseDKCPRAuthenticationToView = False
                 , canUseDKPIDAuthenticationToView = False
                 , canUseDKCVRAuthenticationToView = False
@@ -155,7 +157,9 @@ setFreeFeatures features =
                 | canUseDKCPRAuthenticationToView = False
                 , canUseDKPIDAuthenticationToView = False
                 , canUseDKCVRAuthenticationToView = False
-                , canUseDKAuthenticationToSign = False
+                , canUseDKCPRAuthenticationToSign = False
+                , canUseDKPIDAuthenticationToSign = False
+                , canUseDKCVRAuthenticationToSign = False
                 , canUseFIAuthenticationToView = False
                 , canUseFIAuthenticationToSign = False
                 , canUseNOAuthenticationToView = False
@@ -183,7 +187,9 @@ setPaidFeatures features =
 
         adminFeatures2 =
             { adminFeatures1
-                | canUseDKAuthenticationToSign = True
+                | canUseDKCPRAuthenticationToSign = True
+                , canUseDKPIDAuthenticationToSign = True
+                , canUseDKCVRAuthenticationToSign = True
                 , canUseDKCPRAuthenticationToView = True
                 , canUseDKPIDAuthenticationToView = True
                 , canUseDKCVRAuthenticationToView = True
@@ -208,7 +214,9 @@ setPaidFeatures features =
                 | canUseDKCPRAuthenticationToView = True
                 , canUseDKPIDAuthenticationToView = True
                 , canUseDKCVRAuthenticationToView = True
-                , canUseDKAuthenticationToSign = True
+                , canUseDKCPRAuthenticationToSign = True
+                , canUseDKPIDAuthenticationToSign = True
+                , canUseDKCVRAuthenticationToSign = True
                 , canUseFIAuthenticationToView = True
                 , canUseFIAuthenticationToSign = True
                 , canUseNOAuthenticationToView = True
@@ -505,7 +513,9 @@ featureFlagsStructure =
       , [ ( "Can use DK CPR authorization to view", "can_use_dk_cpr_authentication_to_view" )
         , ( "Can use DK PID authorization to view", "can_use_dk_pid_authentication_to_view" )
         , ( "Can use DK CVR authorization to view", "can_use_dk_cvr_authentication_to_view" )
-        , ( "Can use DK authorization to sign", "can_use_dk_authentication_to_sign" )
+        , ( "Can use DK CPR authorization to sign", "can_use_dk_cpr_authentication_to_sign" )
+        , ( "Can use DK PID authorization to sign", "can_use_dk_pid_authentication_to_sign" )
+        , ( "Can use DK CVR authorization to sign", "can_use_dk_cvr_authentication_to_sign" )
         , ( "Can use FI authorization to view", "can_use_fi_authentication_to_view" )
         , ( "Can use FI authorization to sign", "can_use_fi_authentication_to_sign" )
         , ( "Can use NO authorization to view", "can_use_no_authentication_to_view" )

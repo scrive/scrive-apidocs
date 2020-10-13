@@ -89,14 +89,20 @@ signatoryLinkTemplateFields sl = do
     $      signatorylinkauthenticationtosignmethod sl
     `elem` [ SEBankIDAuthenticationToSign
            , NOBankIDAuthenticationToSign
-           , DKNemIDAuthenticationToSign
+           , LegacyDKNemIDAuthenticationToSign
+           , DKNemIDCPRAuthenticationToSign
+           , DKNemIDPIDAuthenticationToSign
+           , DKNemIDCVRAuthenticationToSign
            ]
     ||     not (signatoryisauthor sl || signatorylinkdeliverymethod sl == APIDelivery)
   F.value "eleg"
     $      signatorylinkauthenticationtosignmethod sl
     `elem` [ SEBankIDAuthenticationToSign
            , NOBankIDAuthenticationToSign
-           , DKNemIDAuthenticationToSign
+           , LegacyDKNemIDAuthenticationToSign
+           , DKNemIDCPRAuthenticationToSign
+           , DKNemIDPIDAuthenticationToSign
+           , DKNemIDCVRAuthenticationToSign
            ]
   F.value "sms_pin"
     $  signatorylinkauthenticationtosignmethod sl
@@ -400,21 +406,27 @@ data CurrentEvidenceEventType
   | ChangeAuthenticationToSignFromSMSPin
   | ChangeAuthenticationToSignFromSEBankID
   | ChangeAuthenticationToSignFromNOBankID
-  | ChangeAuthenticationToSignFromDKNemID
+  | ChangeAuthenticationToSignFromLegacyDKNemID
   | ChangeAuthenticationToSignFromIDIN
   | ChangeAuthenticationToSignFromFITupas
   | ChangeAuthenticationToSignFromOnfidoDocumentCheck
   | ChangeAuthenticationToSignFromOnfidoDocumentAndPhotoCheck
+  | ChangeAuthenticationToSignFromDKNemIDCPR
+  | ChangeAuthenticationToSignFromDKNemIDPID
+  | ChangeAuthenticationToSignFromDKNemIDCVR
   | ChangeAuthenticationToSignFromVerimiQes
   | ChangeAuthenticationToSignToStandard
   | ChangeAuthenticationToSignToSMSPin
   | ChangeAuthenticationToSignToSEBankID
   | ChangeAuthenticationToSignToNOBankID
-  | ChangeAuthenticationToSignToDKNemID
+  | ChangeAuthenticationToSignToLegacyDKNemID
   | ChangeAuthenticationToSignToIDIN
   | ChangeAuthenticationToSignToFITupas
   | ChangeAuthenticationToSignToOnfidoDocumentCheck
   | ChangeAuthenticationToSignToOnfidoDocumentAndPhotoCheck
+  | ChangeAuthenticationToSignToDKNemIDCPR
+  | ChangeAuthenticationToSignToDKNemIDPID
+  | ChangeAuthenticationToSignToDKNemIDCVR
   | ChangeAuthenticationToSignToVerimiQes
   | ChangeAuthenticationToViewFromStandard
   | ChangeAuthenticationToViewFromSMSPin
@@ -980,12 +992,12 @@ instance ToSQL EvidenceEventType where
   toSQL (Current ChangeAuthenticationToSignFromSMSPin          ) = toSQL (223 :: Int16)
   toSQL (Current ChangeAuthenticationToSignFromSEBankID        ) = toSQL (224 :: Int16)
   toSQL (Current ChangeAuthenticationToSignFromNOBankID        ) = toSQL (225 :: Int16)
-  toSQL (Current ChangeAuthenticationToSignFromDKNemID         ) = toSQL (226 :: Int16)
+  toSQL (Current ChangeAuthenticationToSignFromLegacyDKNemID   ) = toSQL (226 :: Int16)
   toSQL (Current ChangeAuthenticationToSignToStandard          ) = toSQL (227 :: Int16)
   toSQL (Current ChangeAuthenticationToSignToSMSPin            ) = toSQL (228 :: Int16)
   toSQL (Current ChangeAuthenticationToSignToSEBankID          ) = toSQL (229 :: Int16)
   toSQL (Current ChangeAuthenticationToSignToNOBankID          ) = toSQL (230 :: Int16)
-  toSQL (Current ChangeAuthenticationToSignToDKNemID           ) = toSQL (231 :: Int16)
+  toSQL (Current ChangeAuthenticationToSignToLegacyDKNemID     ) = toSQL (231 :: Int16)
   toSQL (Current ChangeAuthenticationToViewFromStandard        ) = toSQL (232 :: Int16)
   toSQL (Current ChangeAuthenticationToViewFromSMSPin          ) = toSQL (233 :: Int16)
   toSQL (Current ChangeAuthenticationToViewFromSEBankID        ) = toSQL (234 :: Int16)
@@ -1064,7 +1076,13 @@ instance ToSQL EvidenceEventType where
     toSQL (296 :: Int16)
   toSQL (Current ChangeAuthenticationToViewArchivedToOnfidoDocumentAndPhotoCheck) =
     toSQL (297 :: Int16)
-  toSQL (Current SMSPinVerificationFailed) = toSQL (298 :: Int16)
+  toSQL (Current SMSPinVerificationFailed                ) = toSQL (298 :: Int16)
+  toSQL (Current ChangeAuthenticationToSignFromDKNemIDCPR) = toSQL (299 :: Int16)
+  toSQL (Current ChangeAuthenticationToSignToDKNemIDCPR  ) = toSQL (300 :: Int16)
+  toSQL (Current ChangeAuthenticationToSignFromDKNemIDPID) = toSQL (301 :: Int16)
+  toSQL (Current ChangeAuthenticationToSignToDKNemIDPID  ) = toSQL (302 :: Int16)
+  toSQL (Current ChangeAuthenticationToSignFromDKNemIDCVR) = toSQL (303 :: Int16)
+  toSQL (Current ChangeAuthenticationToSignToDKNemIDCVR  ) = toSQL (304 :: Int16)
 
 instance FromSQL EvidenceEventType where
   type PQBase EvidenceEventType = PQBase Int16
@@ -1338,12 +1356,12 @@ instance FromSQL EvidenceEventType where
       223 -> return (Current ChangeAuthenticationToSignFromSMSPin)
       224 -> return (Current ChangeAuthenticationToSignFromSEBankID)
       225 -> return (Current ChangeAuthenticationToSignFromNOBankID)
-      226 -> return (Current ChangeAuthenticationToSignFromDKNemID)
+      226 -> return (Current ChangeAuthenticationToSignFromLegacyDKNemID)
       227 -> return (Current ChangeAuthenticationToSignToStandard)
       228 -> return (Current ChangeAuthenticationToSignToSMSPin)
       229 -> return (Current ChangeAuthenticationToSignToSEBankID)
       230 -> return (Current ChangeAuthenticationToSignToNOBankID)
-      231 -> return (Current ChangeAuthenticationToSignToDKNemID)
+      231 -> return (Current ChangeAuthenticationToSignToLegacyDKNemID)
       232 -> return (Current ChangeAuthenticationToViewFromStandard)
       233 -> return (Current ChangeAuthenticationToViewFromSMSPin)
       234 -> return (Current ChangeAuthenticationToViewFromSEBankID)
@@ -1413,7 +1431,13 @@ instance FromSQL EvidenceEventType where
       297 ->
         return (Current ChangeAuthenticationToViewArchivedToOnfidoDocumentAndPhotoCheck)
       298 -> return (Current SMSPinVerificationFailed)
-      _   -> E.throwIO $ RangeError { reRange = [(1, 298)], reValue = n }
+      299 -> return (Current ChangeAuthenticationToSignFromDKNemIDCPR)
+      300 -> return (Current ChangeAuthenticationToSignToDKNemIDCPR)
+      301 -> return (Current ChangeAuthenticationToSignFromDKNemIDPID)
+      302 -> return (Current ChangeAuthenticationToSignToDKNemIDPID)
+      303 -> return (Current ChangeAuthenticationToSignFromDKNemIDCVR)
+      304 -> return (Current ChangeAuthenticationToSignToDKNemIDCVR)
+      _   -> E.throwIO $ RangeError { reRange = [(1, 304)], reValue = n }
 
 
 authToViewChangeEvidence
@@ -1513,13 +1537,16 @@ authToSignChangeEvidence aFrom aTo =
 
 authToSignChangeFrom :: AuthenticationToSignMethod -> CurrentEvidenceEventType
 authToSignChangeFrom a = case a of
-  StandardAuthenticationToSign -> ChangeAuthenticationToSignFromStandard
-  SEBankIDAuthenticationToSign -> ChangeAuthenticationToSignFromSEBankID
-  NOBankIDAuthenticationToSign -> ChangeAuthenticationToSignFromNOBankID
-  DKNemIDAuthenticationToSign  -> ChangeAuthenticationToSignFromDKNemID
-  SMSPinAuthenticationToSign   -> ChangeAuthenticationToSignFromSMSPin
-  IDINAuthenticationToSign     -> ChangeAuthenticationToSignFromIDIN
-  FITupasAuthenticationToSign  -> ChangeAuthenticationToSignFromFITupas
+  StandardAuthenticationToSign      -> ChangeAuthenticationToSignFromStandard
+  SEBankIDAuthenticationToSign      -> ChangeAuthenticationToSignFromSEBankID
+  NOBankIDAuthenticationToSign      -> ChangeAuthenticationToSignFromNOBankID
+  LegacyDKNemIDAuthenticationToSign -> ChangeAuthenticationToSignFromLegacyDKNemID
+  DKNemIDCPRAuthenticationToSign    -> ChangeAuthenticationToSignFromDKNemIDCPR
+  DKNemIDPIDAuthenticationToSign    -> ChangeAuthenticationToSignFromDKNemIDPID
+  DKNemIDCVRAuthenticationToSign    -> ChangeAuthenticationToSignFromDKNemIDCVR
+  SMSPinAuthenticationToSign        -> ChangeAuthenticationToSignFromSMSPin
+  IDINAuthenticationToSign          -> ChangeAuthenticationToSignFromIDIN
+  FITupasAuthenticationToSign       -> ChangeAuthenticationToSignFromFITupas
   OnfidoDocumentCheckAuthenticationToSign ->
     ChangeAuthenticationToSignFromOnfidoDocumentCheck
   OnfidoDocumentAndPhotoCheckAuthenticationToSign ->
@@ -1528,13 +1555,16 @@ authToSignChangeFrom a = case a of
 
 authToSignChangeTo :: AuthenticationToSignMethod -> CurrentEvidenceEventType
 authToSignChangeTo a = case a of
-  StandardAuthenticationToSign -> ChangeAuthenticationToSignToStandard
-  SEBankIDAuthenticationToSign -> ChangeAuthenticationToSignToSEBankID
-  NOBankIDAuthenticationToSign -> ChangeAuthenticationToSignToNOBankID
-  DKNemIDAuthenticationToSign  -> ChangeAuthenticationToSignToDKNemID
-  SMSPinAuthenticationToSign   -> ChangeAuthenticationToSignToSMSPin
-  IDINAuthenticationToSign     -> ChangeAuthenticationToSignToIDIN
-  FITupasAuthenticationToSign  -> ChangeAuthenticationToSignToFITupas
+  StandardAuthenticationToSign      -> ChangeAuthenticationToSignToStandard
+  SEBankIDAuthenticationToSign      -> ChangeAuthenticationToSignToSEBankID
+  NOBankIDAuthenticationToSign      -> ChangeAuthenticationToSignToNOBankID
+  LegacyDKNemIDAuthenticationToSign -> ChangeAuthenticationToSignToLegacyDKNemID
+  DKNemIDCPRAuthenticationToSign    -> ChangeAuthenticationToSignToDKNemIDCPR
+  DKNemIDPIDAuthenticationToSign    -> ChangeAuthenticationToSignToDKNemIDPID
+  DKNemIDCVRAuthenticationToSign    -> ChangeAuthenticationToSignToDKNemIDCVR
+  SMSPinAuthenticationToSign        -> ChangeAuthenticationToSignToSMSPin
+  IDINAuthenticationToSign          -> ChangeAuthenticationToSignToIDIN
+  FITupasAuthenticationToSign       -> ChangeAuthenticationToSignToFITupas
   OnfidoDocumentCheckAuthenticationToSign ->
     ChangeAuthenticationToSignToOnfidoDocumentCheck
   OnfidoDocumentAndPhotoCheckAuthenticationToSign ->

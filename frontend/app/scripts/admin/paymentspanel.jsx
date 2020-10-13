@@ -45,7 +45,9 @@ module.exports = React.createClass({
         canUseDKCPRAuthenticationToView: features.canUseDKCPRAuthenticationToView(),
         canUseDKPIDAuthenticationToView: features.canUseDKPIDAuthenticationToView(),
         canUseDKCVRAuthenticationToView: features.canUseDKCVRAuthenticationToView(),
-        canUseDKAuthenticationToSign: features.canUseDKAuthenticationToSign(),
+        canUseDKCPRAuthenticationToSign: features.canUseDKCPRAuthenticationToSign(),
+        canUseDKPIDAuthenticationToSign: features.canUseDKPIDAuthenticationToSign(),
+        canUseDKCVRAuthenticationToSign: features.canUseDKCVRAuthenticationToSign(),
         canUseFIAuthenticationToView: features.canUseFIAuthenticationToView(),
         canUseFIAuthenticationToSign: features.canUseFIAuthenticationToSign(),
         canUseNOAuthenticationToView: features.canUseNOAuthenticationToView(),
@@ -128,7 +130,9 @@ module.exports = React.createClass({
           adminUserFeatures.canUseDKCPRAuthenticationToView = false;
           adminUserFeatures.canUseDKPIDAuthenticationToView = false;
           adminUserFeatures.canUseDKCVRAuthenticationToView = false;
-          adminUserFeatures.canUseDKAuthenticationToSign = false;
+          adminUserFeatures.canUseDKCPRAuthenticationToSign = false;
+          adminUserFeatures.canUseDKPIDAuthenticationToSign = false;
+          adminUserFeatures.canUseDKCVRAuthenticationToSign = false;
           adminUserFeatures.canUseFIAuthenticationToView = false;
           adminUserFeatures.canUseFIAuthenticationToSign = false;
           adminUserFeatures.canUseNOAuthenticationToView = false;
@@ -142,7 +146,9 @@ module.exports = React.createClass({
           regularUserFeatures.canUseDKCPRAuthenticationToView = false;
           regularUserFeatures.canUseDKPIDAuthenticationToView = false;
           regularUserFeatures.canUseDKCVRAuthenticationToView = false;
-          regularUserFeatures.canUseDKAuthenticationToSign = false;
+          regularUserFeatures.canUseDKCPRAuthenticationToSign = false;
+          regularUserFeatures.canUseDKPIDAuthenticationToSign = false;
+          regularUserFeatures.canUseDKCVRAuthenticationToSign = false;
           regularUserFeatures.canUseFIAuthenticationToView = false;
           regularUserFeatures.canUseFIAuthenticationToSign = false;
           regularUserFeatures.canUseNOAuthenticationToView = false;
@@ -158,6 +164,8 @@ module.exports = React.createClass({
           adminUserFeatures.canUseDKCPRAuthenticationToView = true;
           adminUserFeatures.canUseDKPIDAuthenticationToView = true;
           adminUserFeatures.canUseDKCVRAuthenticationToView = true;
+          adminUserFeatures.canUseDKPIDCPRAuthenticationToSign = true;
+          adminUserFeatures.canUseDKCVRAuthenticationToSign = true;
           adminUserFeatures.canUseDKAuthenticationToSign = true;
           adminUserFeatures.canUseFIAuthenticationToView = true;
           adminUserFeatures.canUseFIAuthenticationToSign = true;
@@ -172,7 +180,9 @@ module.exports = React.createClass({
           regularUserFeatures.canUseDKCPRAuthenticationToView = true;
           regularUserFeatures.canUseDKPIDAuthenticationToView = true;
           regularUserFeatures.canUseDKCVRAuthenticationToView = true;
-          regularUserFeatures.canUseDKAuthenticationToSign = true;
+          regularUserFeatures.canUseDKCPRAuthenticationToSign = true;
+          regularUserFeatures.canUseDKPIDAuthenticationToSign = true;
+          regularUserFeatures.canUseDKCVRAuthenticationToSign = true;
           regularUserFeatures.canUseFIAuthenticationToView = true;
           regularUserFeatures.canUseFIAuthenticationToSign = true;
           regularUserFeatures.canUseNOAuthenticationToView = true;
@@ -437,7 +447,9 @@ module.exports = React.createClass({
               {this.renderTRForOptionWithCheckbox("Can use DK Personal NemID authorization to view (with CPR processing)","canUseDKCPRAuthenticationToView")}
               {this.renderTRForOptionWithCheckbox("Can use DK Personal NemID authorization to view (without CPR processing)","canUseDKPIDAuthenticationToView")}
               {this.renderTRForOptionWithCheckbox("Can use DK Employee NemID authorization to view","canUseDKCVRAuthenticationToView")}
-              {this.renderTRForOptionWithCheckbox("Can use DK authorization to sign","canUseDKAuthenticationToSign")}
+              {this.renderTRForOptionWithCheckbox("Can use DK Personal NemID authorization to sign (CPR stored in document)","canUseDKCPRAuthenticationToSign")}
+              {this.renderTRForOptionWithCheckbox("Can use DK Personal NemID authorization to sign (CPR not stored in document)","canUseDKPIDAuthenticationToSign")}
+              {this.renderTRForOptionWithCheckbox("Can use DK Employee NemID authorization to sign","canUseDKCVRAuthenticationToSign")}
               {this.renderTRForOptionWithCheckbox("Can use FI authorization to view","canUseFIAuthenticationToView")}
               {this.renderTRForOptionWithCheckbox("Can use FI authorization to sign","canUseFIAuthenticationToSign")}
               {this.renderTRForOptionWithCheckbox("Can use NO authorization to view","canUseNOAuthenticationToView")}

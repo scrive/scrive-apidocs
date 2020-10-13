@@ -608,11 +608,14 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     noBankIDAuthenticationToSign: function() {
           return this.get("authentication_method_to_sign") == "no_bankid" && this.canHaveAuthenticationToSign();
     },
-    dkNemIDAuthenticationToSign: function() {
-          return this.get("authentication_method_to_sign") == "dk_nemid" && this.canHaveAuthenticationToSign();
+    dkNemIDCPRAuthenticationToSign: function() {
+          return this.authenticationToSign() == "dk_nemid_cpr" && this.canHaveAuthenticationToSign();
     },
-    noBankIDAuthenticationToSign: function() {
-          return this.get("authentication_method_to_sign") == "no_bankid" && this.canHaveAuthenticationToSign();
+    dkNemIDPIDAuthenticationToSign: function() {
+          return this.authenticationToSign() == "dk_nemid_pid" && this.canHaveAuthenticationToSign();
+    },
+    dkNemIDCVRAuthenticationToSign: function() {
+          return this.authenticationToSign() == "dk_nemid_cvr" && this.canHaveAuthenticationToSign();
     },
     smsPinAuthenticationToSign: function() {
           return this.get("authentication_method_to_sign") == "sms_pin" && this.canHaveAuthenticationToSign();
@@ -976,14 +979,10 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
           return bs.indexOf(item) > -1;
         });
       }
+
       // maximum of 1 national EID is allowed per signatory
       var eids = ["se_bankid", "no_bankid", "dk_nemid_cpr", "dk_nemid_pid", "dk_nemid_cvr",  "fi_tupas", "nl_idin", "verimi", "verimi_qes"];
-      if (authToSign === "dk_nemid") {
-        // TODO this code will disappear when new nemid authentication to sign is developed
-        return (1 >= intersect( eids, ["dk_nemid_cpr", authToView, authToViewArchived]).length);
-      } else {
-        return (1 >= intersect( eids, [authToSign, authToView, authToViewArchived]).length);
-      }
+      return (1 >= intersect( eids, [authToSign, authToView, authToViewArchived]).length);
     },
     setAuthenticationToView: function(a) {
         var canMix = this.authenticationMethodsCanMix(a, this.authenticationToSign(), this.authenticationToViewArchived());
@@ -1010,7 +1009,11 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         });
     },
     authenticationToSign: function() {
-        return this.get('authentication_method_to_sign');
+      var val = this.get('authentication_method_to_sign');
+      if (val === "dk_nemid") {
+        val = "dk_nemid_cpr";
+      }
+      return val;
     },
     setAuthenticationToSign: function(a) {
         var canMix = this.authenticationMethodsCanMix(this.authenticationToView(), a, this.authenticationToViewArchived());
@@ -1031,7 +1034,9 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         else if(this.noBankIDAuthenticationToSign()) {
             return ''; // personal number is not checked, when signing with NOBankID
         }
-        else if(this.dkNemIDAuthenticationToSign()) {
+        else if(this.dkNemIDCPRAuthenticationToSign()
+                || this.dkNemIDPIDAuthenticationToSign()
+                || this.dkNemIDCVRAuthenticationToSign()) {
             return this.personalnumber();
         }
         else if(this.smsPinAuthenticationToSign()) {
@@ -1119,7 +1124,8 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         || this.seBankIDAuthenticationToViewArchived()
         || this.noBankIDAuthenticationToView()
         || this.noBankIDAuthenticationToViewArchived()
-        || this.dkNemIDAuthenticationToSign()
+        || this.dkNemIDCPRAuthenticationToSign()
+        || this.dkNemIDCVRAuthenticationToSign()
         || this.dkNemIDCPRAuthenticationToView()
         || this.dkNemIDPIDAuthenticationToView()
         || this.dkNemIDCVRAuthenticationToView()
@@ -1136,6 +1142,8 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
              || this.dkNemIDCPRAuthenticationToView()
              || this.dkNemIDPIDAuthenticationToView()
              || this.dkNemIDCVRAuthenticationToView()
+             || this.dkNemIDCPRAuthenticationToSign()
+             || this.dkNemIDCVRAuthenticationToSign()
              || (this.views() && this.seBankIDAuthenticationToViewArchived())
              || (this.views() && this.noBankIDAuthenticationToViewArchived())
              || (this.views() && this.dkNemIDCPRAuthenticationToViewArchived())

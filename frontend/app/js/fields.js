@@ -189,14 +189,16 @@ var Field = exports.Field = Backbone.Model.extend({
         if (this.isSSN() && (this.signatory().seBankIDAuthenticationToSign() || this.signatory().seBankIDAuthenticationToView())) {
           return new SSNForSEBankIDValidation().validateData(this.value());
         }
-        if (this.isSSN() && (this.signatory().dkNemIDAuthenticationToSign()
+        if (this.isSSN() && (this.signatory().dkNemIDCPRAuthenticationToSign()
                              || this.signatory().dkNemIDCPRAuthenticationToView()
                              || this.signatory().dkNemIDPIDAuthenticationToView()
                              || this.signatory().dkNemIDCPRAuthenticationToViewArchived()
                              || this.signatory().dkNemIDPIDAuthenticationToViewArchived())) {
           return new SSNForDKNemIDValidation().validateData(this.value());
         }
-        if (this.isSSN() && (this.signatory().dkNemIDCVRAuthenticationToView() || this.signatory().dkNemIDCVRAuthenticationToViewArchived())) {
+        if (this.isSSN() && (this.signatory().dkNemIDCVRAuthenticationToView()
+                             || this.signatory().dkNemIDCVRAuthenticationToViewArchived()
+                             || this.signatory().dkNemIDCVRAuthenticationToSign())) {
           return new CVRForDKNemIDValidation().validateData(this.value());
         }
         if (this.isSSN() && (this.signatory().fiTupasAuthenticationToSign() || this.signatory().fiTupasAuthenticationToView())) {
@@ -305,7 +307,9 @@ var Field = exports.Field = Backbone.Model.extend({
         && (!signatory.seBankIDAuthenticationToView())
         && (!signatory.noBankIDAuthenticationToView())
         && (!signatory.noBankIDAuthenticationToSign())
-        && (!signatory.dkNemIDAuthenticationToSign())
+        && (!signatory.dkNemIDCPRAuthenticationToSign())
+        && (!signatory.dkNemIDPIDAuthenticationToSign())
+        && (!signatory.dkNemIDCVRAuthenticationToSign())
         && (!signatory.dkNemIDCPRAuthenticationToView())
         && (!signatory.dkNemIDPIDAuthenticationToView())
         && (!signatory.dkNemIDCVRAuthenticationToView())
@@ -438,14 +442,17 @@ var Field = exports.Field = Backbone.Model.extend({
         return  this.type() == "personal_number";
     },
     isCPR : function() {
-      return this.signatory().dkNemIDAuthenticationToSign()
+      return this.signatory().dkNemIDCPRAuthenticationToSign()
+                             || this.signatory().dkNemIDPIDAuthenticationToSign()
                              || this.signatory().dkNemIDCPRAuthenticationToView()
                              || this.signatory().dkNemIDPIDAuthenticationToView()
                              || this.signatory().dkNemIDCPRAuthenticationToViewArchived()
                              || this.signatory().dkNemIDPIDAuthenticationToViewArchived();
     },
     isCVR : function() {
-      return this.signatory().dkNemIDCVRAuthenticationToView() || this.signatory().dkNemIDCVRAuthenticationToViewArchived();
+      return this.signatory().dkNemIDCVRAuthenticationToView()
+             || this.signatory().dkNemIDCVRAuthenticationToViewArchived()
+             || this.signatory().dkNemIDCVRAuthenticationToSign();
     },
     isCompanyName : function() {
         return  this.type() == "company";

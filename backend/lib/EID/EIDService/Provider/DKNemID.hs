@@ -2,6 +2,9 @@ module EID.EIDService.Provider.DKNemID (
     beginEIDServiceTransaction
   , completeEIDServiceAuthTransaction
   , dateOfBirthFromDKPersonalNumber
+  , completeEIDServiceSignTransaction
+  , DKNemIDEIDServiceAuthCompletionData(..)
+  , DKNemIDEIDServiceSignCompletionData(..)
   ) where
 
 import Control.Monad.Trans.Maybe
@@ -29,22 +32,30 @@ import FlashMessage
 import Happstack.Fields
 import Kontra
 import Session.Model
+import Templates
 import User.Lang
 import Util.Actor
 import Util.HasSomeUserInfo
-import Util.MonadUtils
 
 provider :: EIDServiceTransactionProvider
 provider = EIDServiceTransactionProviderDKNemID
 
-data DKNemIDEIDServiceProviderParams = DKNemIDEIDServiceProviderParams {
+data DKNemIDMethod = DKNemIDPersonalKeycard | DKNemIDEmployeeKeycard | DKNemIDEmployeeKeyfile deriving (Show, Eq)
+
+instance ToJSON DKNemIDMethod where
+  toJSON method = case method of
+    DKNemIDPersonalKeycard -> "PersonalKeycard"
+    DKNemIDEmployeeKeycard -> "EmployeeKeycard"
+    DKNemIDEmployeeKeyfile -> "EmployeeKeyfile"
+
+data DKNemIDEIDServiceProviderAuthParams = DKNemIDEIDServiceProviderAuthParams {
     cdkestUILocale :: Lang
   , cdkestLimitedClientMode :: Bool
   , cdkestRequestCPR :: Bool
-  , cdkestMethod :: Text
+  , cdkestMethod :: DKNemIDMethod
   }
 
-instance ToJSON DKNemIDEIDServiceProviderParams where
+instance ToJSON DKNemIDEIDServiceProviderAuthParams where
   toJSON req = object
     [ "limitedClientMode" .= cdkestLimitedClientMode req
     , "uiLocale" .= localeText
@@ -74,16 +85,6 @@ instance FromJSON StartDKNemIDEIDServiceTransactionResponse where
 
 data DKNemIDAuthMethod = DKNemIDAuthCPR | DKNemIDAuthPID | DKNemIDAuthCVR deriving (Show, Eq)
 
-resolveDKNemIDAuthMethod :: Kontrakcja m => Maybe Text -> m DKNemIDAuthMethod
-resolveDKNemIDAuthMethod = \case
-  Nothing             -> return DKNemIDAuthPID
-  Just "dk_nemid_cpr" -> return DKNemIDAuthCPR
-  Just "dk_nemid_pid" -> return DKNemIDAuthPID
-  Just "dk_nemid_cvr" -> return DKNemIDAuthCVR
-  Just s              -> do
-    logAttention_ $ "No such DK NemID auth method" <> s
-    internalError
-
 beginEIDServiceTransaction
   :: Kontrakcja m
   => EIDServiceConf
@@ -91,57 +92,74 @@ beginEIDServiceTransaction
   -> Document
   -> SignatoryLink
   -> m (EIDServiceTransactionID, Value, EIDServiceTransactionStatus)
-beginEIDServiceTransaction conf authKind doc sl = do
+beginEIDServiceTransaction conf (EIDServiceAuthToView authToViewKind) doc sl =
+  beginAuthTransaction conf authToViewKind doc sl
+beginEIDServiceTransaction conf EIDServiceAuthToSign doc sl =
+  beginSignTransaction conf doc sl
+
+beginAuthTransaction
+  :: Kontrakcja m
+  => EIDServiceConf
+  -> AuthenticationKind
+  -> Document
+  -> SignatoryLink
+  -> m (EIDServiceTransactionID, Value, EIDServiceTransactionStatus)
+beginAuthTransaction conf authToViewKind doc sl = do
   ctx             <- getContext
-  mkontraRedirect <- case authKind of
-    EIDServiceAuthToView _ -> Just <$> guardJustM (getField "redirect")
-    EIDServiceAuthToSign   -> return Nothing
-  nemIDMethod <- getField "nemid_method" >>= resolveDKNemIDAuthMethod
-  let redirectUrl = UnifiedRedirectUrl { redDomain          = ctx ^. #brandedDomain % #url
-                                       , redProvider        = provider
-                                       , redAuthKind        = authKind
-                                       , redDocumentID      = documentid doc
-                                       , redSignatoryLinkID = signatorylinkid sl
-                                       , redPostRedirectUrl = mkontraRedirect
-                                       }
-  let requestCPR     = nemIDMethod == DKNemIDAuthCPR || nemIDMethod == DKNemIDAuthPID
-      resolvedMethod = case nemIDMethod of
-        DKNemIDAuthCPR -> "PersonalKeycard"
-        DKNemIDAuthPID -> "PersonalKeycard"
-        DKNemIDAuthCVR -> "EmployeeKeyfile"
-      createReq = CreateEIDServiceTransactionRequest
+  mkontraRedirect <- getField "redirect"
+  nemIDMethod     <- getField "nemid_method" >>= resolveDKNemIDAuthMethod
+  let redirectUrl = UnifiedRedirectUrl
+        { redDomain          = ctx ^. #brandedDomain % #url
+        , redProvider        = provider
+        , redDocumentID      = documentid doc
+        , redAuthKind        = EIDServiceAuthToView authToViewKind
+        , redSignatoryLinkID = signatorylinkid sl
+        , redPostRedirectUrl = mkontraRedirect
+        }
+  let requestCPR = nemIDMethod == DKNemIDPersonalKeycard
+      createReq  = CreateEIDServiceTransactionRequest
         { cestProvider           = provider
         , cestMethod             = EIDServiceAuthMethod
         , cestRedirectUrl        = showt redirectUrl
-        , cestProviderParameters = Just . toJSON $ DKNemIDEIDServiceProviderParams
+        , cestProviderParameters = Just . toJSON $ DKNemIDEIDServiceProviderAuthParams
                                      { cdkestUILocale          = documentlang doc
                                      , cdkestLimitedClientMode = True
                                      , cdkestRequestCPR        = requestCPR
-                                     , cdkestMethod            = resolvedMethod
+                                     , cdkestMethod            = nemIDMethod
                                      }
         }
   tid  <- cestRespTransactionID <$> createTransactionWithEIDService conf createReq
   turl <- sdkestAuthURL <$> startTransactionWithEIDService conf provider tid
   chargeForItemSingle CIDKNemIDAuthenticationStarted $ documentid doc
   return (tid, object ["accessUrl" .= turl], EIDServiceTransactionStatusStarted)
+  where
+    resolveDKNemIDAuthMethod = \case
+      Nothing             -> return DKNemIDPersonalKeycard
+      Just "dk_nemid_cpr" -> return DKNemIDPersonalKeycard
+      Just "dk_nemid_pid" -> return DKNemIDPersonalKeycard
+      Just "dk_nemid_cvr" -> return DKNemIDEmployeeKeyfile
+      Just s              -> do
+        logAttention_ $ "No such DK NemID auth method" <> s
+        internalError
 
-data DKNemIDEIDServiceCompletionData = DKNemIDEIDServiceCompletionData
+
+data DKNemIDEIDServiceAuthCompletionData = DKNemIDEIDServiceAuthCompletionData
   { eidnidInternalProvider :: EIDServiceDKNemIDInternalProvider
   , eidnidBirthDate :: Maybe T.Text
   , eidnidCertificate :: T.Text
   , eidnidDistinguishedName :: T.Text
   , eidnidPID :: Maybe T.Text
   , eidnidCPR :: Maybe T.Text
-  , eidnidOrganisationData :: DKNemIDEIDServiceCompletionOrganisationData
+  , eidnidOrganisationData :: DKNemIDEIDServiceAuthCompletionOrganisationData
   } deriving (Eq, Ord, Show)
 
-data DKNemIDEIDServiceCompletionOrganisationData = DKNemIDEIDServiceCompletionOrganisationData
+data DKNemIDEIDServiceAuthCompletionOrganisationData = DKNemIDEIDServiceAuthCompletionOrganisationData
   {
     eidnidoOrganisationName :: Maybe T.Text
   , eidnidoOrganisationNumber :: Maybe T.Text
   } deriving (Eq, Ord, Show)
 
-instance FromJSON DKNemIDEIDServiceCompletionData where
+instance FromJSON DKNemIDEIDServiceAuthCompletionData where
   parseJSON outer = do
     providerParams <-
       withObject "object" (.: "providerParameters") outer
@@ -160,7 +178,7 @@ instance FromJSON DKNemIDEIDServiceCompletionData where
               organisationData <- o .: "organisationData" >>= withObject
                 "organisationData"
                 (\od ->
-                  DKNemIDEIDServiceCompletionOrganisationData
+                  DKNemIDEIDServiceAuthCompletionOrganisationData
                     <$> od
                     .:  "organisationName"
                     <*> od
@@ -170,7 +188,7 @@ instance FromJSON DKNemIDEIDServiceCompletionData where
               (cer, dn) <- o .: "certificateData" >>= withObject
                 "object"
                 (\cd -> (,) <$> cd .: "certificate" <*> cd .: "distinguishedName")
-              return DKNemIDEIDServiceCompletionData
+              return DKNemIDEIDServiceAuthCompletionData
                 { eidnidInternalProvider  = ip
                 , eidnidCPR               = cpr
                 , eidnidBirthDate         = dob
@@ -231,9 +249,9 @@ finaliseTransaction
   => Document
   -> SignatoryLink
   -> EIDServiceTransactionFromDB
-  -> EIDServiceTransactionResponse DKNemIDEIDServiceCompletionData
+  -> EIDServiceTransactionResponse DKNemIDEIDServiceAuthCompletionData
   -> m EIDServiceTransactionStatus
-finaliseTransaction doc sl estDB trans = validateCompletionData sl trans >>= \case
+finaliseTransaction doc sl estDB trans = validateAuthCompletionData sl trans >>= \case
   Nothing -> do
     let status = EIDServiceTransactionStatusCompleteAndFailed
     mergeEIDServiceTransactionWithStatus status
@@ -242,20 +260,20 @@ finaliseTransaction doc sl estDB trans = validateCompletionData sl trans >>= \ca
     let status   = EIDServiceTransactionStatusCompleteAndSuccess
         authKind = estAuthKind estDB
     mergeEIDServiceTransactionWithStatus status
-    updateDBTransactionWithCompletionData doc sl authKind cd
-    updateEvidenceLog doc sl authKind cd
+    updateDBTransactionWithAuthCompletionData doc sl authKind cd
+    updateEvidenceLogWithAuth doc sl authKind cd
     chargeForItemSingle CIDKNemIDAuthenticationFinished $ documentid doc
     return status
   where
     mergeEIDServiceTransactionWithStatus newstatus =
       dbUpdate . MergeEIDServiceTransaction $ estDB { estStatus = newstatus }
 
-validateCompletionData
+validateAuthCompletionData
   :: Kontrakcja m
   => SignatoryLink
-  -> EIDServiceTransactionResponse DKNemIDEIDServiceCompletionData
-  -> m (Maybe DKNemIDEIDServiceCompletionData)
-validateCompletionData sl trans = case estRespCompletionData trans of
+  -> EIDServiceTransactionResponse DKNemIDEIDServiceAuthCompletionData
+  -> m (Maybe DKNemIDEIDServiceAuthCompletionData)
+validateAuthCompletionData sl trans = case estRespCompletionData trans of
   Nothing -> return Nothing
   Just cd -> do
     case eidnidInternalProvider cd of
@@ -266,8 +284,8 @@ validateCompletionData sl trans = case estRespCompletionData trans of
   where
     validateCPR
       :: Kontrakcja m
-      => DKNemIDEIDServiceCompletionData
-      -> m (Maybe DKNemIDEIDServiceCompletionData)
+      => DKNemIDEIDServiceAuthCompletionData
+      -> m (Maybe DKNemIDEIDServiceAuthCompletionData)
     validateCPR cd = do
       let cprFromEIDService    = normalizeCPR <$> eidnidCPR cd
           cprFromSignatoryLink = normalizeCPR $ getPersonalNumber sl
@@ -285,8 +303,8 @@ validateCompletionData sl trans = case estRespCompletionData trans of
         else return $ Just cd
     validateCVR
       :: Kontrakcja m
-      => DKNemIDEIDServiceCompletionData
-      -> m (Maybe DKNemIDEIDServiceCompletionData)
+      => DKNemIDEIDServiceAuthCompletionData
+      -> m (Maybe DKNemIDEIDServiceAuthCompletionData)
     validateCVR cd = do
       let cvrFromEIDService    = eidnidoOrganisationNumber . eidnidOrganisationData $ cd
           cvrFromSignatoryLink = Just . getPersonalNumber $ sl
@@ -310,14 +328,14 @@ validateCompletionData sl trans = case estRespCompletionData trans of
     flashMessageUserHasIdentifiedWithDifferentSSN = toFlashMsg OperationFailed
       <$> renderTemplate_ "flashMessageUserHasIdentifiedWithDifferentSSN"
 
-updateDBTransactionWithCompletionData
+updateDBTransactionWithAuthCompletionData
   :: Kontrakcja m
   => Document
   -> SignatoryLink
   -> EIDServiceAuthenticationKind
-  -> DKNemIDEIDServiceCompletionData
+  -> DKNemIDEIDServiceAuthCompletionData
   -> m ()
-updateDBTransactionWithCompletionData doc sl authKind cd = do
+updateDBTransactionWithAuthCompletionData doc sl authKind cd = do
   authMethod <- getDKNemIDAuthMethod authKind sl
   let signatoryName            = cnFromDN $ eidnidDistinguishedName cd
       birthDate                = eidnidBirthDate cd
@@ -338,14 +356,14 @@ updateDBTransactionWithCompletionData doc sl authKind cd = do
     . MergeDocumentEidAuthentication (mkAuthKind doc) sessionID (signatorylinkid sl)
     $ EIDServiceNemIDAuthentication_ auth
 
-updateEvidenceLog
+updateEvidenceLogWithAuth
   :: Kontrakcja m
   => Document
   -> SignatoryLink
   -> EIDServiceAuthenticationKind
-  -> DKNemIDEIDServiceCompletionData
+  -> DKNemIDEIDServiceAuthCompletionData
   -> m ()
-updateEvidenceLog doc sl authKind cd = do
+updateEvidenceLogWithAuth doc sl authKind cd = do
   ctx        <- getContext
   authMethod <- getDKNemIDAuthMethod authKind sl
   let
@@ -417,3 +435,153 @@ dateOfBirthFromDKPersonalNumber personalnumber =
       = if yearWithoutCentury < 58 then 20 else 18
       | otherwise
       = if yearWithoutCentury < 37 then 20 else 19
+
+data DKNemIDEIDServiceProviderSignParams = DKNemIDEIDServiceProviderSignParams
+  {
+     cdkestsMethod :: DKNemIDMethod
+   , cdkestsSignTitle :: Text
+   , cdkestsSignDescription :: Text
+   , cdkestsSignText :: Text
+   , cdkestsPersonalNumber :: Maybe Text
+  }
+
+instance ToJSON DKNemIDEIDServiceProviderSignParams where
+  toJSON req = object
+    [ "method" .= cdkestsMethod req
+    , "signText" .= cdkestsSignText req
+    , "signTitle" .= cdkestsSignTitle req
+    , "signDescription" .= cdkestsSignDescription req
+    , "personalNumber" .= cdkestsPersonalNumber req
+    ]
+
+beginSignTransaction
+  :: Kontrakcja m
+  => EIDServiceConf
+  -> Document
+  -> SignatoryLink
+  -> m (EIDServiceTransactionID, Value, EIDServiceTransactionStatus)
+beginSignTransaction conf doc sl = do
+  userVisibleData <- textToBeSigned
+  nemIDMethod     <- getField "nemid_method" >>= resolveDKNemIDSignMethod
+  redirectUrl     <- do
+    ctx <- getContext
+    return $ showt UnifiedRedirectUrl { redDomain          = ctx ^. #brandedDomain % #url
+                                      , redProvider        = provider
+                                      , redAuthKind        = EIDServiceAuthToSign
+                                      , redDocumentID      = documentid doc
+                                      , redSignatoryLinkID = signatorylinkid sl
+                                      , redPostRedirectUrl = Nothing
+                                      }
+  let (mPersonalNumber :: Maybe Text) =
+        fieldTextValue =<< (getFieldByIdentity PersonalNumberFI . signatoryfields $ sl)
+      createReq = CreateEIDServiceTransactionRequest
+        { cestProvider           = provider
+        , cestMethod             = EIDServiceSignMethod
+        , cestRedirectUrl        = redirectUrl
+        , cestProviderParameters = Just . toJSON $ DKNemIDEIDServiceProviderSignParams
+                                     { cdkestsMethod          = nemIDMethod
+                                     , cdkestsSignTitle       = "Scrive document"
+                                     , cdkestsSignDescription =
+                                       "Scrive document to be signed"
+                                     , cdkestsSignText        = userVisibleData
+                                     , cdkestsPersonalNumber  = mPersonalNumber
+                                     }
+        }
+  tid <- cestRespTransactionID <$> createTransactionWithEIDService conf createReq
+  startTransactionWithEIDServiceWithStatus conf provider tid >>= \case
+    Right response -> do
+      chargeForItemSingle CIDKNemIDSignatureStarted $ documentid doc
+      return
+        ( tid
+        , object ["accessUrl" .= signUrl response]
+        , EIDServiceTransactionStatusStarted
+        )
+    Left (HttpErrorCode 409) -> return
+      ( tid
+      , object ["grp_fault" .= ("already_in_progress" :: Text)]
+      , EIDServiceTransactionStatusFailed
+      )
+    Left err -> do
+      logInfo_ $ "Transaction retrieval error " <> showt err
+      internalError
+
+  where
+    textToBeSigned :: TemplatesMonad m => m Text
+    textToBeSigned = renderLocalTemplate doc "tbs" $ do
+      F.value "document_title" $ documenttitle doc
+      F.value "document_id" . show $ documentid doc
+    resolveDKNemIDSignMethod = \case
+      Nothing             -> return DKNemIDPersonalKeycard
+      Just "dk_nemid_cpr" -> return DKNemIDPersonalKeycard
+      Just "dk_nemid_pid" -> return DKNemIDPersonalKeycard
+      Just "dk_nemid_cvr_keyfile" -> return DKNemIDEmployeeKeyfile
+      Just "dk_nemid_cvr_keycard" -> return DKNemIDEmployeeKeycard
+      Just s              -> do
+        logAttention_ $ "No such DK NemID sign method" <> s
+        internalError
+
+newtype StartDKNemIDSignTransactionResponse = StartDKNemIDSignTransactionResponse {
+    signUrl :: Text
+  }
+
+instance FromJSON StartDKNemIDSignTransactionResponse where
+  parseJSON outer =
+    StartDKNemIDSignTransactionResponse
+      <$> (   withObject "object" (.: "providerInfo") outer
+          >>= withObject "object" (.: (toEIDServiceProviderName provider <> "Sign"))
+          >>= withObject "object" (.: "signUrl")
+          )
+
+completeEIDServiceSignTransaction
+  :: Kontrakcja m => EIDServiceConf -> SignatoryLink -> m Bool
+completeEIDServiceSignTransaction conf sl = do
+  sessionID <- getNonTempSessionID
+  mTrans    <- getTransactionFromSession sessionID
+  return . maybe False isSuccessfulTransaction $ mTrans
+  where
+    getTransactionFromSession sessionID = runMaybeT $ do
+      Just estDB <- dbQuery $ GetEIDServiceTransactionGuardSessionID
+        sessionID
+        (signatorylinkid sl)
+        EIDServiceAuthToSign
+      Just trans <- getTransactionFromEIDService conf provider (estID estDB)
+      return (trans :: EIDServiceTransactionResponse DKNemIDEIDServiceSignCompletionData)
+    isSuccessfulTransaction trans =
+      estRespStatus trans == EIDServiceTransactionStatusCompleteAndSuccess
+
+data DKNemIDEIDServiceSignCompletionData = DKNemIDEIDServiceSignCompletionData
+  {
+    eidnidsSignedText :: Text
+  , eidnidsB64SDO       :: Text
+  , eidnidsSignatoryName :: Text
+  , eidnidsSignatorySSN :: Maybe Text
+  , eidnidsSignatoryPID :: Maybe Text
+  , eidnidsSignatoryIP :: Maybe Text
+  } deriving Show
+
+instance FromJSON DKNemIDEIDServiceSignCompletionData where
+  parseJSON outer = do
+    withObject "object" (.: "providerInfo") outer
+      >>= withObject "object" (.: providerAuth)
+      >>= withObject "object" (.: "completionData")
+      >>= withObject
+            "object"
+            (\o -> do
+              signedText    <- o .: "signedText"
+              base64SDO     <- o .: "base64SDO"
+              signatoryName <- o .: "signatoryName"
+              signatorySSN  <- o .:? "signatorySSN"
+              signatoryPID  <- o .:? "signatoryPID"
+              signatoryIP   <- o .:? "signatoryIP"
+              return DKNemIDEIDServiceSignCompletionData
+                { eidnidsSignedText    = signedText
+                , eidnidsB64SDO        = base64SDO
+                , eidnidsSignatoryName = signatoryName
+                , eidnidsSignatorySSN  = signatorySSN
+                , eidnidsSignatoryPID  = signatoryPID
+                , eidnidsSignatoryIP   = signatoryIP
+                }
+            )
+    where
+      providerName = toEIDServiceProviderName provider
+      providerAuth = providerName <> "Sign"

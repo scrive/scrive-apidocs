@@ -1,4 +1,4 @@
-{ 
+{
 "_DeletePDF":"Delete",
 "_RequestedAttachments":"Requested attachments",
 "_ReviewPDF":"Show",
@@ -75,7 +75,6 @@
 "_elegSignDKConfirmationTitle":"Sign with Danish NemID",
 "_elegSignDKSignMethodEmployeeKeycard":"Employee keycard",
 "_elegSignDKSignMethodEmployeeKeyfile":"Employee keyfile",
-"_elegSignDKSignMethodPersonalKeycard":"Personal keycard",
 "_elegSignFIConfirmationTitle":"Sign with Finnish FTN",
 "_elegSignNLConfirmationTitle":"Sign with iDIN",
 "_elegSignNOConfirmationText":"<strong class='put-signatory-name-here'></strong>, you will sign using Norwegian BankID. When you have signed your signature will be registered by the e-signing service Scrive.",

@@ -8,22 +8,26 @@ module EID.Signature.Migrations (
   , removeEidJson
   , addFieldsForVerimi
   , eidSignaturesUpdatePersonalNumberCheck
+  , addNoDKNemIDPIDExceptionConstraint
 ) where
 
 import DB
 import EID.Signature.Tables
 
+tableName :: RawSQL ()
+tableName = tblName tableEIDSignatures
+
 -- the previous version of the check didn't handle adding new providers
 eidSignaturesAddProviderNetsNOBankID :: MonadDB m => Migration m
 eidSignaturesAddProviderNetsNOBankID = Migration
-  { mgrTableName = tblName tableEIDSignatures
+  { mgrTableName = tableName
   , mgrFrom      = 1
   , mgrAction    =
     StandardMigration $ do
-      runQuery_ . sqlAlterTable "eid_signatures" $ map
+      runQuery_ . sqlAlterTable tableName $ map
         sqlDropCheck
         ["eid_signatures_ocsp_response_well_defined"]
-      runQuery_ . sqlAlterTable "eid_signatures" $ map
+      runQuery_ . sqlAlterTable tableName $ map
         sqlAddValidCheck
         [ tblCheck
             { chkName      = "eid_signatures_ocsp_response_well_defined"
@@ -35,11 +39,11 @@ eidSignaturesAddProviderNetsNOBankID = Migration
 
 addSignatoryIPToEIDSignatures :: MonadDB m => Migration m
 addSignatoryIPToEIDSignatures = Migration
-  { mgrTableName = tblName tableEIDSignatures
+  { mgrTableName = tableName
   , mgrFrom      = 2
   , mgrAction    = StandardMigration $ do
                      runQuery_ $ sqlAlterTable
-                       (tblName tableEIDSignatures)
+                       tableName
                        [ sqlAddColumn $ tblColumn { colName     = "signatory_ip"
                                                   , colType     = TextT
                                                   , colNullable = True
@@ -49,12 +53,12 @@ addSignatoryIPToEIDSignatures = Migration
 
 addSignatoryDobAndEmailToEIDSignatures :: MonadDB m => Migration m
 addSignatoryDobAndEmailToEIDSignatures = Migration
-  { mgrTableName = tblName tableEIDSignatures
+  { mgrTableName = tableName
   , mgrFrom      = 3
   , mgrAction    =
     StandardMigration $ do
       runQuery_ $ sqlAlterTable
-        (tblName tableEIDSignatures)
+        tableName
         [ sqlAddColumn $ tblColumn { colName     = "signatory_date_of_birth"
                                    , colType     = TextT
                                    , colNullable = True
@@ -62,28 +66,25 @@ addSignatoryDobAndEmailToEIDSignatures = Migration
         , sqlAddColumn
           $ tblColumn { colName = "signatory_email", colType = TextT, colNullable = True }
         ]
-      runQuery_ $ sqlAlterTable (tblName tableEIDSignatures)
-                                [sqlAlterColumn "signature" "DROP NOT NULL"]
-      runQuery_ $ sqlAlterTable (tblName tableEIDSignatures)
-                                [sqlAlterColumn "data" "DROP NOT NULL"]
+      runQuery_ $ sqlAlterTable tableName [sqlAlterColumn "signature" "DROP NOT NULL"]
+      runQuery_ $ sqlAlterTable tableName [sqlAlterColumn "data" "DROP NOT NULL"]
   }
 
 dropEmailFromEIDSignatures :: MonadDB m => Migration m
 dropEmailFromEIDSignatures = Migration
-  { mgrTableName = tblName tableEIDSignatures
+  { mgrTableName = tableName
   , mgrFrom      = 4
   , mgrAction    = StandardMigration $ do
-                     runQuery_ $ sqlAlterTable (tblName tableEIDSignatures)
-                                               [sqlDropColumn "signatory_email"]
+                     runQuery_ $ sqlAlterTable tableName [sqlDropColumn "signatory_email"]
   }
 
 addEidJson :: MonadDB m => Migration m
 addEidJson = Migration
-  { mgrTableName = tblName tableEIDSignatures
+  { mgrTableName = tableName
   , mgrFrom      = 5
   , mgrAction    = StandardMigration $ do
                      runQuery_ $ sqlAlterTable
-                       (tblName tableEIDSignatures)
+                       tableName
                        [ sqlAddColumn
                            $ tblColumn { colName = "eid_service_json", colType = TextT }
                        ]
@@ -92,7 +93,7 @@ addEidJson = Migration
 
 eidSignaturesAddProviderEIDServiceSEBankID :: MonadDB m => Migration m
 eidSignaturesAddProviderEIDServiceSEBankID = Migration
-  { mgrTableName = tblName tableEIDSignatures
+  { mgrTableName = tableName
   , mgrFrom      = 6
   , mgrAction    =
     StandardMigration $ do
@@ -111,11 +112,10 @@ eidSignaturesAddProviderEIDServiceSEBankID = Migration
 
 removeEidJson :: MonadDB m => Migration m
 removeEidJson = Migration
-  { mgrTableName = tblName tableEIDSignatures
+  { mgrTableName = tableName
   , mgrFrom      = 7
   , mgrAction    = StandardMigration $ do
-                     runQuery_ $ sqlAlterTable (tblName tableEIDSignatures)
-                                               [sqlDropColumn "eid_service_json"]
+                     runQuery_ $ sqlAlterTable tableName [sqlDropColumn "eid_service_json"]
   }
 
 addFieldsForVerimi :: MonadDB m => Migration m
@@ -148,5 +148,23 @@ eidSignaturesUpdatePersonalNumberCheck = Migration
             , chkCondition =
               "(provider = ANY (ARRAY[1, 2, 3, 4, 13])) = (signatory_personal_number IS NULL)"
             }
+        ]
+  }
+
+addNoDKNemIDPIDExceptionConstraint :: MonadDB m => Migration m
+addNoDKNemIDPIDExceptionConstraint = Migration
+  { mgrTableName = tblName tableEIDSignatures
+  , mgrFrom      = 10
+  , mgrAction    =
+    StandardMigration $ do
+      runQuery_ $ sqlAlterTable
+        tableName
+        [ sqlDropCheck "eid_signatures_signatory_personal_number_well_defined"
+        , sqlAddValidCheck $ tblCheck
+          { chkName      = "eid_signatures_signatory_personal_number_well_defined"
+          , chkCondition =
+            "(provider = ANY (ARRAY[1, 2, 3, 4, 13])) = (signatory_personal_number IS NULL)"
+              <> " OR provider = 14 "
+          }
         ]
   }

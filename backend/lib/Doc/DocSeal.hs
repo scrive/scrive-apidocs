@@ -191,6 +191,8 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
             renderTextTemplate "_nameFromOnfidoText" templateField
           EIDServiceIDINSignature_ _ ->
             renderTextTemplate "_nameFromIDINText" templateField
+          EIDServiceDKNemIDSignature_ _ ->
+            renderTextTemplate "_nameFromDKNemIDText" templateField
           EIDServiceVerimiQesSignature_ _ ->
             renderTextTemplate "_nameFromVerimiQesText" templateField
 
@@ -228,7 +230,10 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
     maybeAddBankIDLogo = case signatorylinkauthenticationtosignmethod signatory of
       SEBankIDAuthenticationToSign            -> addBankIDLogo "bankid_logo_se.png"
       NOBankIDAuthenticationToSign            -> addBankIDLogo "bankid_logo_no.png"
-      DKNemIDAuthenticationToSign             -> addBankIDLogo "nemid_logo_dk.png"
+      LegacyDKNemIDAuthenticationToSign       -> addBankIDLogo "nemid_logo_dk.png"
+      DKNemIDCPRAuthenticationToSign          -> addBankIDLogo "nemid_logo_dk.png"
+      DKNemIDPIDAuthenticationToSign          -> addBankIDLogo "nemid_logo_dk.png"
+      DKNemIDCVRAuthenticationToSign          -> addBankIDLogo "nemid_logo_dk.png"
       FITupasAuthenticationToSign             -> addBankIDLogo "tupas_logo_fi.png"
       OnfidoDocumentAndPhotoCheckAuthenticationToSign -> addBankIDLogo "onfido_logo.png"
       OnfidoDocumentCheckAuthenticationToSign -> addBankIDLogo "onfido_logo.png"
@@ -267,6 +272,7 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
       EIDServiceOnfidoSignature_    sig -> eidServiceOnfidoSigSignatoryName sig
       EIDServiceNOBankIDSignature_  sig -> eidServiceNOBankIDSigSignatoryName sig
       EIDServiceSEBankIDSignature_  sig -> eidServiceSEBankIDSigSignatoryName sig
+      EIDServiceDKNemIDSignature_   sig -> eidServiceDKNemIDSignatoryName sig
       EIDServiceVerimiQesSignature_ sig -> eidServiceVerimiSigName sig
 
     authenticationIdentity :: EAuthentication -> Text

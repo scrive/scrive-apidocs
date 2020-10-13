@@ -533,7 +533,10 @@ apiCallV1Ready did = logDocument did . api $ do
           isGood . asValidSEBankIdPersonalNumber $ getPersonalNumber sl
         NOBankIDAuthenticationToSign ->
           isGood . asValidNorwegianSSN $ getPersonalNumber sl
-        DKNemIDAuthenticationToSign             -> False -- Danish Nets eSigning is not supported in API v1
+        LegacyDKNemIDAuthenticationToSign       -> False -- Danish Nets eSigning is not supported in API v1
+        DKNemIDCPRAuthenticationToSign          -> False -- Danish Nets eSigning is not supported in API v1
+        DKNemIDPIDAuthenticationToSign          -> False -- Danish Nets eSigning is not supported in API v1
+        DKNemIDCVRAuthenticationToSign          -> False -- Danish Nets eSigning is not supported in API v1
         StandardAuthenticationToSign            -> True
         SMSPinAuthenticationToSign              -> True
         IDINAuthenticationToSign                -> False -- Dutch iDIN eSigning is not supported in API v1
@@ -675,7 +678,16 @@ apiCallV1CheckSign did slid = logDocumentAndSignatory did slid . api $ do
       NOBankIDAuthenticationToSign -> do
         logAttention_ "Norwegian BankID signing attempted in V1 API"
         Left . Failed <$> J.runJSONGenT (J.value "noBankidNotSupported" True)
-      DKNemIDAuthenticationToSign -> do
+      LegacyDKNemIDAuthenticationToSign -> do
+        logAttention_ "Danish NemID signing attempted in V1 API"
+        Left . Failed <$> J.runJSONGenT (J.value "dkNemidNotSupported" True)
+      DKNemIDCPRAuthenticationToSign -> do
+        logAttention_ "Danish NemID signing attempted in V1 API"
+        Left . Failed <$> J.runJSONGenT (J.value "dkNemidNotSupported" True)
+      DKNemIDPIDAuthenticationToSign -> do
+        logAttention_ "Danish NemID signing attempted in V1 API"
+        Left . Failed <$> J.runJSONGenT (J.value "dkNemidNotSupported" True)
+      DKNemIDCVRAuthenticationToSign -> do
         logAttention_ "Danish NemID signing attempted in V1 API"
         Left . Failed <$> J.runJSONGenT (J.value "dkNemidNotSupported" True)
       IDINAuthenticationToSign -> do
@@ -773,7 +785,16 @@ apiCallV1Sign did slid = logDocumentAndSignatory did slid . api $ do
           NOBankIDAuthenticationToSign -> do
             logAttention_ "Norwegian BankID signing attempted in V1 API"
             Left . Failed <$> J.runJSONGenT (J.value "noBankidNotSupported" True)
-          DKNemIDAuthenticationToSign -> do
+          LegacyDKNemIDAuthenticationToSign -> do
+            logAttention_ "Danish NemID signing attempted in V1 API"
+            Left . Failed <$> J.runJSONGenT (J.value "dkNemidNotSupported" True)
+          DKNemIDCPRAuthenticationToSign -> do
+            logAttention_ "Danish NemID signing attempted in V1 API"
+            Left . Failed <$> J.runJSONGenT (J.value "dkNemidNotSupported" True)
+          DKNemIDPIDAuthenticationToSign -> do
+            logAttention_ "Danish NemID signing attempted in V1 API"
+            Left . Failed <$> J.runJSONGenT (J.value "dkNemidNotSupported" True)
+          DKNemIDCVRAuthenticationToSign -> do
             logAttention_ "Danish NemID signing attempted in V1 API"
             Left . Failed <$> J.runJSONGenT (J.value "dkNemidNotSupported" True)
           IDINAuthenticationToSign -> do
@@ -828,7 +849,16 @@ checkAuthenticationToSignMethodAndValue slid = do
             (True, NOBankIDAuthenticationToSign) ->
               throwM . SomeDBExtraException $ conflictError
                 "Norwegian BankID signing not supported in API V1"
-            (True, DKNemIDAuthenticationToSign) ->
+            (True, LegacyDKNemIDAuthenticationToSign) ->
+              throwM . SomeDBExtraException $ conflictError
+                "Danish NemID signing not supported in API V1"
+            (True, DKNemIDCPRAuthenticationToSign) ->
+              throwM . SomeDBExtraException $ conflictError
+                "Danish NemID signing not supported in API V1"
+            (True, DKNemIDPIDAuthenticationToSign) ->
+              throwM . SomeDBExtraException $ conflictError
+                "Danish NemID signing not supported in API V1"
+            (True, DKNemIDCVRAuthenticationToSign) ->
               throwM . SomeDBExtraException $ conflictError
                 "Danish NemID signing not supported in API V1"
             (True, SMSPinAuthenticationToSign) ->
@@ -1245,7 +1275,13 @@ apiCallV1ChangeAuthenticationToSign did slid =
                   Good _ -> return ()
         NOBankIDAuthenticationToSign -> throwM . SomeDBExtraException $ badInput
           "Norwegian BankID signing is not supported in API V1"
-        DKNemIDAuthenticationToSign -> throwM . SomeDBExtraException $ badInput
+        LegacyDKNemIDAuthenticationToSign -> throwM . SomeDBExtraException $ badInput
+          "Danish NemID signing is not supported in API V1"
+        DKNemIDCPRAuthenticationToSign -> throwM . SomeDBExtraException $ badInput
+          "Danish NemID signing is not supported in API V1"
+        DKNemIDPIDAuthenticationToSign -> throwM . SomeDBExtraException $ badInput
+          "Danish NemID signing is not supported in API V1"
+        DKNemIDCVRAuthenticationToSign -> throwM . SomeDBExtraException $ badInput
           "Danish NemID signing is not supported in API V1"
         IDINAuthenticationToSign -> throwM . SomeDBExtraException $ badInput
           "Dutch iDIN signing is not supported in API V1"

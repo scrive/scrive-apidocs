@@ -44,6 +44,7 @@ module Doc.Migrations
   , addSeparateEvidenceFileToMainFiles
   , addEvidenceSecretToDocuments
   , updateLegacyAuthenticationToViewInTemplates
+  , updateLegacyAuthenticationToSignInTemplates
 ) where
 
 import Data.Int
@@ -1611,3 +1612,18 @@ updateLegacyAuthenticationToViewInTemplates = Migration
                    LegacyDKNemIDAuthenticationToView
         sqlSet "authentication_to_view_archived_method" DKNemIDCPRAuthenticationToView
   }
+
+updateLegacyAuthenticationToSignInTemplates :: MonadDB m => Migration m
+updateLegacyAuthenticationToSignInTemplates = Migration
+  { mgrTableName = tblName tableSignatoryLinks
+  , mgrFrom      = 40
+  , mgrAction    =
+    StandardMigration $ do
+      runQuery_ . sqlUpdate "signatory_links" $ do
+        sqlFrom "documents"
+        sqlWhere "document_id = documents.id"
+        sqlWhereEq "documents.type"                Template
+        sqlWhereEq "authentication_to_sign_method" LegacyDKNemIDAuthenticationToSign
+        sqlSet "authentication_to_sign_method" DKNemIDCPRAuthenticationToSign
+  }
+

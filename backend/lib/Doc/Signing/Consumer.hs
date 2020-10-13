@@ -34,12 +34,14 @@ import Doc.SignatoryScreenshots
 import Doc.Signing.Model
 import Doc.Types.AuthorAttachment
 import Doc.Types.Document
+import Doc.Types.SignatoryLink
 import EID.CGI.GRP.Config
 import EID.CGI.GRP.Control
 import EID.CGI.GRP.Types as CGI
 import EID.EIDService.Communication
 import EID.EIDService.Conf
 import EID.EIDService.Model
+import EID.EIDService.Provider.DKNemID (DKNemIDEIDServiceSignCompletionData(..))
 import EID.EIDService.Provider.FITupas (FITupasEIDServiceCompletionData(..))
 import EID.EIDService.Provider.NLIDIN (NLIDINEIDServiceCompletionData(..))
 import EID.EIDService.Provider.NOBankID (NOBankIDEIDServiceCompletionData(..))
@@ -98,7 +100,7 @@ data DocumentSigning = DocumentSigning {
   , signingNotUploadedSigAttachments :: [Text]
   , signingSignatureProvider    :: SignatureProvider
   , signingConsentResponses     :: SignatoryConsentResponsesForSigning
-  }
+  } deriving (Show)
 
 minutesTillPurgeOfFailedAction :: Int32
 minutesTillPurgeOfFailedAction = 3
@@ -217,6 +219,12 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf mEidServiceConf templates 
                   EIDServiceSEBankID -> handleEidService
                     (checkSEBankID signingSignatoryID)
                     processCompleteSEBankIDTransaction
+                    mEidServiceConf
+                    ds
+                    now
+                  EIDServiceDKNemID -> handleEidService
+                    (`getTransactionFromEIDService` EIDServiceTransactionProviderDKNemID)
+                    processCompleteDKNemIDTransaction
                     mEidServiceConf
                     ds
                     now
@@ -425,6 +433,37 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf mEidServiceConf templates 
       logInfo_ $ "EidHub Verimi QES Sign succeeded: " <> showt est
       signFromESignature ds now
       chargeForItemSingle CIVerimiQesSignatureFinished . documentid =<< theDocument
+
+    processCompleteDKNemIDTransaction ds@DocumentSigning {..} est ct now = do
+      let mctd = estRespCompletionData ct
+      DKNemIDEIDServiceSignCompletionData {..} <- whenNothing mctd
+        $ throwE (Failed Remove)
+
+      msl <- getSigLinkFor signingSignatoryID <$> theDocument
+      let authToSignMethod = signatorylinkauthenticationtosignmethod <$> msl
+      let personalNumber = case authToSignMethod of
+            Just LegacyDKNemIDAuthenticationToSign -> eidnidsSignatorySSN
+            Just DKNemIDCPRAuthenticationToSign -> eidnidsSignatorySSN
+            Just DKNemIDPIDAuthenticationToSign -> eidnidsSignatoryPID
+            Just DKNemIDCVRAuthenticationToSign -> getPersonalNumber <$> msl
+            method -> do
+              fail
+                $  "Impossible happened - consuming dkNemID signining while "
+                <> "authentication to sign is not dkNemID "
+                <> show method
+      dbUpdate
+        . MergeEIDServiceDKNemIDSignature signingSignatoryID
+        $ EIDServiceDKNemIDSignature
+            { eidServiceDKNemIDSignedText              = eidnidsSignedText
+            , eidServiceDKNemIDB64SDO                  = eidnidsB64SDO
+            , eidServiceDKNemIDSignatoryName           = eidnidsSignatoryName
+            , eidServiceDKNemIDSignatoryPersonalNumber = personalNumber
+            , eidServiceDKNemIDSignatoryIP             = eidnidsSignatoryIP
+            }
+      logInfo_ $ "EidHub DKNemID Sign succeeded: " <> showt est
+      signFromESignature ds now
+      chargeForItemSingle CIDKNemIDSignatureFinished . documentid =<< theDocument
+
 
 handleCgiGrpBankID
   :: ( CryptoRNG m

@@ -266,7 +266,10 @@ atsToMix StandardAuthenticationToSign            = MAM_Standard
 atsToMix SEBankIDAuthenticationToSign            = MAM_SEBankID
 atsToMix SMSPinAuthenticationToSign              = MAM_SMSPin
 atsToMix NOBankIDAuthenticationToSign            = MAM_NOBankID
-atsToMix DKNemIDAuthenticationToSign             = MAM_DKNemIDCPR
+atsToMix LegacyDKNemIDAuthenticationToSign       = MAM_DKNemIDCPR
+atsToMix DKNemIDCPRAuthenticationToSign          = MAM_DKNemIDCPR
+atsToMix DKNemIDPIDAuthenticationToSign          = MAM_DKNemIDPID
+atsToMix DKNemIDCVRAuthenticationToSign          = MAM_DKNemIDCVR
 atsToMix IDINAuthenticationToSign                = MAM_NLIDIN
 atsToMix FITupasAuthenticationToSign             = MAM_FITupas
 atsToMix OnfidoDocumentCheckAuthenticationToSign = MAM_Onfido
@@ -280,9 +283,11 @@ authenticationMethodsCanMix
   -> Bool
 -- We allow at most one EID authentication method within a signatory.
 authenticationMethodsCanMix authToView authToSign authToViewArchived =
-  let auths = S.fromList
-        [atvToMix authToView, atsToMix authToSign, atvToMix authToViewArchived]
-      eids = S.fromList
+  let atvMix  = atvToMix authToView
+      atvaMix = atvToMix authToViewArchived
+      atsMix  = atsToMix authToSign
+      auths   = S.fromList [atvMix, atsMix, atvaMix]
+      eids    = S.fromList
         [ MAM_SEBankID
         , MAM_NOBankID
         , MAM_DKNemIDCPR
@@ -292,7 +297,8 @@ authenticationMethodsCanMix authToView authToSign authToViewArchived =
         , MAM_Verimi
         , MAM_NLIDIN
         ]
-  in  length (auths `S.intersection` eids) <= 1
+      eidsUsed = auths `S.intersection` eids
+  in  length eidsUsed <= 1
 
 ----------------------------------------
 
@@ -364,7 +370,10 @@ authToSignNeedsPersonalNumber StandardAuthenticationToSign            = False
 authToSignNeedsPersonalNumber SMSPinAuthenticationToSign              = False
 authToSignNeedsPersonalNumber SEBankIDAuthenticationToSign            = True
 authToSignNeedsPersonalNumber NOBankIDAuthenticationToSign            = False
-authToSignNeedsPersonalNumber DKNemIDAuthenticationToSign             = True
+authToSignNeedsPersonalNumber LegacyDKNemIDAuthenticationToSign       = True
+authToSignNeedsPersonalNumber DKNemIDCPRAuthenticationToSign          = True
+authToSignNeedsPersonalNumber DKNemIDPIDAuthenticationToSign          = False
+authToSignNeedsPersonalNumber DKNemIDCVRAuthenticationToSign          = True
 authToSignNeedsPersonalNumber IDINAuthenticationToSign                = False
 authToSignNeedsPersonalNumber FITupasAuthenticationToSign             = False
 authToSignNeedsPersonalNumber OnfidoDocumentCheckAuthenticationToSign = False
@@ -376,7 +385,10 @@ authToSignNeedsMobileNumber StandardAuthenticationToSign            = False
 authToSignNeedsMobileNumber SMSPinAuthenticationToSign              = True
 authToSignNeedsMobileNumber SEBankIDAuthenticationToSign            = False
 authToSignNeedsMobileNumber NOBankIDAuthenticationToSign            = False
-authToSignNeedsMobileNumber DKNemIDAuthenticationToSign             = False
+authToSignNeedsMobileNumber LegacyDKNemIDAuthenticationToSign       = False
+authToSignNeedsMobileNumber DKNemIDCPRAuthenticationToSign          = False
+authToSignNeedsMobileNumber DKNemIDPIDAuthenticationToSign          = False
+authToSignNeedsMobileNumber DKNemIDCVRAuthenticationToSign          = False
 authToSignNeedsMobileNumber IDINAuthenticationToSign                = False
 authToSignNeedsMobileNumber FITupasAuthenticationToSign             = False
 authToSignNeedsMobileNumber OnfidoDocumentCheckAuthenticationToSign = False

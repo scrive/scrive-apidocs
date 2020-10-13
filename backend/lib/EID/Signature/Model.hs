@@ -21,6 +21,7 @@ module EID.Signature.Model (
   , MergeEIDServiceNOBankIDSignature(..)
   , EIDServiceSEBankIDSignature(..)
   , MergeEIDServiceSEBankIDSignature(..)
+  , MergeEIDServiceDKNemIDSignature(..)
   , MergeEIDServiceVerimiQesSignature(..)
   ) where
 
@@ -60,6 +61,7 @@ data ESignature
   | EIDServiceOnfidoSignature_ !EIDServiceOnfidoSignature
   | EIDServiceNOBankIDSignature_ !EIDServiceNOBankIDSignature
   | EIDServiceSEBankIDSignature_ !EIDServiceSEBankIDSignature
+  | EIDServiceDKNemIDSignature_ !EIDServiceDKNemIDSignature
   | EIDServiceVerimiQesSignature_ !EIDServiceVerimiQesSignature
   deriving (Eq, Ord, Show)
 
@@ -80,6 +82,7 @@ data SignatureProvider
   | EIDServiceOnfido
   | EIDServiceNOBankID
   | EIDServiceSEBankID
+  | EIDServiceDKNemID
   | EIDServiceVerimi
     deriving (Eq, Ord, Show)
 
@@ -104,7 +107,8 @@ instance FromSQL SignatureProvider where
       11 -> return EIDServiceNOBankID
       12 -> return EIDServiceSEBankID
       13 -> return EIDServiceVerimi
-      _  -> throwM RangeError { reRange = [(1, 13)], reValue = n }
+      14 -> return EIDServiceDKNemID
+      _  -> throwM RangeError { reRange = [(1, 14)], reValue = n }
 
 instance ToSQL SignatureProvider where
   type PQDest SignatureProvider = PQDest Int16
@@ -121,6 +125,7 @@ instance ToSQL SignatureProvider where
   toSQL EIDServiceNOBankID = toSQL (11 :: Int16)
   toSQL EIDServiceSEBankID = toSQL (12 :: Int16)
   toSQL EIDServiceVerimi   = toSQL (13 :: Int16)
+  toSQL EIDServiceDKNemID  = toSQL (14 :: Int16)
 
 ----------------------------------------
 
@@ -364,6 +369,34 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceSEBankIDSignature
         sqlSet "ocsp_response"     eidServiceSEBankIDSigOcspResponse
         sqlSet "data"              eidServiceSEBankIDSigSignedText
 
+data MergeEIDServiceDKNemIDSignature = MergeEIDServiceDKNemIDSignature SignatoryLinkID EIDServiceDKNemIDSignature
+instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceDKNemIDSignature () where
+  dbUpdate (MergeEIDServiceDKNemIDSignature slid EIDServiceDKNemIDSignature {..}) = do
+    runQuery01_ selectSignatorySignTime
+    msign_time :: Maybe UTCTime <- fetchOne runIdentity
+    when (isJust msign_time) $ do
+      unexpectedError "signatory already signed, can't merge signature"
+    runQuery_ . sqlInsert "eid_signatures" $ do
+      setFields
+      sqlOnConflictOnColumns ["signatory_link_id"] . sqlUpdate "" $ do
+        setFields
+        -- replace the signature only if signatory hasn't signed yet
+        sqlWhere $ parenthesize (toSQLCommand selectSignatorySignTime) <+> "IS NULL"
+    where
+      selectSignatorySignTime = do
+        sqlSelect "signatory_links" $ do
+          sqlResult "sign_time"
+          sqlWhereEq "id" slid
+      setFields :: (MonadState v n, SqlSet v) => n ()
+      setFields = do
+        sqlSet "signatory_link_id" slid
+        sqlSet "provider"          EIDServiceDKNemID
+        sqlSet "data"              eidServiceDKNemIDSignedText
+        sqlSet "signature" . encodeUtf8 $ eidServiceDKNemIDB64SDO
+        sqlSet "signatory_name"            eidServiceDKNemIDSignatoryName
+        sqlSet "signatory_personal_number" eidServiceDKNemIDSignatoryPersonalNumber
+        sqlSet "signatory_ip"              eidServiceDKNemIDSignatoryIP
+
 data MergeEIDServiceVerimiQesSignature = MergeEIDServiceVerimiQesSignature SignatoryLinkID EIDServiceVerimiQesSignature
 instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceVerimiQesSignature () where
   dbUpdate (MergeEIDServiceVerimiQesSignature slid EIDServiceVerimiQesSignature {..}) =
@@ -383,7 +416,6 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceVerimiQesSignatur
         sqlSelect "signatory_links" $ do
           sqlResult "sign_time"
           sqlWhereEq "id" slid
-
       setFields :: (MonadState v n, SqlSet v) => n ()
       setFields = do
         sqlSet "signatory_link_id"      slid
@@ -505,6 +537,13 @@ fetchESignature (provider, sdata, signature, mcertificate, msignatory_name, msig
       , eidServiceSEBankIDSigSignedText     = fromJust sdata
       , eidServiceSEBankIDSigSignature      = fromJust signature
       , eidServiceSEBankIDSigOcspResponse   = fromJust mocsp_response
+      }
+    EIDServiceDKNemID -> EIDServiceDKNemIDSignature_ $ EIDServiceDKNemIDSignature
+      { eidServiceDKNemIDSignedText              = fromJust sdata
+      , eidServiceDKNemIDB64SDO                  = decodeUtf8 $ fromJust signature
+      , eidServiceDKNemIDSignatoryName           = fromJust msignatory_name
+      , eidServiceDKNemIDSignatoryPersonalNumber = msignatory_personal_number
+      , eidServiceDKNemIDSignatoryIP             = msignatory_ip
       }
     EIDServiceVerimi -> EIDServiceVerimiQesSignature_ $ EIDServiceVerimiQesSignature
       { eidServiceVerimiSigName          = fromJust msignatory_name

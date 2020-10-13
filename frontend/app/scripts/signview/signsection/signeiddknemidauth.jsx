@@ -106,21 +106,14 @@ var SignLegalAgreement = require("./signlegalagreement");
         "center-block": true
       });
 
-      var confirmationText;
-      var confirmationTextNoName;
-      var logoClass;
-      var confirmationTitle;
       var doc = model.document();
       var sig = doc.currentSignatory();
-      if (sig.noBankIDAuthenticationToSign()) {
-        confirmationText = localization.docsignview.eleg.bankid.signNOConfirmationText;
-        confirmationTextNoName = localization.docsignview.eleg.bankid.signNOConfirmationTextNoName;
-        logoClass = classNames({"bankid-logo-nets": true, "no-bankid-logo": true});
-        confirmationTitle = localization.docsignview.eleg.bankid.signNOConfirmationTitle;
-      }
+      var confirmationText = localization.docsignview.eleg.bankid.signDKConfirmationText;
+      var confirmationTextNoName = localization.docsignview.eleg.bankid.signDKConfirmationTextNoName;
+      var logoClass = classNames({"bankid-logo-nets": true, "dk-nemid-logo": true});
+      var confirmationTitle = localization.docsignview.eleg.bankid.signDKConfirmationTitle;
 
       var randomFragment = Math.floor((Math.random() * 1000000) + 1);
-
 
       return (
         <div className={divClass}>
@@ -137,6 +130,30 @@ var SignLegalAgreement = require("./signlegalagreement");
           }
           {/* else */ name === "" &&
             <p>{confirmationTextNoName}</p>
+          }
+          { /* if */ (sig.dkNemIDCPRAuthenticationToSign() || sig.dkNemIDCVRAuthenticationToSign())
+                && this.props.askForSSN &&
+            <dl className="ssn-list">
+              <dt><label htmlFor="ssn">{localization.eID.idName.cpr}</label></dt>
+              <dd>
+                <InfoTextInput
+                  id="ssn"
+                  ref="ssnInput"
+                  infotext={localization.eID.infoText.cpr}
+                  className={inputSSNClass}
+                  value={fieldSSN.value()}
+                  onChange={function (value) { fieldSSN.setValue(value); }}
+                />
+              </dd>
+            </dl>
+          }
+
+          {/* else */ sig.dkNemIDCPRAuthenticationToSign() && !this.props.askForSSN &&
+            <p className="ssn-text">{localization.eID.idName.cpr} <b>{ssn}</b></p>
+          }
+
+          {/* else */ sig.dkNemIDCVRAuthenticationToSign() && !this.props.askForSSN &&
+            <p className="ssn-text">{localization.eID.idName.cvr} <b>{ssn}</b></p>
           }
 
           <Button

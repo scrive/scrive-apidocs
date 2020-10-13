@@ -232,10 +232,13 @@ var moment = require("moment");
                    || signatory.dkNemIDPIDAuthenticationToView()
                    || signatory.dkNemIDCPRAuthenticationToViewArchived()
                    || signatory.dkNemIDPIDAuthenticationToViewArchived()
-                   || signatory.dkNemIDAuthenticationToSign()) {
+                   || signatory.dkNemIDCPRAuthenticationToSign()
+                   || signatory.dkNemIDPIDAuthenticationToSign()
+        ) {
           return !new SSNForDKNemIDValidation().validateData(field.value());
        } else if (signatory.dkNemIDCVRAuthenticationToView()
-                  || signatory.dkNemIDCVRAuthenticationToViewArchived()) {
+                  || signatory.dkNemIDCVRAuthenticationToViewArchived()
+                  || signatory.dkNemIDCVRAuthenticationToSign()) {
           return !new CVRForDKNemIDValidation().validateData(field.value());
        } else {
           return !new NoValidation().validateData(field.value());
@@ -249,7 +252,11 @@ var moment = require("moment");
       var document = this.document();
       var signatory = document.currentSignatory();
 
-      return this.askForSSN() && !signatory.seBankIDAuthenticationToSign() && !signatory.dkNemIDAuthenticationToSign();
+      return this.askForSSN()
+              && !signatory.seBankIDAuthenticationToSign()
+              && !signatory.dkNemIDCPRAuthenticationToSign()
+              && !signatory.dkNemIDPIDAuthenticationToSign()
+              && !signatory.dkNemIDCVRAuthenticationToSign();
     },
 
     askForPhone: function () {

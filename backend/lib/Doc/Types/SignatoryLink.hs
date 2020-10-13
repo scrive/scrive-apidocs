@@ -202,7 +202,10 @@ data AuthenticationToSignMethod
   | SEBankIDAuthenticationToSign
   | SMSPinAuthenticationToSign
   | NOBankIDAuthenticationToSign
-  | DKNemIDAuthenticationToSign
+  | LegacyDKNemIDAuthenticationToSign
+  | DKNemIDCPRAuthenticationToSign
+  | DKNemIDPIDAuthenticationToSign
+  | DKNemIDCVRAuthenticationToSign
   | IDINAuthenticationToSign  -- authentication at the point of signing
   | FITupasAuthenticationToSign  -- authentication at the point of signing
   | OnfidoDocumentCheckAuthenticationToSign  -- Onfido document check; authentication at the point of signing
@@ -222,13 +225,16 @@ instance FromSQL AuthenticationToSignMethod where
       2  -> return SEBankIDAuthenticationToSign
       3  -> return SMSPinAuthenticationToSign
       4  -> return NOBankIDAuthenticationToSign
-      5  -> return DKNemIDAuthenticationToSign
+      5  -> return LegacyDKNemIDAuthenticationToSign
       6  -> return IDINAuthenticationToSign
       7  -> return FITupasAuthenticationToSign
       8  -> return OnfidoDocumentCheckAuthenticationToSign
       9  -> return OnfidoDocumentAndPhotoCheckAuthenticationToSign
       10 -> return VerimiQesAuthenticationToSign
-      _  -> throwM RangeError { reRange = [(1, 10)], reValue = n }
+      11 -> return DKNemIDCPRAuthenticationToSign
+      12 -> return DKNemIDPIDAuthenticationToSign
+      13 -> return DKNemIDCVRAuthenticationToSign
+      _  -> throwM RangeError { reRange = [(1, 13)], reValue = n }
 
 instance ToSQL AuthenticationToSignMethod where
   type PQDest AuthenticationToSignMethod = PQDest Int16
@@ -236,12 +242,15 @@ instance ToSQL AuthenticationToSignMethod where
   toSQL SEBankIDAuthenticationToSign            = toSQL (2 :: Int16)
   toSQL SMSPinAuthenticationToSign              = toSQL (3 :: Int16)
   toSQL NOBankIDAuthenticationToSign            = toSQL (4 :: Int16)
-  toSQL DKNemIDAuthenticationToSign             = toSQL (5 :: Int16)
+  toSQL LegacyDKNemIDAuthenticationToSign       = toSQL (5 :: Int16)
   toSQL IDINAuthenticationToSign                = toSQL (6 :: Int16)
   toSQL FITupasAuthenticationToSign             = toSQL (7 :: Int16)
   toSQL OnfidoDocumentCheckAuthenticationToSign = toSQL (8 :: Int16)
   toSQL OnfidoDocumentAndPhotoCheckAuthenticationToSign = toSQL (9 :: Int16)
   toSQL VerimiQesAuthenticationToSign           = toSQL (10 :: Int16)
+  toSQL DKNemIDCPRAuthenticationToSign          = toSQL (11 :: Int16)
+  toSQL DKNemIDPIDAuthenticationToSign          = toSQL (12 :: Int16)
+  toSQL DKNemIDCVRAuthenticationToSign          = toSQL (13 :: Int16)
 
 ---------------------------------
 

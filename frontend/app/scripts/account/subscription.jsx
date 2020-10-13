@@ -168,7 +168,9 @@ var Subscription = Backbone.Model.extend({
         can_use_dk_cpr_authentication_to_view: ff.canUseDKCPRAuthenticationToView,
         can_use_dk_pid_authentication_to_view: ff.canUseDKPIDAuthenticationToView,
         can_use_dk_cvr_authentication_to_view: ff.canUseDKCVRAuthenticationToView,
-        can_use_dk_authentication_to_sign: ff.canUseDKAuthenticationToSign,
+        can_use_dk_cpr_authentication_to_sign: ff.canUseDKCPRAuthenticationToSign,
+        can_use_dk_pid_authentication_to_sign: ff.canUseDKPIDAuthenticationToSign,
+        can_use_dk_cvr_authentication_to_sign: ff.canUseDKCVRAuthenticationToSign,
         can_use_fi_authentication_to_view: ff.canUseFIAuthenticationToView,
         can_use_fi_authentication_to_sign: ff.canUseFIAuthenticationToSign,
         can_use_no_authentication_to_view: ff.canUseNOAuthenticationToView,
@@ -295,7 +297,9 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
     "can_use_dk_cpr_authentication_to_view": true,
     "can_use_dk_pid_authentication_to_view": true,
     "can_use_dk_cvr_authentication_to_view": true,
-    "can_use_dk_authentication_to_sign": true,
+    "can_use_dk_cpr_authentication_to_sign": true,
+    "can_use_dk_pid_authentication_to_sign": true,
+    "can_use_dk_cvr_authentication_to_sign": true,
     "can_use_fi_authentication_to_view": true,
     "can_use_fi_authentication_to_sign": true,
     "can_use_no_authentication_to_view": true,
@@ -352,8 +356,14 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
   canUseDKCVRAuthenticationToView: function () {
      return this.get("can_use_dk_cvr_authentication_to_view");
   },
-  canUseDKAuthenticationToSign: function () {
-     return this.get("can_use_dk_authentication_to_sign");
+  canUseDKCPRAuthenticationToSign: function () {
+     return this.get("can_use_dk_cpr_authentication_to_sign");
+  },
+  canUseDKPIDAuthenticationToSign: function () {
+     return this.get("can_use_dk_pid_authentication_to_sign");
+  },
+  canUseDKCVRAuthenticationToSign: function () {
+     return this.get("can_use_dk_cvr_authentication_to_sign");
   },
   canUseFIAuthenticationToView: function () {
      return this.get("can_use_fi_authentication_to_view");
@@ -456,8 +466,12 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
       return "se_bankid";
     else if (this.canUseNOAuthenticationToSign())
       return "no_bankid";
-    else if (this.canUseDKAuthenticationToSign())
-      return "dk_bankid";
+    else if (this.canUseDKCPRAuthenticationToSign())
+      return "dk_nemid_cpr";
+    else if (this.canUseDKPIDAuthenticationToSign())
+      return "dk_nemid_pid";
+    else if (this.canUseDKCVRAuthenticationToSign())
+      return "dk_nemid_cvr";
     else if (this.canUseSMSPinAuthenticationToSign())
       return "sms_pin";
     else if (this.canUseIDINAuthenticationToSign())
@@ -508,7 +522,9 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
     return this.canUseSEAuthenticationToSign() ||
       this.canUseSMSPinAuthenticationToSign() ||
       this.canUseNOAuthenticationToSign() ||
-      this.canUseDKAuthenticationToSign() ||
+      this.canUseDKCPRAuthenticationToSign() ||
+      this.canUseDKPIDAuthenticationToSign() ||
+      this.canUseDKCVRAuthenticationToSign() ||
       this.canUseIDINAuthenticationToSign() ||
       this.canUseFIAuthenticationToSign() ||
       this.canUseOnfidoAuthenticationToSign() ||
@@ -526,7 +542,10 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
       can_use_sms_confirmations: args.can_use_sms_confirmations,
       can_use_dk_cpr_authentication_to_view: args.can_use_dk_cpr_authentication_to_view,
       can_use_dk_pid_authentication_to_view: args.can_use_dk_pid_authentication_to_view,
-      can_use_dk_authentication_to_sign: args.can_use_dk_authentication_to_sign,
+      can_use_dk_cvr_authentication_to_view: args.can_use_dk_cvr_authentication_to_view,
+      can_use_dk_cpr_authentication_to_sign: args.can_use_dk_cpr_authentication_to_sign,
+      can_use_dk_pid_authentication_to_sign: args.can_use_dk_pid_authentication_to_sign,
+      can_use_dk_cvr_authentication_to_sign: args.can_use_dk_cvr_authentication_to_sign,
       can_use_fi_authentication_to_view: args.can_use_fi_authentication_to_view,
       can_use_fi_authentication_to_sign: args.can_use_fi_authentication_to_sign,
       can_use_no_authentication_to_view: args.can_use_no_authentication_to_view,
