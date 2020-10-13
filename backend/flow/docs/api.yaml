@@ -1,16 +1,35 @@
 openapi: 3.0.0
 info:
   title: Scrive Flow API
-  version: "0.10.7"
+  version: "0.10.8"
   description: |
     This is a specification of an API for configuring and managing Scrive Flow processes.
 
     Here are some of the additional documentation resources that should be available if you're viewing this document through a Scrive service.
-    * [API guide](/experimental/flow/documentation/flow-api-guide.md), a short introduction that walks you through setting up a simple Flow process.
-    * [API changelog](/experimental/flow/documentation/changelog.md), a list of past changes to the specification.
-    * [Planned API changes](/experimental/flow/documentation/flow-api-changes.md), a list of planned changes to the specification.
-    * [ReDoc UI](/experimental/flow/documentation/redoc.html), an alternative presentation of the specification itself.
-    * [Swagger UI](/experimental/flow/documentation/index.html), the default presentation of the specification itself.
+    * [API guide (md)](/experimental/flow/documentation/flow-api-guide.md), a short introduction that walks you through setting up a simple Flow process.
+    * [API changelog (md)](/experimental/flow/documentation/changelog.md), a list of past changes to the specification.
+    * [ReDoc UI (html)](/experimental/flow/documentation/redoc.html), an alternative presentation of the specification itself.
+    * [Swagger UI (html)](/experimental/flow/documentation/index.html), the default presentation of the specification itself.
+
+    # Recent changes
+
+    ## 0.10.8
+
+    * Add support for specifying allowed document types when using Onfido for authentication.
+    * Schema `AuthenticationOnfido`: add optional `allowed_document_types` field.
+    * Schema `VersionResponse`: add fields `api_version` and `build_date`.
+
+    ## 0.10.7
+
+    * Add support for SMS OTP (one-time password) authentication via EID Hub.
+
+    ## 0.10.6
+
+    * Add support for specifying which method when using Onfido for authentication.
+    * Schema `AuthenticationOnfido`: add optional `method` field.
+
+    Download the full [API changelog (md)](/experimental/flow/documentation/changelog.md) here.
+
   contact:
     email: support@scrive.com
 tags:
@@ -18,8 +37,6 @@ tags:
     description: Calls used to configure Flow processes.
   - name: control
     description: Calls used to control Flow processes.
-  - name: participation
-    description: Calls used to participate in Flow processes.
   - name: general
     description: General information about the Flow service.
   - name: internal
@@ -375,12 +392,14 @@ paths:
   /instances/{instance_id}/view:
     get:
       tags:
-        - participation
+        - internal
       summary: View a Flow instance
       operationId: viewFlow
       description: |
         User interface that returns information relevant
         to the party involved in a Flow process.
+
+        This is an internal API and the behavior may change in the future.
       parameters:
         - $ref: "#/components/parameters/InstanceId"
       responses:
@@ -407,12 +426,13 @@ paths:
     post:
       tags:
         - internal
-        - participation
       summary: Reject a Flow instance
       operationId: rejectFlow
       description: |
         Reject a flow instance, causing all documents that involve the participant
-        to be cancelled. This is an internal API and the behavior may change in the future.
+        to be cancelled.
+
+        This is an internal API and the behavior may change in the future.
       parameters:
         - $ref: "#/components/parameters/InstanceId"
       requestBody:
@@ -689,6 +709,19 @@ components:
               enum:
                 - document
                 - document_and_photo
+            allowed_document_types:
+              description: |
+                Types of documents that the user can choose from to authenticate.
+
+                If not specified all the document types are allowed.
+              type: array
+              items:
+                type: string
+                enum:
+                  - national_identity_card
+                  - driving_licence
+                  - passport
+                  - residence_permit
     AuthenticationSMS:
       description: |
         SMS pin authentication code.
@@ -747,6 +780,10 @@ components:
             id: joe@foo.com
             auth_to_view:
               provider: onfido
+              method: document_and_photo
+              allowed_document_types:
+                - national_identity_card
+                - driving_licence
               max_failures: 1
             auth_to_view_archived:
               provider: sms_pin
@@ -1174,11 +1211,20 @@ components:
         Flow service version information
       type: object
       required:
+        - api_version
         - build_commit
+        - build_date
       properties:
+        api_version:
+          type: string
+          example: 0.10.8
         build_commit:
           type: string
           example: 25a5af6235033d22cafefcdd68bf402265414741
+        build_date:
+          type: string
+          format: date-time
+          example: "2020-01-01T12:00:27.87.00000Z"
 
     CallbackEvent:
       description: |

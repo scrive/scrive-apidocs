@@ -344,8 +344,8 @@ mkIdentifyViewAppConfig cdnBaseUrl logoUrl instance_ userName authorId (authenti
     toAuthenticationToViewMethod
       :: AuthenticationProvider -> AuthenticationToViewFlowMethod
     toAuthenticationToViewMethod = \case
-      (Onfido (AuthenticationProviderOnfidoData Document)) ->
+      (Onfido (AuthenticationProviderOnfidoData Document _)) ->
         OnfidoDocumentCheckAuthenticationToView
-      (Onfido (AuthenticationProviderOnfidoData DocumentAndPhoto)) ->
+      (Onfido (AuthenticationProviderOnfidoData DocumentAndPhoto _)) ->
         OnfidoDocumentAndPhotoCheckAuthenticationToView
       SmsOtp -> SmsOtpAuthenticationToView

@@ -20,10 +20,13 @@ buildVersion = $( do
   buildNumberLit <- litE $ stringL buildNumber
   buildVcsNumberName <- fromJust <$> lookupValueName "buildVcsNumber"
   buildVcsNumberLit <- litE $ stringL buildVcsNumber
+  buildFlowApiVersionName <- fromJust <$> lookupValueName "buildFlowApiVersion"
+  buildFlowApiVersionLit <- litE $ stringL buildFlowApiVersion
   recConE 'BuildVersion
     [ pure (buildDateName, buildDateLit)
     , pure (buildNumberName, buildNumberLit)
     , pure (buildVcsNumberName, buildVcsNumberLit)
+    , pure (buildFlowApiVersionName, buildFlowApiVersionLit)
     ]
   )
 
