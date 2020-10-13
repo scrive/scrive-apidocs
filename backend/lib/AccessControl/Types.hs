@@ -76,6 +76,7 @@ accessRoleGetTargetUserGroupID role = case accessRoleTarget role of
   FolderUserAR         _    -> Nothing
   SharedTemplateUserAR _    -> Nothing
   EidImpersonatorAR    ugid -> Just ugid
+  FolderDraftAccessAR  _    -> Nothing
 
 accessRoleGetTargetFolderID :: AccessRole -> Maybe FolderID
 accessRoleGetTargetFolderID role = case accessRoleTarget role of
@@ -87,6 +88,7 @@ accessRoleGetTargetFolderID role = case accessRoleTarget role of
   FolderUserAR         fid -> Just fid
   SharedTemplateUserAR fid -> Just fid
   EidImpersonatorAR    _   -> Nothing
+  FolderDraftAccessAR  fid -> Just fid
 
 accessRoleGetTargetUserID :: AccessRole -> Maybe UserID
 accessRoleGetTargetUserID role = case accessRoleTarget role of
@@ -98,6 +100,7 @@ accessRoleGetTargetUserID role = case accessRoleTarget role of
   FolderUserAR         _   -> Nothing
   SharedTemplateUserAR _   -> Nothing
   EidImpersonatorAR    _   -> Nothing
+  FolderDraftAccessAR  _   -> Nothing
 
 accessRoleGetSourceUserID :: AccessRole -> Maybe UserID
 accessRoleGetSourceUserID role = case role of
@@ -148,6 +151,8 @@ data AccessRoleTarget
   -- their EID display name rather than that of their own user group; in that
   -- case the impersonated group is charged for the EID transaction.
   -- Impersonation only applies to Swedish BankID at the moment!
+  | FolderDraftAccessAR FolderID
+  -- ^ Can Read private Drafts (signables in preparation) in a folder
   deriving (Eq, Ord, Show)
 
 -- | We need to discern between permissions and actions that affect users, user
@@ -175,6 +180,8 @@ data AccessResource
   | DocumentAfterPreparationR FolderID
   -- Assignee of this role can use UserGroup (but not subgroups) for EID purposes (Display name and charging)
   | EidIdentityR UserGroupID
+  -- Drafts in Folder or any subfolder
+  | DraftInFolderR FolderID
   deriving (Eq, Ord)
 
 data PermissionKind = PermCanDo | PermCanGrant deriving (Eq, Ord, Show)
@@ -191,6 +198,7 @@ instance Show AccessResource where
   show (FlowTemplateR             _) = "flow_template"
   show (DocumentAfterPreparationR _) = "document_after_preparation"
   show (EidIdentityR              _) = "eid_identity"
+  show (DraftInFolderR            _) = "draft"
 
 -- | Should be self-explanatory. The 'A' stands for 'Action'.
 data AccessAction
@@ -264,6 +272,7 @@ data AccessRoleType
   | FolderUserART
   | SharedTemplateUserART
   | EidImpersonatorART
+  | FolderDraftAccessART
   deriving (Eq)
 
 instance PQFormat AccessRoleType where
@@ -278,9 +287,7 @@ instance FromSQL AccessRoleType where
       1 -> return UserGroupMemberART
       2 -> return UserAdminART
       3 -> return UserGroupAdminART
-      -- The DocumentAdmin role was removed, leaving this gap.
-      -- When creating a new role, please use number 4 and
-      -- remove this comment.
+      4 -> return FolderDraftAccessART
       5 -> return FolderAdminART
       6 -> return FolderUserART
       7 -> return SharedTemplateUserART
@@ -293,6 +300,7 @@ instance ToSQL AccessRoleType where
   toSQL UserGroupMemberART    = toSQL (1 :: Int16)
   toSQL UserAdminART          = toSQL (2 :: Int16)
   toSQL UserGroupAdminART     = toSQL (3 :: Int16)
+  toSQL FolderDraftAccessART  = toSQL (4 :: Int16)
   toSQL FolderAdminART        = toSQL (5 :: Int16)
   toSQL FolderUserART         = toSQL (6 :: Int16)
   toSQL SharedTemplateUserART = toSQL (7 :: Int16)
@@ -307,17 +315,19 @@ instance Show AccessRoleType where
   show FolderUserART         = "folder_user"
   show SharedTemplateUserART = "shared_template_user"
   show EidImpersonatorART    = "eid_impersonator"
+  show FolderDraftAccessART  = "folder_draft_access"
 
 instance Read AccessRoleType where
-  readsPrec _ "user"              = [(UserART, "")]
-  readsPrec _ "user_admin"        = [(UserAdminART, "")]
-  readsPrec _ "user_group_admin"  = [(UserGroupAdminART, "")]
-  readsPrec _ "user_group_member" = [(UserGroupMemberART, "")]
-  readsPrec _ "folder_admin"      = [(FolderAdminART, "")]
-  readsPrec _ "folder_user"       = [(FolderUserART, "")]
+  readsPrec _ "user"                = [(UserART, "")]
+  readsPrec _ "user_admin"          = [(UserAdminART, "")]
+  readsPrec _ "user_group_admin"    = [(UserGroupAdminART, "")]
+  readsPrec _ "user_group_member"   = [(UserGroupMemberART, "")]
+  readsPrec _ "folder_admin"        = [(FolderAdminART, "")]
+  readsPrec _ "folder_user"         = [(FolderUserART, "")]
   readsPrec _ "shared_template_user" = [(SharedTemplateUserART, "")]
-  readsPrec _ "eid_impersonator"  = [(EidImpersonatorART, "")]
-  readsPrec _ _                   = []
+  readsPrec _ "eid_impersonator"    = [(EidImpersonatorART, "")]
+  readsPrec _ "folder_draft_access" = [(FolderDraftAccessART, "")]
+  readsPrec _ _                     = []
 
 instance Unjson AccessRoleType where
   unjsonDef = unjsonInvmapR
@@ -345,6 +355,7 @@ toAccessRoleType ar = case ar of
   FolderUserAR         _ -> FolderUserART
   SharedTemplateUserAR _ -> SharedTemplateUserART
   EidImpersonatorAR    _ -> EidImpersonatorART
+  FolderDraftAccessAR  _ -> FolderDraftAccessART
 
 -- AccessRoleID
 

@@ -49,7 +49,7 @@ createSignatoryContext docId signatoryId = do
     $ NewSignatoryAccessToken signatoryId SignatoryAccessTokenForMailBeforeClosing Nothing
 
   getRequest <- mkRequestWithHeaders GET [] []
-  ctx1       <- set #maybeUser Nothing <$> mkContext defaultLang
+  ctx1       <- mkContext defaultLang
   (_, ctx2)  <- runTestKontra getRequest ctx1
     $ handleSignShowSaveMagicHash docId signatoryId token
   return ctx2
@@ -87,6 +87,7 @@ testBasicAccessControl = do
   folderUser      <- instantiateRandomUser
   folderGuest     <- instantiateRandomUser
   folderAdmin     <- instantiateRandomUser
+  folderDraftUser <- instantiateRandomUser
   otherUser       <- instantiateRandomUser
   otherFolderUser <- instantiateRandomUser
 
@@ -94,14 +95,15 @@ testBasicAccessControl = do
   groupAdmin      <- instantiateUser
     $ randomUserTemplate { groupID = return userGroupId, isCompanyAdmin = True }
 
-  anonCtx            <- set #maybeUser Nothing <$> mkContext defaultLang
-  folderUserCtx      <- set #maybeUser (Just folderUser) <$> mkContext defaultLang
-  folderGuestCtx     <- set #maybeUser (Just folderGuest) <$> mkContext defaultLang
-  folderAdminCtx     <- set #maybeUser (Just folderAdmin) <$> mkContext defaultLang
-  otherUserCtx       <- set #maybeUser (Just otherUser) <$> mkContext defaultLang
-  otherFolderUserCtx <- set #maybeUser (Just otherFolderUser) <$> mkContext defaultLang
-  groupUserCtx       <- set #maybeUser (Just groupUser) <$> mkContext defaultLang
-  groupAdminCtx      <- set #maybeUser (Just groupAdmin) <$> mkContext defaultLang
+  anonCtx            <- mkContext defaultLang
+  folderUserCtx      <- mkContextWithUser defaultLang folderUser
+  folderGuestCtx     <- mkContextWithUser defaultLang folderGuest
+  folderAdminCtx     <- mkContextWithUser defaultLang folderAdmin
+  folderDraftUserCtx <- mkContextWithUser defaultLang folderDraftUser
+  otherUserCtx       <- mkContextWithUser defaultLang otherUser
+  otherFolderUserCtx <- mkContextWithUser defaultLang otherFolderUser
+  groupUserCtx       <- mkContextWithUser defaultLang groupUser
+  groupAdminCtx      <- mkContextWithUser defaultLang groupAdmin
 
   folder             <- dbUpdate . FolderCreate $ defaultFolder
   let folderId = folder ^. #id
@@ -116,6 +118,8 @@ testBasicAccessControl = do
                                                (SharedTemplateUserAR folderId)
   void . dbUpdate $ AccessControlCreateForUser (folderAdmin ^. #id)
                                                (FolderAdminAR folderId)
+  void . dbUpdate $ AccessControlCreateForUser (folderDraftUser ^. #id)
+                                               (FolderDraftAccessAR folderId)
 
   void . dbUpdate $ AccessControlCreateForUser (otherFolderUser ^. #id)
                                                (FolderUserAR otherFolderId)
@@ -133,7 +137,7 @@ testBasicAccessControl = do
                                                (EidImpersonatorAR userGroupId)
 
   author    <- instantiateUser $ randomUserTemplate { groupID = return userGroupId }
-  authorCtx <- set #maybeUser (Just author) <$> mkContext defaultLang
+  authorCtx <- mkContextWithUser defaultLang author
 
   void . dbUpdate $ AccessControlCreateForUser (author ^. #id) (FolderUserAR folderId)
 
@@ -164,6 +168,12 @@ testBasicAccessControl = do
       "Folder admin should not able to get draft document with no folder permission"
       docId
       folderAdminCtx
+      []
+
+    assertGetDocumentSucceed
+      "Folder user with draft access should be able to get draft document with draft permission available"
+      docId
+      folderDraftUserCtx
       []
 
     assertGetDocumentFails
@@ -236,7 +246,7 @@ testBasicAccessControl = do
     assertGetDocumentSucceed
       "Signatory user should be able to access through signatory id when logging in as other user"
       docId
-      (set #maybeUser (Just otherUser) participantSignCtx)
+      (#maybeUser ?~ otherUser $ participantSignCtx)
       [("signatory_id", inText . showt $ signatorylinkid participantSigLink)]
 
     assertGetDocumentSucceed
@@ -255,6 +265,12 @@ testBasicAccessControl = do
       "Folder admin should be able to get started document with folder permission available"
       docId
       folderAdminCtx
+      []
+
+    assertGetDocumentFails
+      "User with folder draft access should not be able to access non-draft documents with draft permission available"
+      docId
+      folderDraftUserCtx
       []
 
     assertGetDocumentFails
@@ -351,6 +367,12 @@ testBasicAccessControl = do
       []
 
     assertGetDocumentFails
+      "User with folder draft access should not be able to get cancelled document"
+      docId
+      folderDraftUserCtx
+      []
+
+    assertGetDocumentFails
       "Shared folder user should not able to get cancelled document"
       docId
       folderGuestCtx
@@ -392,7 +414,7 @@ testAuthorAccessControl = do
   now       <- currentTime
 
   author    <- instantiateUser $ randomUserTemplate { groupID = return userGroupId }
-  authorCtx <- set #maybeUser (Just author) <$> mkContext defaultLang
+  authorCtx <- mkContextWithUser defaultLang author
 
   role <- dbUpdate $ AccessControlCreateForUser (author ^. #id) (FolderUserAR folderId)
   let roleId = fromJust . accessRoleGetAccessRoleId $ fromJust role
@@ -432,7 +454,7 @@ testAuthorAccessControl = do
     assertGetDocumentSucceed
       "Author should still be able to access through signatory id while logged in"
       docId
-      (set #maybeUser (Just author) authorSignCtx)
+      (#maybeUser ?~ author $ authorSignCtx)
       [("signatory_id", inText . showt $ signatorylinkid authorSigLink)]
 
   do -- Document cancelled
@@ -472,14 +494,14 @@ testSharedAccessControl = do
   groupAdmin      <- instantiateUser
     $ randomUserTemplate { groupID = return userGroupId, isCompanyAdmin = True }
 
-  anonCtx            <- set #maybeUser Nothing <$> mkContext defaultLang
-  folderUserCtx      <- set #maybeUser (Just folderUser) <$> mkContext defaultLang
-  folderGuestCtx     <- set #maybeUser (Just folderGuest) <$> mkContext defaultLang
-  folderAdminCtx     <- set #maybeUser (Just folderAdmin) <$> mkContext defaultLang
-  otherUserCtx       <- set #maybeUser (Just otherUser) <$> mkContext defaultLang
-  otherFolderUserCtx <- set #maybeUser (Just otherFolderUser) <$> mkContext defaultLang
-  groupUserCtx       <- set #maybeUser (Just groupUser) <$> mkContext defaultLang
-  groupAdminCtx      <- set #maybeUser (Just groupAdmin) <$> mkContext defaultLang
+  anonCtx            <- mkContext defaultLang
+  folderUserCtx      <- mkContextWithUser defaultLang folderUser
+  folderGuestCtx     <- mkContextWithUser defaultLang folderGuest
+  folderAdminCtx     <- mkContextWithUser defaultLang folderAdmin
+  otherUserCtx       <- mkContextWithUser defaultLang otherUser
+  otherFolderUserCtx <- mkContextWithUser defaultLang otherFolderUser
+  groupUserCtx       <- mkContextWithUser defaultLang groupUser
+  groupAdminCtx      <- mkContextWithUser defaultLang groupAdmin
 
   folder             <- dbUpdate . FolderCreate $ defaultFolder
   let folderId = folder ^. #id
@@ -507,9 +529,11 @@ testSharedAccessControl = do
                                                (UserGroupMemberAR userGroupId)
   void . dbUpdate $ AccessControlCreateForUser (groupUser ^. #id)
                                                (EidImpersonatorAR userGroupId)
+  void . dbUpdate $ AccessControlCreateForUser (groupUser ^. #id)
+                                               (FolderDraftAccessAR folderId)
 
   author <- instantiateUser $ randomUserTemplate { groupID = return userGroupId }
-  authorCtx <- set #maybeUser (Just author) <$> mkContext defaultLang
+  authorCtx <- mkContextWithUser defaultLang author
 
   role <- dbUpdate $ AccessControlCreateForUser (author ^. #id) (FolderUserAR folderId)
   let roleId = fromJust . accessRoleGetAccessRoleId $ fromJust role
@@ -610,9 +634,9 @@ testGroupAccessControl = do
   groupAdmin <- instantiateUser
     $ randomUserTemplate { groupID = return userGroupId, isCompanyAdmin = True }
 
-  authorCtx     <- set #maybeUser (Just author) <$> mkContext defaultLang
-  groupUserCtx  <- set #maybeUser (Just groupUser) <$> mkContext defaultLang
-  groupAdminCtx <- set #maybeUser (Just groupAdmin) <$> mkContext defaultLang
+  authorCtx     <- mkContextWithUser defaultLang author
+  groupUserCtx  <- mkContextWithUser defaultLang groupUser
+  groupAdminCtx <- mkContextWithUser defaultLang groupAdmin
 
   do -- Normal documents
     do -- Document preparation phase
@@ -698,19 +722,23 @@ testGroupAccessControl = do
 
 testFolderAccessControl :: TestEnv ()
 testFolderAccessControl = do
-  baseFolderUser        <- instantiateRandomUser
-  childFolderUser       <- instantiateRandomUser
-  grandChildFolderUser  <- instantiateRandomUser
+  baseFolderUser            <- instantiateRandomUser
+  childFolderUser           <- instantiateRandomUser
+  grandChildFolderUser      <- instantiateRandomUser
 
-  baseFolderAdmin       <- instantiateRandomUser
-  childFolderAdmin      <- instantiateRandomUser
-  grandChildFolderAdmin <- instantiateRandomUser
+  baseFolderAdmin           <- instantiateRandomUser
+  childFolderAdmin          <- instantiateRandomUser
+  grandChildFolderAdmin     <- instantiateRandomUser
 
-  baseFolderGuest       <- instantiateRandomUser
-  childFolderGuest      <- instantiateRandomUser
-  grandChildFolderGuest <- instantiateRandomUser
+  baseFolderGuest           <- instantiateRandomUser
+  childFolderGuest          <- instantiateRandomUser
+  grandChildFolderGuest     <- instantiateRandomUser
 
-  baseFolder            <- dbUpdate . FolderCreate $ defaultFolder
+  baseFolderDraftUser       <- instantiateRandomUser
+  childFolderDraftUser      <- instantiateRandomUser
+  grandChildFolderDraftUser <- instantiateRandomUser
+
+  baseFolder                <- dbUpdate . FolderCreate $ defaultFolder
   let baseFolderId = baseFolder ^. #id
 
   childFolder <- dbUpdate . FolderCreate $ set #parentID (Just baseFolderId) defaultFolder
@@ -748,18 +776,29 @@ testFolderAccessControl = do
   void . dbUpdate $ AccessControlCreateForUser (grandChildFolderGuest ^. #id)
                                                (SharedTemplateUserAR grandChildFolderId)
 
-  baseFolderUserCtx <- set #maybeUser (Just baseFolderUser) <$> mkContext defaultLang
-  baseFolderAdminCtx <- set #maybeUser (Just baseFolderAdmin) <$> mkContext defaultLang
-  baseFolderGuestCtx <- set #maybeUser (Just baseFolderGuest) <$> mkContext defaultLang
+  void . dbUpdate $ AccessControlCreateForUser (baseFolderDraftUser ^. #id)
+                                               (FolderDraftAccessAR baseFolderId)
 
-  childFolderUserCtx <- set #maybeUser (Just childFolderUser) <$> mkContext defaultLang
-  childFolderAdminCtx <- set #maybeUser (Just childFolderAdmin) <$> mkContext defaultLang
-  childFolderGuestCtx <- set #maybeUser (Just childFolderGuest) <$> mkContext defaultLang
+  void . dbUpdate $ AccessControlCreateForUser (childFolderDraftUser ^. #id)
+                                               (FolderDraftAccessAR childFolderId)
 
-  grandChildFolderUserCtx <- set #maybeUser (Just grandChildFolderUser)
-    <$> mkContext defaultLang
-  grandChildFolderAdminCtx <- set #maybeUser (Just grandChildFolderAdmin)
-    <$> mkContext defaultLang
+  void . dbUpdate $ AccessControlCreateForUser (grandChildFolderDraftUser ^. #id)
+                                               (FolderDraftAccessAR grandChildFolderId)
+
+
+  baseFolderUserCtx            <- mkContextWithUser defaultLang baseFolderUser
+  baseFolderAdminCtx           <- mkContextWithUser defaultLang baseFolderAdmin
+  baseFolderGuestCtx           <- mkContextWithUser defaultLang baseFolderGuest
+  baseFolderDraftUserCtx       <- mkContextWithUser defaultLang baseFolderDraftUser
+
+  childFolderUserCtx           <- mkContextWithUser defaultLang childFolderUser
+  childFolderAdminCtx          <- mkContextWithUser defaultLang childFolderAdmin
+  childFolderGuestCtx          <- mkContextWithUser defaultLang childFolderGuest
+  childFolderDraftUserCtx      <- mkContextWithUser defaultLang childFolderDraftUser
+
+  grandChildFolderUserCtx      <- mkContextWithUser defaultLang grandChildFolderUser
+  grandChildFolderAdminCtx     <- mkContextWithUser defaultLang grandChildFolderAdmin
+  grandChildFolderDraftUserCtx <- mkContextWithUser defaultLang grandChildFolderDraftUser
 
   do -- Document in base folder
     logInfo_ "Test access control for document in base folder"
@@ -811,6 +850,24 @@ testFolderAccessControl = do
         "Child folder shared template user should not able to get draft document"
         docId
         childFolderGuestCtx
+        []
+
+      assertGetDocumentSucceed
+        "Base folder user with draft access should be able to get draft document"
+        docId
+        baseFolderDraftUserCtx
+        []
+
+      assertGetDocumentFails
+        "Child folder user with draft access should not be able to get draft document"
+        docId
+        childFolderDraftUserCtx
+        []
+
+      assertGetDocumentFails
+        "Grandchild folder user with draft access should not be able to get draft document"
+        docId
+        grandChildFolderDraftUserCtx
         []
 
     do -- Pending document
@@ -918,6 +975,24 @@ testFolderAccessControl = do
         "Child folder shared template user should not able to get draft document"
         docId
         childFolderGuestCtx
+        []
+
+      assertGetDocumentSucceed
+        "Base folder user with draft access should be able to get draft document"
+        docId
+        baseFolderDraftUserCtx
+        []
+
+      assertGetDocumentSucceed
+        "Child folder user with draft access should be able to get draft document"
+        docId
+        childFolderDraftUserCtx
+        []
+
+      assertGetDocumentFails
+        "Grandchild folder user with draft access should not be able to get draft document"
+        docId
+        grandChildFolderDraftUserCtx
         []
 
     do -- Pending document
@@ -1028,18 +1103,16 @@ testSharedFolderAccessControl = do
   void . dbUpdate $ AccessControlCreateForUser (grandChildFolderGuest ^. #id)
                                                (SharedTemplateUserAR grandChildFolderId)
 
-  baseFolderUserCtx <- set #maybeUser (Just baseFolderUser) <$> mkContext defaultLang
-  baseFolderAdminCtx <- set #maybeUser (Just baseFolderAdmin) <$> mkContext defaultLang
-  baseFolderGuestCtx <- set #maybeUser (Just baseFolderGuest) <$> mkContext defaultLang
+  baseFolderUserCtx        <- mkContextWithUser defaultLang baseFolderUser
+  baseFolderAdminCtx       <- mkContextWithUser defaultLang baseFolderAdmin
+  baseFolderGuestCtx       <- mkContextWithUser defaultLang baseFolderGuest
 
-  childFolderUserCtx <- set #maybeUser (Just childFolderUser) <$> mkContext defaultLang
-  childFolderAdminCtx <- set #maybeUser (Just childFolderAdmin) <$> mkContext defaultLang
-  childFolderGuestCtx <- set #maybeUser (Just childFolderGuest) <$> mkContext defaultLang
+  childFolderUserCtx       <- mkContextWithUser defaultLang childFolderUser
+  childFolderAdminCtx      <- mkContextWithUser defaultLang childFolderAdmin
+  childFolderGuestCtx      <- mkContextWithUser defaultLang childFolderGuest
 
-  grandChildFolderUserCtx <- set #maybeUser (Just grandChildFolderUser)
-    <$> mkContext defaultLang
-  grandChildFolderGuestCtx <- set #maybeUser (Just grandChildFolderGuest)
-    <$> mkContext defaultLang
+  grandChildFolderUserCtx  <- mkContextWithUser defaultLang grandChildFolderUser
+  grandChildFolderGuestCtx <- mkContextWithUser defaultLang grandChildFolderGuest
 
   do -- Shared document in base folder
     logInfo_ "Testing shared document access control for document in base folder"
@@ -1253,10 +1326,10 @@ testDocumentFileAccessControl = do
     }
 
   anonCtx       <- mkContext defaultLang
-  authorCtx     <- set #maybeUser (Just author) <$> mkContext defaultLang
-  otherUserCtx  <- set #maybeUser (Just otherUser) <$> mkContext defaultLang
-  folderUserCtx <- set #maybeUser (Just folderUser) <$> mkContext defaultLang
-  groupUserCtx  <- set #maybeUser (Just groupUser) <$> mkContext defaultLang
+  authorCtx     <- mkContextWithUser defaultLang author
+  otherUserCtx  <- mkContextWithUser defaultLang otherUser
+  folderUserCtx <- mkContextWithUser defaultLang folderUser
+  groupUserCtx  <- mkContextWithUser defaultLang groupUser
 
   let docId              = documentid doc
       authorSigLink      = fromJust $ getSigLinkFor (author ^. #id) doc

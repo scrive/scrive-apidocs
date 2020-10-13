@@ -15,7 +15,7 @@ import Doc.DocStateData
 import Doc.Model.Filter
 import Folder.Types
 import MagicHash
-import User.UserID
+import User.UserID (UserID)
 import UserGroup.Types
 
 -- | Document security domain.
@@ -46,11 +46,12 @@ data DocumentDomain
   -- but can still be visible to other signing parties
   | DocumentsUserHasAnyLinkTo UserID
   -- ^ Documents that the given user is linked to
-  | DocumentsVisibleToSigningPartyOrByFolders UserID [FolderID] [FolderID] [FolderID]
+  | DocumentsVisibleToSigningPartyOrByFolders UserID [FolderID] [FolderID] [FolderID] [FolderID]
   -- ^ Documents that a user has access to by means of some read access to a folder
   --   shared_template_fids
   --   started_documents_fids
   --   full_read_fids (usually authors Folders)
+  --   access_drafts_fids
  deriving (Eq, Ord, Typeable, Show)
 
 -- | Domain needs DISTINCT when there could be duplicate document ids, i.e.
@@ -178,7 +179,7 @@ documentDomainToSQL (DocumentsUserHasAnyLinkTo uid) = pure . (legacyFilterMap, )
   `UserID` is included in the data constructor because of the SigningParty based
   access.
 -}
-documentDomainToSQL (DocumentsVisibleToSigningPartyOrByFolders uid shared_fids started_fids author_fids)
+documentDomainToSQL (DocumentsVisibleToSigningPartyOrByFolders uid shared_fids started_fids author_fids access_drafts_fids)
   = [ (legacyFilterMap, documentsVisibleToSigningParty)
     , (folderFilterMap, documentsVisibleByFolders)
     ]
@@ -194,14 +195,16 @@ documentDomainToSQL (DocumentsVisibleToSigningPartyOrByFolders uid shared_fids s
 
     documentsVisibleByFolders = do
       sqlJoinOn "folders" "folders.id = documents.folder_id"
-      sqlWhereIn "folders.id"
-                 (S.toList . S.fromList $ author_fids ++ shared_fids ++ started_fids)
+      let folderIds = author_fids ++ shared_fids ++ started_fids ++ access_drafts_fids
+
+      sqlWhereIn "folders.id" (S.toList . S.fromList $ folderIds)
       sqlWhereDocumentWasNotPurged
       sqlWhereDocumentIsNotReallyDeletedByAuthor
       sqlWhereAny
         [ documentIsInFolder author_fids
         , documentIsSharedTemplateAndIsInFolder shared_fids
         , documentIsStartedAndIsInFolder started_fids
+        , documentIsDraftInFolder access_drafts_fids
         ]
 
     documentIsInFolder fids = do
@@ -215,6 +218,11 @@ documentDomainToSQL (DocumentsVisibleToSigningPartyOrByFolders uid shared_fids s
       sqlWhereIn "folders.id" fids
       sqlWhereEq "documents.type"    Template
       sqlWhereEq "documents.sharing" Shared
+
+    documentIsDraftInFolder fids = do
+      sqlWhereIn "folders.id" fids
+      sqlWhereEq "documents.type"   Signable
+      sqlWhereEq "documents.status" Preparation
 
 -- helpers
 

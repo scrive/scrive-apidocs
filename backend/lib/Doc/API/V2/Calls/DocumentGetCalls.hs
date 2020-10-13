@@ -109,8 +109,7 @@ docApiV2List = api $ do
       -- some user or user group property), hence `nubBy`
       allUserRoles <- nubOrdOn accessRoleTarget
         <$> dbQuery (GetRolesIncludingInherited user $ ugwpUG ugwp)
-      let allPerms =
-            nubOrd . concatMap hasPermissions $ map accessRoleTarget allUserRoles
+      let allPerms = nubOrd $ concatMap (hasPermissions . accessRoleTarget) allUserRoles
           fullReadFids = (`mapMaybe` allPerms) $ \case
             Permission PermCanDo ReadA (DocumentInFolderR fid) -> Just fid
             _ -> Nothing
@@ -122,11 +121,15 @@ docApiV2List = api $ do
             Permission PermCanDo ReadA (DocumentInFolderR fid) -> Just fid
             Permission PermCanDo ReadA (DocumentAfterPreparationR fid) -> Just fid
             _ -> Nothing
+          accessDraftsFids = (`mapMaybe` allPerms) $ \case
+            Permission PermCanDo ReadA (DraftInFolderR fid) -> Just fid
+            _ -> Nothing
       ((allDocsCount, allDocs), time) <- timed . dbQuery $ GetDocumentsWithSoftLimit
         (DocumentsVisibleToSigningPartyOrByFolders (user ^. #id)
                                                    sharedFids
                                                    startedFids
                                                    fullReadFids
+                                                   accessDraftsFids
         )
         documentFilters
         documentSorting

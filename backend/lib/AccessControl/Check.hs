@@ -17,7 +17,7 @@ import Data.List.Extra (nubOrd)
 
 import AccessControl.Types
 import DB
-import Doc.DocInfo (isDocumentShared, isPreparation)
+import Doc.DocInfo (isDocumentShared, isPreparation, isSignable)
 import Doc.Types.Document (Document(..))
 import Folder.Model
 import User.Model.Query
@@ -79,6 +79,7 @@ alternativePermissionCondition perm = case permResource perm of
   FlowTemplateR             fid  -> addForAllParentsFid FlowTemplateR fid
   DocumentAfterPreparationR fid  -> addForAllParentsFid DocumentAfterPreparationR fid
   EidIdentityR              ugid -> addForAllParentsUgid EidIdentityR ugid
+  DraftInFolderR            fid  -> addForAllParentsFid DraftInFolderR fid
   where
     addForAllParentsFid
       :: (FolderID -> AccessResource) -> FolderID -> m PermissionCondition
@@ -170,13 +171,23 @@ hasPermissions (SharedTemplateUserAR fid) =
 hasPermissions (EidImpersonatorAR ugid) =
   [Permission PermCanDo ReadA $ EidIdentityR ugid]
 
+hasPermissions (FolderDraftAccessAR fid) =
+  -- can see drafts of other users in the folder
+  [ Permission kind ReadA $ DraftInFolderR fid | kind <- [PermCanDo, PermCanGrant] ]
+
+
 docResources :: Document -> [AccessResource]
-docResources doc =
-  let folderId = documentfolderid doc
-  in  if
-        | isDocumentShared doc -> [DocumentInFolderR folderId, SharedTemplateR folderId]
-        | isPreparation doc -> [DocumentInFolderR folderId]
-        | otherwise -> [DocumentInFolderR folderId, DocumentAfterPreparationR folderId]
+docResources doc
+  | isDocumentShared doc
+  = [DocumentInFolderR folderId, SharedTemplateR folderId]
+  | isPreparation doc && isSignable doc
+  = [DocumentInFolderR folderId, DraftInFolderR folderId]
+  | isPreparation doc
+  = [DocumentInFolderR folderId]
+  | otherwise
+  = [DocumentInFolderR folderId, DocumentAfterPreparationR folderId]
+  where folderId = documentfolderid doc
+
 
 accessControlDocCheck :: AccessAction -> [AccessRole] -> Document -> Bool
 accessControlDocCheck action allUserRoles doc =

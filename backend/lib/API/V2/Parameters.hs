@@ -57,11 +57,7 @@ apiV2ParameterObligatory p = do
 
 -- | Get an optional parameter with a default value
 apiV2ParameterDefault :: Kontrakcja m => a -> ApiV2Parameter a -> m a
-apiV2ParameterDefault d p = do
-  v <- apiV2ParameterOptional p
-  case v of
-    Just r  -> return r
-    Nothing -> return d
+apiV2ParameterDefault d p = fromMaybe d <$> apiV2ParameterOptional p
 
 -- | Get an optional parameter
 apiV2ParameterOptional :: Kontrakcja m => ApiV2Parameter a -> m (Maybe a)

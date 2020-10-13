@@ -153,6 +153,7 @@ accessRoleTargetToJSON (FolderAdminAR        fid ) = FolderTargetJSON fid
 accessRoleTargetToJSON (FolderUserAR         fid ) = FolderTargetJSON fid
 accessRoleTargetToJSON (SharedTemplateUserAR fid ) = FolderTargetJSON fid
 accessRoleTargetToJSON (EidImpersonatorAR    ugid) = UserGroupTargetJSON ugid
+accessRoleTargetToJSON (FolderDraftAccessAR  fid ) = FolderTargetJSON fid
 
 jsonToAccessRole :: AccessRoleJSON -> Either String AccessRole
 jsonToAccessRole roleJson = constructor =<< jsonToAccessRoleTarget roleJson
@@ -175,6 +176,7 @@ jsonToAccessRoleTarget roleJson = case target roleJson of
     FolderUserART         -> Left invalidTargetErr
     SharedTemplateUserART -> Left invalidTargetErr
     EidImpersonatorART    -> Left invalidTargetErr
+    FolderDraftAccessART  -> Left invalidTargetErr
   UserGroupTargetJSON ugid -> case roleType roleJson of
     -- valid
     UserAdminART          -> return $ UserAdminAR ugid
@@ -186,10 +188,12 @@ jsonToAccessRoleTarget roleJson = case target roleJson of
     FolderAdminART        -> Left invalidTargetErr
     FolderUserART         -> Left invalidTargetErr
     SharedTemplateUserART -> Left invalidTargetErr
+    FolderDraftAccessART  -> Left invalidTargetErr
   FolderTargetJSON fid -> case roleType roleJson of
     -- valid
     FolderAdminART        -> return $ FolderAdminAR fid
     FolderUserART         -> return $ FolderUserAR fid
+    FolderDraftAccessART  -> return $ FolderDraftAccessAR fid
     -- invalid
     UserART               -> Left invalidTargetErr
     UserGroupMemberART    -> Left invalidTargetErr

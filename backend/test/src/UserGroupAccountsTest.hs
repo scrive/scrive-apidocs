@@ -249,7 +249,7 @@ test_movingACompanyAccountWithinTheCompany = do
   doc1 <- addRandomDocument (rdaDefault user) { rdaFolderId = sourceFolderId }
   let docId1 = documentid doc1
 
-  ctx <- set #maybeUser (Just admin) <$> mkContext defaultLang
+  ctx <- mkContextWithUser defaultLang admin
 
   req <- mkRequest
     POST

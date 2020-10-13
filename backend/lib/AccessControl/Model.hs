@@ -72,6 +72,7 @@ setTarget target = case target of
   FolderUserAR         fid  -> sqlSet "trg_folder_id" fid
   SharedTemplateUserAR fid  -> sqlSet "trg_folder_id" fid
   EidImpersonatorAR    ugid -> sqlSet "trg_user_group_id" ugid
+  FolderDraftAccessAR  fid  -> sqlSet "trg_folder_id" fid
 
 newtype AccessRoleGet = AccessRoleGet AccessRoleID
 instance (MonadDB m, MonadThrow m)
@@ -276,5 +277,7 @@ fetchAccessRoleTarget (SharedTemplateUserART, Nothing, Nothing, Just fid) =
   SharedTemplateUserAR fid
 fetchAccessRoleTarget (EidImpersonatorART, Nothing, Just ugid, Nothing) =
   EidImpersonatorAR ugid
+fetchAccessRoleTarget (FolderDraftAccessART, Nothing, Nothing, Just fid) =
+  FolderDraftAccessAR fid
 fetchAccessRoleTarget row =
   unexpectedError $ "invalid access_control row in database" <> showt row
