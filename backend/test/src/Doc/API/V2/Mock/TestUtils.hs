@@ -357,7 +357,7 @@ getMockDocSigLinkAuthToSignMethod i md =
     "standard"  -> StandardAuthenticationToSign
     "se_bankid" -> SEBankIDAuthenticationToSign
     "no_bankid" -> NOBankIDAuthenticationToSign
-    "dk_nemid"  -> DKNemIDAuthenticationToSign
+    "dk_nemid"  -> LegacyDKNemIDAuthenticationToSign
     "sms_pin"   -> SMSPinAuthenticationToSign
     "nl_idin"   -> IDINAuthenticationToSign
     _ ->
@@ -374,7 +374,10 @@ setMockDocSigLinkAuthToSignMethod i auth = setForSigNumberFromMockDoc
     toStrAuth StandardAuthenticationToSign            = "standard"
     toStrAuth SEBankIDAuthenticationToSign            = "se_bankid"
     toStrAuth NOBankIDAuthenticationToSign            = "no_bankid"
-    toStrAuth DKNemIDAuthenticationToSign             = "dk_nemid"
+    toStrAuth LegacyDKNemIDAuthenticationToSign       = "dk_nemid"
+    toStrAuth DKNemIDCPRAuthenticationToSign          = "dk_nemid_cpr"
+    toStrAuth DKNemIDPIDAuthenticationToSign          = "dk_nemid_pid"
+    toStrAuth DKNemIDCVRAuthenticationToSign          = "dk_nemid_cvr"
     toStrAuth IDINAuthenticationToSign                = "nl_idin"
     toStrAuth FITupasAuthenticationToSign             = "fi_tupas"
     toStrAuth SMSPinAuthenticationToSign              = "sms_pin"

@@ -382,7 +382,7 @@ ctSignatoryAttachment = CompositeType
 tableSignatoryLinks :: Table
 tableSignatoryLinks = tblTable
   { tblName        = "signatory_links"
-  , tblVersion     = 40
+  , tblVersion     = 41
   , tblColumns     =
     [ tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "document_id", colType = BigIntT, colNullable = False }

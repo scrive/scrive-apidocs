@@ -259,9 +259,14 @@ authToSignIsValid sl =
          NOBankIDAuthenticationToSign -> T.null (getPersonalNumber sl)
            || isGood (asValidNOBankIdPersonalNumber $ getPersonalNumber sl)
          -- How does `T.null (getPersonalNumber sl)` square with
-         -- `authToSignNeedsPersonalNumber DKNemIDAuthenticationToSign = True`?
-         DKNemIDAuthenticationToSign -> T.null (getPersonalNumber sl)
+         -- `authToSignNeedsPersonalNumber LegacyDKNemIDAuthenticationToSign = True`?
+         LegacyDKNemIDAuthenticationToSign -> T.null (getPersonalNumber sl)
            || isGood (asValidDanishSSN $ getPersonalNumber sl)
+         DKNemIDCPRAuthenticationToSign -> T.null (getPersonalNumber sl)
+           || isGood (asValidDanishSSN $ getPersonalNumber sl)
+         DKNemIDPIDAuthenticationToSign -> True
+         DKNemIDCVRAuthenticationToSign -> T.null (getPersonalNumber sl)
+           || isGood (asValidDanishCVR $ getPersonalNumber sl)
          SMSPinAuthenticationToSign ->
            isJust (getFieldByIdentity MobileFI $ signatoryfields sl)
              && (T.null (getMobile sl) || isGood (asValidPhoneForSMS $ getMobile sl))

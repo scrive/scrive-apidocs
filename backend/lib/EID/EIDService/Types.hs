@@ -22,6 +22,7 @@ module EID.EIDService.Types (
   , EIDServiceDKNemIDAuthentication(..)
   , EIDServiceNOBankIDAuthentication(..)
   , EIDServiceSEBankIDAuthentication(..)
+  , EIDServiceDKNemIDSignature(..)
   , EIDServiceFITupasAuthentication(..)
   , EIDServiceOnfidoAuthentication(..)
   , EIDServiceNLIDINSignature(..)
@@ -419,6 +420,16 @@ data EIDServiceNOBankIDSignature = EIDServiceNOBankIDSignature
   , eidServiceNOBankIDSigDateOfBirth :: Maybe Text
   , eidServiceNOBankIDSigSignedText :: Maybe Text
   , eidServiceNOBankIDSigCertificate :: Maybe Text
+  }
+  deriving (Eq, Ord, Show)
+
+data EIDServiceDKNemIDSignature = EIDServiceDKNemIDSignature
+  {
+    eidServiceDKNemIDSignedText    :: Text
+  , eidServiceDKNemIDB64SDO        :: Text -- base64 SDO from Nets ESigning
+  , eidServiceDKNemIDSignatoryName :: Text
+  , eidServiceDKNemIDSignatoryPersonalNumber  :: Maybe Text
+  , eidServiceDKNemIDSignatoryIP   :: Maybe Text
   }
   deriving (Eq, Ord, Show)
 

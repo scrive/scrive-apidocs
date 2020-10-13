@@ -5,7 +5,7 @@ import DB
 tableEIDSignatures :: Table
 tableEIDSignatures = tblTable
   { tblName        = "eid_signatures"
-  , tblVersion     = 10
+  , tblVersion     = 11
   , tblColumns     =
     [ tblColumn { colName = "signatory_link_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "provider", colType = SmallIntT, colNullable = False }
@@ -46,6 +46,7 @@ tableEIDSignatures = tblTable
       { chkName      = "eid_signatures_signatory_personal_number_well_defined"
       , chkCondition =
         "(provider = ANY (ARRAY[1, 2, 3, 4, 13])) = (signatory_personal_number IS NULL)"
+          <> " OR provider = 14"
       }
     ]
   , tblForeignKeys =

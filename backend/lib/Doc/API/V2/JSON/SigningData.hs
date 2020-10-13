@@ -59,7 +59,7 @@ ssdToJson hidePN signatory SignatorySigningData {..} =
             Left  authToSignMethod                 -> Just authToSignMethod
             Right (CGISEBankIDSignature_        _) -> Just SEBankIDAuthenticationToSign
             Right (NetsNOBankIDSignature_       _) -> Just NOBankIDAuthenticationToSign
-            Right (NetsDKNemIDSignature_        _) -> Just DKNemIDAuthenticationToSign
+            Right (NetsDKNemIDSignature_ _) -> Just LegacyDKNemIDAuthenticationToSign
             Right (EIDServiceIDINSignature_     _) -> Just IDINAuthenticationToSign
             Right (EIDServiceFITupasSignature_  _) -> Just FITupasAuthenticationToSign
             Right (EIDServiceNOBankIDSignature_ _) -> Just NOBankIDAuthenticationToSign
@@ -70,10 +70,13 @@ ssdToJson hidePN signatory SignatorySigningData {..} =
                   Just OnfidoDocumentAndPhotoCheckAuthenticationToSign
             Right (EIDServiceSEBankIDSignature_  _) -> Just SEBankIDAuthenticationToSign
             Right (EIDServiceVerimiQesSignature_ _) -> Just VerimiQesAuthenticationToSign
-            Right (LegacyBankIDSignature_        _) -> Nothing
-            Right (LegacyTeliaSignature_         _) -> Nothing
-            Right (LegacyNordeaSignature_        _) -> Nothing
-            Right (LegacyMobileBankIDSignature_  _) -> Nothing
+            -- TODO maybe it makes sense to actually use this for all (Right _) patterns?
+            Right (EIDServiceDKNemIDSignature_ _) ->
+              Just $ signatorylinkauthenticationtosignmethod signatory
+            Right (LegacyBankIDSignature_       _) -> Nothing
+            Right (LegacyTeliaSignature_        _) -> Nothing
+            Right (LegacyNordeaSignature_       _) -> Nothing
+            Right (LegacyMobileBankIDSignature_ _) -> Nothing
 
     encB64 = T.decodeUtf8 . B64.encode
 
@@ -157,6 +160,21 @@ ssdToJson hidePN signatory SignatorySigningData {..} =
             <> if hidePN
                  then []
                  else ["personal_number" .= eidServiceSEBankIDSigPersonalNumber]
+            )
+        ]
+      Right (EIDServiceDKNemIDSignature_ EIDServiceDKNemIDSignature {..}) ->
+        [ "dk_nemid_data" .= object
+            (  [ "signatory_name" .= eidServiceDKNemIDSignatoryName
+               , "signed_text" .= eidServiceDKNemIDSignedText
+               , "sdo" .= eidServiceDKNemIDB64SDO
+               , "signatory_ip" .= eidServiceDKNemIDSignatoryIP
+               ]
+            <> if hidePN
+                 then []
+                 else
+                   [ "signatory_personal_number"
+                       .= eidServiceDKNemIDSignatoryPersonalNumber
+                   ]
             )
         ]
       Right (EIDServiceVerimiQesSignature_ EIDServiceVerimiQesSignature {..}) ->

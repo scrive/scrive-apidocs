@@ -1683,12 +1683,33 @@ testSealDocument = replicateM_ 1 $ do
                                                  Nothing
                                                  screenshots
                                                  sa
-          DKNemIDAuthenticationToSign -> do
+          LegacyDKNemIDAuthenticationToSign -> do
             randomUpdate $ \esig -> SignDocument (signatorylinkid slk)
                                                  (Just (NetsDKNemIDSignature_ esig))
                                                  Nothing
                                                  screenshots
                                                  sa
+          DKNemIDCPRAuthenticationToSign -> do
+            randomUpdate $ \esig -> SignDocument
+              (signatorylinkid slk)
+              (Just (EIDServiceDKNemIDSignature_ esig))
+              Nothing
+              screenshots
+              sa
+          DKNemIDPIDAuthenticationToSign -> do
+            randomUpdate $ \esig -> SignDocument
+              (signatorylinkid slk)
+              (Just (EIDServiceDKNemIDSignature_ esig))
+              Nothing
+              screenshots
+              sa
+          DKNemIDCVRAuthenticationToSign -> do
+            randomUpdate $ \esig -> SignDocument
+              (signatorylinkid slk)
+              (Just (EIDServiceDKNemIDSignature_ esig))
+              Nothing
+              screenshots
+              sa
           IDINAuthenticationToSign -> do
             randomUpdate $ \esig -> SignDocument (signatorylinkid slk)
                                                  (Just (EIDServiceIDINSignature_ esig))
@@ -2592,22 +2613,22 @@ testSignDocumentSignablePendingNOBankIDRight = replicateM_ 10 $ do
 testSignDocumentSignablePendingDKNemIDRight :: TestEnv ()
 testSignDocumentSignablePendingDKNemIDRight = replicateM_ 10 $ do
   author <- instantiateRandomUser
-  let genDoc = addRandomDocument (rdaDefault author)
-        { rdaTypes       = OneOf [Signable]
-        , rdaStatuses    = OneOf [Pending]
-        , rdaSignatories = let signatory =
-                                 OneOf
-                                   [ [ RSC_IsSignatoryThatHasntSigned
-                                     , RSC_AuthToSignIs DKNemIDAuthenticationToSign
-                                     ]
-                                   ]
-                           in  anyRandomSignatoryCondition 1 10 signatory
-        }
+  let
+    genDoc = addRandomDocument (rdaDefault author)
+      { rdaTypes       = OneOf [Signable]
+      , rdaStatuses    = OneOf [Pending]
+      , rdaSignatories = let signatory = OneOf
+                               [ [ RSC_IsSignatoryThatHasntSigned
+                                 , RSC_AuthToSignIs LegacyDKNemIDAuthenticationToSign
+                                 ]
+                               ]
+                         in  anyRandomSignatoryCondition 1 10 signatory
+      }
   withDocumentM genDoc $ do
     sl <-
       guardJustM
       $   find
-            (  (== DKNemIDAuthenticationToSign)
+            (  (== LegacyDKNemIDAuthenticationToSign)
             .  signatorylinkauthenticationtosignmethod
             && isSignatoryAndHasNotSigned
             )

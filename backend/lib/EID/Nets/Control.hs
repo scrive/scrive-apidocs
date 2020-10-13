@@ -368,7 +368,7 @@ handleSignRequest did slid = do
           _ -> do
             logAttention_ "Missing or invalid eid_method for NO"
             respond404
-      DKNemIDAuthenticationToSign -> do
+      LegacyDKNemIDAuthenticationToSign -> do
         pn <- getField "personal_number" >>= \case
           (Just pn) -> return pn
           _         -> do
@@ -409,7 +409,8 @@ handleSignRequest did slid = do
 
     case auth_to_sign of
       NOBankIDAuthenticationToSign -> chargeForItemSingle CINOBankIDSignatureStarted did
-      DKNemIDAuthenticationToSign -> chargeForItemSingle CIDKNemIDSignatureStarted did
+      LegacyDKNemIDAuthenticationToSign ->
+        chargeForItemSingle CIDKNemIDSignatureStarted did
       _ -> return ()
 
     let nets_sign_url = gsprsSignURL getSignProcRs <> encodeNetsUrlParams sign_url_params

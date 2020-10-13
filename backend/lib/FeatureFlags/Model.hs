@@ -42,7 +42,9 @@ data FeatureFlags = FeatureFlags
   , ffCanUseDKCPRAuthenticationToView :: Bool
   , ffCanUseDKPIDAuthenticationToView :: Bool
   , ffCanUseDKCVRAuthenticationToView :: Bool
-  , ffCanUseDKAuthenticationToSign :: Bool
+  , ffCanUseDKCPRAuthenticationToSign :: Bool
+  , ffCanUseDKPIDAuthenticationToSign :: Bool
+  , ffCanUseDKCVRAuthenticationToSign :: Bool
   , ffCanUseFIAuthenticationToView :: Bool
   , ffCanUseFIAuthenticationToSign :: Bool
   , ffCanUseNOAuthenticationToView :: Bool
@@ -100,8 +102,14 @@ instance Unjson FeatureFlags where
       <*> field "can_use_dk_cvr_authentication_to_view"
                 ffCanUseDKCVRAuthenticationToView
                 "Can use the authentication to view with NemID employee id (CVR)"
-      <*> field "can_use_dk_authentication_to_sign"
-                ffCanUseDKAuthenticationToSign
+      <*> field "can_use_dk_cpr_authentication_to_sign"
+                ffCanUseDKCPRAuthenticationToSign
+                "TODO desc"
+      <*> field "can_use_dk_pid_authentication_to_sign"
+                ffCanUseDKPIDAuthenticationToSign
+                "TODO desc"
+      <*> field "can_use_dk_cvr_authentication_to_sign"
+                ffCanUseDKCVRAuthenticationToSign
                 "TODO desc"
       <*> field "can_use_fi_authentication_to_view"
                 ffCanUseFIAuthenticationToView
@@ -210,13 +218,15 @@ type instance CompositeRow FeatureFlags
     , Bool
     , Bool
     , Bool
+    , Bool
+    , Bool
     )
 
 instance PQFormat FeatureFlags where
   pqFormat = compositeTypePqFormat ctFeatureFlags
 
 instance CompositeFromSQL FeatureFlags where
-  toComposite (ffCanUseTemplates, ffCanUseBranding, ffCanUseAuthorAttachments, ffCanUseSignatoryAttachments, ffCanUseMassSendout, ffCanUseSMSInvitations, ffCanUseSMSConfirmations, ffCanUseDKCPRAuthenticationToView, ffCanUseDKPIDAuthenticationToView, ffCanUseDKCVRAuthenticationToView, ffCanUseDKAuthenticationToSign, ffCanUseFIAuthenticationToView, ffCanUseFIAuthenticationToSign, ffCanUseNOAuthenticationToView, ffCanUseNOAuthenticationToSign, ffCanUseSEAuthenticationToView, ffCanUseSEAuthenticationToSign, ffCanUseSMSPinAuthenticationToView, ffCanUseSMSPinAuthenticationToSign, ffCanUseStandardAuthenticationToView, ffCanUseStandardAuthenticationToSign, ffCanUseVerimiAuthenticationToView, ffCanUseVerimiQesAuthenticationToSign, ffCanUseIDINAuthenticationToView, ffCanUseIDINAuthenticationToSign, ffCanUseOnfidoAuthenticationToSign, ffCanUseEmailInvitations, ffCanUseEmailConfirmations, ffCanUseAPIInvitations, ffCanUsePadInvitations, ffCanUseShareableLinks, ffCanUseForwarding, ffCanUseDocumentPartyNotifications, ffCanUsePortal, ffCanUseCustomSMSTexts, ffCanUseArchiveToDropBox, ffCanUseArchiveToGoogleDrive, ffCanUseArchiveToOneDrive, ffCanUseArchiveToSharePoint, ffCanUseArchiveToSftp)
+  toComposite (ffCanUseTemplates, ffCanUseBranding, ffCanUseAuthorAttachments, ffCanUseSignatoryAttachments, ffCanUseMassSendout, ffCanUseSMSInvitations, ffCanUseSMSConfirmations, ffCanUseDKCPRAuthenticationToView, ffCanUseDKPIDAuthenticationToView, ffCanUseDKCVRAuthenticationToView, ffCanUseDKCPRAuthenticationToSign, ffCanUseDKPIDAuthenticationToSign, ffCanUseDKCVRAuthenticationToSign, ffCanUseFIAuthenticationToView, ffCanUseFIAuthenticationToSign, ffCanUseNOAuthenticationToView, ffCanUseNOAuthenticationToSign, ffCanUseSEAuthenticationToView, ffCanUseSEAuthenticationToSign, ffCanUseSMSPinAuthenticationToView, ffCanUseSMSPinAuthenticationToSign, ffCanUseStandardAuthenticationToView, ffCanUseStandardAuthenticationToSign, ffCanUseVerimiAuthenticationToView, ffCanUseVerimiQesAuthenticationToSign, ffCanUseIDINAuthenticationToView, ffCanUseIDINAuthenticationToSign, ffCanUseOnfidoAuthenticationToSign, ffCanUseEmailInvitations, ffCanUseEmailConfirmations, ffCanUseAPIInvitations, ffCanUsePadInvitations, ffCanUseShareableLinks, ffCanUseForwarding, ffCanUseDocumentPartyNotifications, ffCanUsePortal, ffCanUseCustomSMSTexts, ffCanUseArchiveToDropBox, ffCanUseArchiveToGoogleDrive, ffCanUseArchiveToOneDrive, ffCanUseArchiveToSharePoint, ffCanUseArchiveToSftp)
     = FeatureFlags { .. }
 
 firstAllowedAuthenticationToView :: FeatureFlags -> AuthenticationToViewMethod
@@ -240,7 +250,9 @@ firstAllowedAuthenticationToSign ff
   | ffCanUseStandardAuthenticationToSign ff = StandardAuthenticationToSign
   | ffCanUseSMSPinAuthenticationToSign ff = SMSPinAuthenticationToSign
   | ffCanUseSEAuthenticationToSign ff = SEBankIDAuthenticationToSign
-  | ffCanUseDKAuthenticationToSign ff = DKNemIDAuthenticationToSign
+  | ffCanUseDKCPRAuthenticationToSign ff = DKNemIDCPRAuthenticationToSign
+  | ffCanUseDKPIDAuthenticationToSign ff = DKNemIDPIDAuthenticationToSign
+  | ffCanUseDKCVRAuthenticationToSign ff = DKNemIDCVRAuthenticationToSign
   | ffCanUseNOAuthenticationToSign ff = NOBankIDAuthenticationToSign
   | ffCanUseFIAuthenticationToSign ff = FITupasAuthenticationToSign
   | ffCanUseIDINAuthenticationToSign ff = IDINAuthenticationToSign
@@ -273,12 +285,12 @@ defaultFeatures paymentPlan = Features ff ff
                              , ffCanUseMassSendout                = True
                              , ffCanUseSMSInvitations             = True
                              , ffCanUseSMSConfirmations           = True
-                             -- TODO make sure that it makes sense to actually allow use of CPR as this has legal
-                             -- implications and it could be the case that it makes sense to disable that by default
                              , ffCanUseDKCPRAuthenticationToView  = True
                              , ffCanUseDKPIDAuthenticationToView  = True
                              , ffCanUseDKCVRAuthenticationToView  = True
-                             , ffCanUseDKAuthenticationToSign     = True
+                             , ffCanUseDKCPRAuthenticationToSign  = True
+                             , ffCanUseDKPIDAuthenticationToSign  = True
+                             , ffCanUseDKCVRAuthenticationToSign  = True
                              , ffCanUseFIAuthenticationToView     = True
                              , ffCanUseFIAuthenticationToSign     = True
                              , ffCanUseNOAuthenticationToView     = True
@@ -313,7 +325,9 @@ defaultFeatures paymentPlan = Features ff ff
       FreePlan -> defaultFF { ffCanUseDKCPRAuthenticationToView     = False
                             , ffCanUseDKPIDAuthenticationToView     = False
                             , ffCanUseDKCVRAuthenticationToView     = False
-                            , ffCanUseDKAuthenticationToSign        = False
+                            , ffCanUseDKCPRAuthenticationToSign     = False
+                            , ffCanUseDKPIDAuthenticationToSign     = False
+                            , ffCanUseDKCVRAuthenticationToSign     = False
                             , ffCanUseFIAuthenticationToView        = False
                             , ffCanUseFIAuthenticationToSign        = False
                             , ffCanUseNOAuthenticationToView        = False
@@ -340,7 +354,9 @@ setFeatureFlagsSql ff = do
   sqlSet "can_use_dk_cpr_authentication_to_view" $ ffCanUseDKCPRAuthenticationToView ff
   sqlSet "can_use_dk_pid_authentication_to_view" $ ffCanUseDKPIDAuthenticationToView ff
   sqlSet "can_use_dk_cvr_authentication_to_view" $ ffCanUseDKCVRAuthenticationToView ff
-  sqlSet "can_use_dk_authentication_to_sign" $ ffCanUseDKAuthenticationToSign ff
+  sqlSet "can_use_dk_cpr_authentication_to_sign" $ ffCanUseDKCPRAuthenticationToSign ff
+  sqlSet "can_use_dk_pid_authentication_to_sign" $ ffCanUseDKPIDAuthenticationToSign ff
+  sqlSet "can_use_dk_cvr_authentication_to_sign" $ ffCanUseDKCVRAuthenticationToSign ff
   sqlSet "can_use_fi_authentication_to_view" $ ffCanUseFIAuthenticationToView ff
   sqlSet "can_use_fi_authentication_to_sign" $ ffCanUseFIAuthenticationToSign ff
   sqlSet "can_use_no_authentication_to_view" $ ffCanUseNOAuthenticationToView ff
@@ -385,7 +401,9 @@ selectFeatureFlagsSelectors =
   , "feature_flags.can_use_dk_cpr_authentication_to_view"
   , "feature_flags.can_use_dk_pid_authentication_to_view"
   , "feature_flags.can_use_dk_cvr_authentication_to_view"
-  , "feature_flags.can_use_dk_authentication_to_sign"
+  , "feature_flags.can_use_dk_cpr_authentication_to_sign"
+  , "feature_flags.can_use_dk_pid_authentication_to_sign"
+  , "feature_flags.can_use_dk_cvr_authentication_to_sign"
   , "feature_flags.can_use_fi_authentication_to_view"
   , "feature_flags.can_use_fi_authentication_to_sign"
   , "feature_flags.can_use_no_authentication_to_view"

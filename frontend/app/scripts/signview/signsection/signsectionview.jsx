@@ -26,6 +26,10 @@ var SignEIDNOBankIDAuth = require("./signeidnobankidauth");
 var SignEIDNOBankIDAuthChoose = require("./signeidnobankidauthchoose");
 var FITupasSignModel = require("../../eleg/fitupassigning");
 var SignFITupasAuth = require("./signfitupasauth");
+var DKNemIDSignModel = require("../../eleg/dknemidsigning");
+var SignDKNemIDAuth = require("./signeiddknemidauth");
+var SignDKNemIDAuthChoose = require("./signeiddknemidauthchoose");
+var SignDKNemIDAuthProcess = require("./signeiddknemidprocess");
 var OnfidoSignModel = require("../../eleg/onfidosigning");
 var SignOnfidoAuth = require("./signonfidoauth");
 var VerimiQesSignModel = require("../../eleg/verimiqessigning");
@@ -73,7 +77,8 @@ var Task = require("../navigation/task");
         signedStatus: 0,
         eidThisDevice: false,
         askForPhone: model.askForPhone(),
-        askForSSN: model.askForSSN()
+        askForSSN: model.askForSSN(),
+        iframeUrl: ""
       };
     },
 
@@ -106,16 +111,16 @@ var Task = require("../navigation/task");
       var isApprover = signatory.approves();
       var hasPinAuth = signatory.smsPinAuthenticationToSign();
       var hasEIDAuth = signatory.seBankIDAuthenticationToSign();
-      var hasEIDNets = signatory.dkNemIDAuthenticationToSign();
-      if (!useEIDHubForNOBankIDSign) {
-        hasEIDNets = hasEIDNets || signatory.noBankIDAuthenticationToSign();
-      }
+      var hasEIDNets = !useEIDHubForNOBankIDSign && signatory.noBankIDAuthenticationToSign();
       var hasEIDNOBankID = useEIDHubForNOBankIDSign && signatory.noBankIDAuthenticationToSign();
       var hasSEBankIDAuth = signatory.seBankIDAuthenticationToSign();
       var hasIDINAuth = signatory.nlIDINAuthenticationToSign();
       var hasFITupasAuth = signatory.fiTupasAuthenticationToSign();
       var hasOnfidoAuth = signatory.onfidoDocumentCheckAuthenticationToSign()
                           || signatory.onfidoDocumentAndPhotoCheckAuthenticationToSign();
+      var hasDKNemIDAuth = signatory.dkNemIDCPRAuthenticationToSign()
+                            || signatory.dkNemIDPIDAuthenticationToSign()
+                            || signatory.dkNemIDCVRAuthenticationToSign();
       var hasVerimiQesSign = signatory.verimiQesAuthenticationToSign();
 
       if (isApprover) {
@@ -150,6 +155,10 @@ var Task = require("../navigation/task");
         return "eid-onfido-auth";
       }
 
+      if (hasDKNemIDAuth) {
+        return "eid-dknemid-auth";
+      }
+
       if (hasVerimiQesSign) {
         return "eid-verimi-qes-sign";
       }
@@ -167,6 +176,7 @@ var Task = require("../navigation/task");
         "input-pin", "reject", "eid-nets", "eid-nets-process", "approve",
         "approving", "forward", "eid-idin-auth", "eid-fi-tupas-auth",
         "eid-onfido-auth", "eid-nobankid-auth", "eid-nobankid-auth-choose",
+        "eid-dknemid-auth", "eid-dknemid-auth-choose", "eid-dknemid-auth-process",
         "eid-verimi-qes-sign"
       ];
 
@@ -235,7 +245,7 @@ var Task = require("../navigation/task");
       var noOverlayStep = [
         "sign", "approve", "finish", "pin", "eid", "eid-nets", "eid-idin-auth",
         "eid-fi-tupas-auth", "eid-onfido-auth", "eid-nobankid-auth",
-        "eid-verimi-qes-sign"
+        "eid-verimi-qes-sign", "eid-dknemid-auth"
       ];
       return !(noOverlayStep.indexOf(step) > -1);
     },
@@ -684,6 +694,28 @@ var Task = require("../navigation/task");
       }).sign();
     },
 
+    handleDKNemIDAuth: function (errorHandler, dkNemIDCVRMethod) {
+      var self = this;
+      if (!this.canSignDocument()) {
+        errorHandler();
+        return this.context.blinkArrow();
+      }
+
+      var document = this.props.model.document();
+      var signatory = document.currentSignatory();
+
+      new DKNemIDSignModel({
+        doc: document,
+        siglinkid: signatory.signatoryid(),
+        errorHandler: errorHandler,
+        dkNemIDCVRMethod: dkNemIDCVRMethod
+      }).startSignTransaction(function (accessUrl) {
+         self.setState({iframeUrl: accessUrl}, function () {
+           self.setStep("eid-dknemid-auth-process");
+        });
+      });
+    },
+
     handleOnfidoAuth: function (errorHandler) {
       if (!this.canSignDocument()) {
         errorHandler();
@@ -955,6 +987,52 @@ var Task = require("../navigation/task");
               }}
             />
           }
+          {/* if */ this.isOnStep("eid-dknemid-auth") &&
+            <SignDKNemIDAuth
+              model={this.props.model}
+              name={sig.name()}
+              ssn={sig.personalnumber()}
+              canSign={this.canSignDocument()}
+              onReject={this.handleSetStep("reject")}
+              onForward={this.handleSetStep("forward")}
+              onSign={function () {
+                doc.takeSigningScreenshot(function () {
+                  if (sig.dkNemIDCVRAuthenticationToSign()) {
+                    self.setStep("eid-dknemid-auth-choose");
+                  } else {
+                    self.setState({signingButtonBlocked: true});
+                    self.handleDKNemIDAuth(function () {
+                      self.setState({signingButtonBlocked: false});
+                    }, null);
+                  }
+                });
+              }}
+            />
+          }
+          {/* if */ this.isOnStep("eid-dknemid-auth-process") &&
+            <SignDKNemIDAuthProcess
+              model={this.props.model}
+              iframeUrl={this.state.iframeUrl}
+              onBack={this.handleSetStep("eid-dknemid-auth")}
+              />
+          }
+          {/* if */ this.isOnStep("eid-dknemid-auth-choose") &&
+            <SignDKNemIDAuthChoose
+              model={this.props.model}
+              canSign={this.canSignDocument()}
+              onReject={this.handleSetStep("reject")}
+              onForward={this.handleSetStep("forward")}
+              onChoice={function (dkNemIDCVRMethod) {
+                if (!self.state.signingButtonBlocked) {
+                  self.setState({signingButtonBlocked: true});
+                  self.handleDKNemIDAuth(function () {
+                    self.setState({signingButtonBlocked: false});
+                  }, dkNemIDCVRMethod);
+                }
+              }}
+            />
+          }
+
           {/* if */ this.isOnStep("eid-onfido-auth") &&
             <SignOnfidoAuth
               model={this.props.model}

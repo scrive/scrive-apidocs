@@ -188,9 +188,16 @@ authenticationToSignJSON StandardAuthenticationToSign = toJSValue ("standard" ::
 authenticationToSignJSON SEBankIDAuthenticationToSign = toJSValue ("eleg" :: String)
 authenticationToSignJSON SMSPinAuthenticationToSign   = toJSValue ("sms_pin" :: String)
 authenticationToSignJSON NOBankIDAuthenticationToSign = toJSValue ("no_bankid" :: String)
-authenticationToSignJSON DKNemIDAuthenticationToSign  = toJSValue ("dk_nemid" :: String)
-authenticationToSignJSON IDINAuthenticationToSign     = toJSValue ("nl_idin" :: String)
-authenticationToSignJSON FITupasAuthenticationToSign  = toJSValue ("fi_tupas" :: String)
+authenticationToSignJSON LegacyDKNemIDAuthenticationToSign =
+  toJSValue ("dk_nemid" :: String)
+authenticationToSignJSON DKNemIDCPRAuthenticationToSign =
+  toJSValue ("dk_nemid_cpr" :: String)
+authenticationToSignJSON DKNemIDPIDAuthenticationToSign =
+  toJSValue ("dk_nemid_pid" :: String)
+authenticationToSignJSON DKNemIDCVRAuthenticationToSign =
+  toJSValue ("dk_nemid_cvr" :: String)
+authenticationToSignJSON IDINAuthenticationToSign    = toJSValue ("nl_idin" :: String)
+authenticationToSignJSON FITupasAuthenticationToSign = toJSValue ("fi_tupas" :: String)
 authenticationToSignJSON OnfidoDocumentCheckAuthenticationToSign =
   toJSValue ("onfido_document_check" :: String)
 authenticationToSignJSON OnfidoDocumentAndPhotoCheckAuthenticationToSign =

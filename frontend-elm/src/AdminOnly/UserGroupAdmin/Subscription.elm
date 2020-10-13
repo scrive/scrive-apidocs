@@ -125,7 +125,9 @@ type alias FeatureFlags =
     , canUseTemplates : Bool
     , canUseShareableLinks : Bool
     , canUsePadInvitations : Bool
-    , canUseDKAuthenticationToSign : Bool
+    , canUseDKCPRAuthenticationToSign : Bool
+    , canUseDKPIDAuthenticationToSign : Bool
+    , canUseDKCVRAuthenticationToSign : Bool
     , canUseAuthorAttachments : Bool
     , canUseSmsPinAuthenticationToSign : Bool
     , canUseSignatoryAttachments : Bool
@@ -281,7 +283,9 @@ defaultFeatureFlags =
     , canUseTemplates = False
     , canUseShareableLinks = False
     , canUsePadInvitations = False
-    , canUseDKAuthenticationToSign = False
+    , canUseDKCPRAuthenticationToSign = False
+    , canUseDKPIDAuthenticationToSign = False
+    , canUseDKCVRAuthenticationToSign = False
     , canUseAuthorAttachments = False
     , canUseSmsPinAuthenticationToSign = False
     , canUseSignatoryAttachments = False
@@ -326,7 +330,9 @@ ffKeyAccessPairs =
     , ( "can_use_templates", ( .canUseTemplates, \ff v -> { ff | canUseTemplates = v } ) )
     , ( "can_use_shareable_links", ( .canUseShareableLinks, \ff v -> { ff | canUseShareableLinks = v } ) )
     , ( "can_use_pad_invitations", ( .canUsePadInvitations, \ff v -> { ff | canUsePadInvitations = v } ) )
-    , ( "can_use_dk_authentication_to_sign", ( .canUseDKAuthenticationToSign, \ff v -> { ff | canUseDKAuthenticationToSign = v } ) )
+    , ( "can_use_dk_cpr_authentication_to_sign", ( .canUseDKCPRAuthenticationToSign, \ff v -> { ff | canUseDKCPRAuthenticationToSign = v } ) )
+    , ( "can_use_dk_pid_authentication_to_sign", ( .canUseDKPIDAuthenticationToSign, \ff v -> { ff | canUseDKPIDAuthenticationToSign = v } ) )
+    , ( "can_use_dk_cvr_authentication_to_sign", ( .canUseDKCVRAuthenticationToSign, \ff v -> { ff | canUseDKCVRAuthenticationToSign = v } ) )
     , ( "can_use_author_attachments", ( .canUseAuthorAttachments, \ff v -> { ff | canUseAuthorAttachments = v } ) )
     , ( "can_use_sms_pin_authentication_to_sign", ( .canUseSmsPinAuthenticationToSign, \ff v -> { ff | canUseSmsPinAuthenticationToSign = v } ) )
     , ( "can_use_signatory_attachments", ( .canUseSignatoryAttachments, \ff v -> { ff | canUseSignatoryAttachments = v } ) )

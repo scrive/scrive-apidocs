@@ -744,10 +744,10 @@ var Document = exports.Document = Backbone.Model.extend({
         }
         if (this.author().seBankIDAuthenticationToSign() || this.author().seBankIDAuthenticationToView()
           || this.author().noBankIDAuthenticationToSign() || this.author().noBankIDAuthenticationToView()
-          || this.author().dkNemIDAuthenticationToSign()  || this.author().dkNemIDCPRAuthenticationToView()
+          || this.author().dkNemIDCPRAuthenticationToSign() || this.author().dkNemIDPIDAuthenticationToSign()
+          || this.author().dkNemIDCVRAuthenticationToSign() || this.author().dkNemIDCPRAuthenticationToView()
           || this.author().dkNemIDPIDAuthenticationToView() || this.author().dkNemIDCVRAuthenticationToView()
-          || this.author().verimiQesAuthenticationToSign()
-          || this.author().fiTupasAuthenticationToView()) {
+          || this.author().verimiQesAuthenticationToSign() || this.author().fiTupasAuthenticationToView()) {
             // We don't support eleg authorization in design view
             return false;
         }
@@ -971,7 +971,8 @@ var Document = exports.Document = Backbone.Model.extend({
         return _.some(this.signatories(), function(s) {
             return  (s.seBankIDAuthenticationToSign() || s.seBankIDAuthenticationToView()
                    || s.noBankIDAuthenticationToSign() || s.noBankIDAuthenticationToView()
-                   || s.dkNemIDAuthenticationToSign()  || s.dkNemIDCPRAuthenticationToView()
+                   || s.dkNemIDCPRAuthenticationToSign() || s.dkNemIDPIDAuthenticationToSign()
+                   || s.dkNemIDCVRAuthenticationToSign() || s.dkNemIDCPRAuthenticationToView()
                    || s.dkNemIDPIDAuthenticationToView() || s.dkNemIDCVRAuthenticationToView()
                    || s.fiTupasAuthenticationToView());
         });

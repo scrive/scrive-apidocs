@@ -77,7 +77,9 @@ describe("admin/paymentspanel", function () {
           canUseDKCPRAuthenticationToView: true,
           canUseDKPIDAuthenticationToView: true,
           canUseDKCVRAuthenticationToView: true,
-          canUseDKAuthenticationToSign: true,
+          canUseDKCPRAuthenticationToSign: true,
+          canUseDKPIDAuthenticationToSign: true,
+          canUseDKCVRAuthenticationToSign: true,
           canUseFIAuthenticationToView: true,
           canUseNOAuthenticationToView: true,
           canUseNOAuthenticationToSign: true,
@@ -110,7 +112,9 @@ describe("admin/paymentspanel", function () {
           canUseDKCPRAuthenticationToView: true,
           canUseDKPIDAuthenticationToView: true,
           canUseDKCVRAuthenticationToView: true,
-          canUseDKAuthenticationToSign: true,
+          canUseDKCPRAuthenticationToSign: true,
+          canUseDKPIDAuthenticationToSign: true,
+          canUseDKCVRAuthenticationToSign: true,
           canUseFIAuthenticationToView: true,
           canUseNOAuthenticationToView: true,
           canUseNOAuthenticationToSign: true,
@@ -135,11 +139,11 @@ describe("admin/paymentspanel", function () {
     });
     component.forceUpdate();
     var checkedCheckboxes = $(".checkbox.checked", component.getDOMNode());
-    assert.equal(checkedCheckboxes.size(), 60); // 4 options were set to false
+    assert.equal(checkedCheckboxes.size(), 64); // 4 options were set to false
 
     TestUtils.Simulate.click(checkedCheckboxes[0]); // Lets pick one to uncheck
     component.forceUpdate();
     var changedCheckedCheckboxes = $(".checkbox.checked", component.getDOMNode());
-    assert.equal(changedCheckedCheckboxes.size(), 59);
+    assert.equal(changedCheckedCheckboxes.size(), 63);
   });
 });

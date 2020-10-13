@@ -87,11 +87,14 @@ module.exports = React.createClass({
       const isDanishPersonal = (
                         sig.dkNemIDCPRAuthenticationToView() ||
                         sig.dkNemIDPIDAuthenticationToView() ||
+                        sig.dkNemIDCPRAuthenticationToSign() ||
+                        sig.dkNemIDPIDAuthenticationToSign() ||
                         sig.dkNemIDAuthenticationToSign() ||
                         sig.dkNemIDCPRAuthenticationToViewArchived() ||
                         sig.dkNemIDPIDAuthenticationToViewArchived());
       const isDanishEmployee = sig.dkNemIDCVRAuthenticationToView()
-                               || sig.dkNemIDCVRAuthenticationToViewArchived();
+                               || sig.dkNemIDCVRAuthenticationToViewArchived()
+                               || sig.dkNemIDCVRAuthenticationToSign();
       const isFinnish = (sig.fiTupasAuthenticationToView() ||
                          sig.fiTupasAuthenticationToViewArchived());
       const mpn = new MaskedPersonalNumber({number: personalNumber,
@@ -104,8 +107,10 @@ module.exports = React.createClass({
     getSsnLabel: function () {
       var sig = this.props.signatory;
       switch (sig.authenticationToSign()) {
-        case "dk_nemid":
+        case "dk_nemid_cpr":
           return localization.eID.idName.cpr;
+        case "dk_nemid_cvr":
+          return localization.eID.idName.cvr;
         default:
           return localization.docsignview.personalNumberLabel;
       }

@@ -1082,6 +1082,18 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
           maybeFieldHasPlacements :: Maybe SignatoryField -> Bool
           maybeFieldHasPlacements Nothing   = False
           maybeFieldHasPlacements (Just sf) = not . null $ fieldPlacements sf
+          makePersonalNumberFieldNonMandatoryWhenNotNeeded :: DocumentMonad m => m ()
+          makePersonalNumberFieldNonMandatoryWhenNotNeeded = when
+            (  maybeFieldHasPlacements slSSNField
+            && not (authToViewNeedsPersonalNumber slAuthToView)
+            && not (authToViewNeedsPersonalNumber slAuthToViewArchived)
+            )
+            (kRun1OrThrowWhyNot . sqlUpdate "signatory_link_fields" $ do
+              sqlSet "obligatory" False
+              sqlWhereEq "signatory_link_id" slid
+              sqlWhereEq "type"              PersonalNumberFT
+            )
+
       -- Set the new authentication method in signatory_links
       kRun1OrThrowWhyNot . sqlUpdate "signatory_links" $ do
         sqlSet "authentication_to_sign_method" newAuthToSign
@@ -1100,38 +1112,19 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
         (True , _) -> return ()
         (False, StandardAuthenticationToSign) -> return ()
         -- Make PersonalNumber non-obligatory if conditions are satisfied
-        (False, SEBankIDAuthenticationToSign) -> when
-          (  maybeFieldHasPlacements slSSNField
-          && not (authToViewNeedsPersonalNumber slAuthToView)
-          && not (authToViewNeedsPersonalNumber slAuthToViewArchived)
-          )
-          (kRun1OrThrowWhyNot . sqlUpdate "signatory_link_fields" $ do
-            sqlSet "obligatory" False
-            sqlWhereEq "signatory_link_id" slid
-            sqlWhereEq "type"              PersonalNumberFT
-          )
-        -- Make PersonalNumber non-obligatory if conditions are satisfied
-        (False, NOBankIDAuthenticationToSign) -> when
-          (  maybeFieldHasPlacements slSSNField
-          && not (authToViewNeedsPersonalNumber slAuthToView)
-          && not (authToViewNeedsPersonalNumber slAuthToViewArchived)
-          )
-          (kRun1OrThrowWhyNot . sqlUpdate "signatory_link_fields" $ do
-            sqlSet "obligatory" False
-            sqlWhereEq "signatory_link_id" slid
-            sqlWhereEq "type"              PersonalNumberFT
-          )
-        -- Make PersonalNumber non-obligatory if conditions are satisfied
-        (False, DKNemIDAuthenticationToSign) -> when
-          (  maybeFieldHasPlacements slSSNField
-          && not (authToViewNeedsPersonalNumber slAuthToView)
-          && not (authToViewNeedsPersonalNumber slAuthToViewArchived)
-          )
-          (kRun1OrThrowWhyNot . sqlUpdate "signatory_link_fields" $ do
-            sqlSet "obligatory" False
-            sqlWhereEq "signatory_link_id" slid
-            sqlWhereEq "type"              PersonalNumberFT
-          )
+        (False, SEBankIDAuthenticationToSign) ->
+          makePersonalNumberFieldNonMandatoryWhenNotNeeded
+        (False, NOBankIDAuthenticationToSign) ->
+          makePersonalNumberFieldNonMandatoryWhenNotNeeded
+        (False, LegacyDKNemIDAuthenticationToSign) ->
+          makePersonalNumberFieldNonMandatoryWhenNotNeeded
+        (False, DKNemIDCPRAuthenticationToSign) ->
+          makePersonalNumberFieldNonMandatoryWhenNotNeeded
+        (False, DKNemIDPIDAuthenticationToSign) ->
+          makePersonalNumberFieldNonMandatoryWhenNotNeeded
+        (False, DKNemIDCVRAuthenticationToSign) ->
+          makePersonalNumberFieldNonMandatoryWhenNotNeeded
+
         -- Make MobileNumber non-obligatory if conditions are satisfied
         (False, SMSPinAuthenticationToSign) -> when
           (  maybeFieldHasPlacements slMobileField
@@ -1969,7 +1962,7 @@ instance ( DocumentMonad m, CryptoRNG m, MonadBase IO m, MonadCatch m
         (Just (NetsNOBankIDSignature_ _), _) ->
           sqlWhereSignatoryAuthenticationToSignMethodIs NOBankIDAuthenticationToSign
         (Just (NetsDKNemIDSignature_ _), _) ->
-          sqlWhereSignatoryAuthenticationToSignMethodIs DKNemIDAuthenticationToSign
+          sqlWhereSignatoryAuthenticationToSignMethodIs LegacyDKNemIDAuthenticationToSign
         (Just (EIDServiceIDINSignature_ _), _) ->
           sqlWhereSignatoryAuthenticationToSignMethodIs IDINAuthenticationToSign
         (Just (EIDServiceFITupasSignature_ _), _) ->
@@ -1984,6 +1977,13 @@ instance ( DocumentMonad m, CryptoRNG m, MonadBase IO m, MonadCatch m
           sqlWhereSignatoryAuthenticationToSignMethodIs NOBankIDAuthenticationToSign
         (Just (EIDServiceSEBankIDSignature_ _), _) ->
           sqlWhereSignatoryAuthenticationToSignMethodIs SEBankIDAuthenticationToSign
+        (Just (EIDServiceDKNemIDSignature_ _), _) ->
+          sqlWhereSignatoryAuthenticationToSignMethodIsIn
+            [ LegacyDKNemIDAuthenticationToSign
+            , DKNemIDCPRAuthenticationToSign
+            , DKNemIDPIDAuthenticationToSign
+            , DKNemIDCVRAuthenticationToSign
+            ]
         (Just (EIDServiceVerimiQesSignature_ _), _) ->
           sqlWhereSignatoryAuthenticationToSignMethodIs VerimiQesAuthenticationToSign
         (Just (LegacyBankIDSignature_       _), _) -> legacy_signature_error
@@ -2093,6 +2093,16 @@ instance ( DocumentMonad m, CryptoRNG m, MonadBase IO m, MonadCatch m
           F.value "provider_sebankid_eidservice" True
           F.value "signature" $ B64.encode eidServiceSEBankIDSigSignature
           F.value "ocsp_response" $ B64.encode eidServiceSEBankIDSigOcspResponse
+        (Just (EIDServiceDKNemIDSignature_ EIDServiceDKNemIDSignature {..}), _) -> do
+          F.value "hide_pn" $ signatorylinkhidepn sl
+          F.value "eleg" True
+          F.value "signatory_name" eidServiceDKNemIDSignatoryName
+          F.value "signed_text" eidServiceDKNemIDSignedText
+          F.value "provider_dknemid" True
+          F.value "signature" eidServiceDKNemIDB64SDO
+          F.value "signatory_personal_number" eidServiceDKNemIDSignatoryPersonalNumber
+          F.value "signatory_personal_number_from_signlink" $ getPersonalNumber sl
+          F.value "signatory_ip" eidServiceDKNemIDSignatoryIP
         (Just (EIDServiceVerimiQesSignature_ EIDServiceVerimiQesSignature {..}), _) -> do
           F.value "hide_pn" $ signatorylinkhidepn sl
           F.value "eleg" True

@@ -78,7 +78,7 @@ completeEIDServiceSignTransaction
   -> m Bool
 completeEIDServiceSignTransaction conf provider sl = case provider of
   EIDServiceTransactionProviderDKNemID ->
-    unexpectedError "DKNemID sign not supported via EID service"
+    DKNemID.completeEIDServiceSignTransaction conf sl
   EIDServiceTransactionProviderNLIDIN -> NLIDIN.completeEIDServiceSignTransaction conf sl
   EIDServiceTransactionProviderNOBankID ->
     NOBankID.completeEIDServiceSignTransaction conf sl

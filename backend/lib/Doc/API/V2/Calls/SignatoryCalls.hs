@@ -345,7 +345,10 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
         SEBankIDAuthenticationToSign -> Just seBankIDSignProvider
         NOBankIDAuthenticationToSign | useEIDHubForNOBankIDSign -> Just EIDServiceNOBankID
                                      | otherwise                -> Just NetsNOBankID
-        DKNemIDAuthenticationToSign             -> Just NetsDKNemID
+        LegacyDKNemIDAuthenticationToSign       -> Just EIDServiceDKNemID
+        DKNemIDCPRAuthenticationToSign          -> Just EIDServiceDKNemID
+        DKNemIDPIDAuthenticationToSign          -> Just EIDServiceDKNemID
+        DKNemIDCVRAuthenticationToSign          -> Just EIDServiceDKNemID
         IDINAuthenticationToSign                -> Just EIDServiceIDIN
         FITupasAuthenticationToSign             -> Just EIDServiceTupas
         OnfidoDocumentCheckAuthenticationToSign -> Just EIDServiceOnfido

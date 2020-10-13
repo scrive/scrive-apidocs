@@ -94,7 +94,7 @@ fixSignatorySettings = fixSignatoryDKNemidPersonalField
 
 fixSignatoryDKNemidPersonalField :: SignatoryLink -> SignatoryLink
 fixSignatoryDKNemidPersonalField sl = case sl of
-  SignatoryLink { signatorylinkauthenticationtosignmethod = DKNemIDAuthenticationToSign }
+  SignatoryLink { signatorylinkauthenticationtosignmethod = LegacyDKNemIDAuthenticationToSign }
     -> sl { signatoryfields = map adjustField $ signatoryfields sl }
   _ -> sl
   where

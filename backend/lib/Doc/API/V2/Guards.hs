@@ -397,7 +397,10 @@ guardCanSetAuthenticationToSignForSignatoryWithValue slid newAuthToSign mSSN mMo
       -- validate is non-trivial iff authToSignNeedsPersonalNumber newAuthToSign = True
       let validate = case newAuthToSign of
             SEBankIDAuthenticationToSign            -> asValidSEBankIdPersonalNumber
-            DKNemIDAuthenticationToSign             -> asValidDanishSSN
+            LegacyDKNemIDAuthenticationToSign       -> asValidDanishSSN
+            DKNemIDCPRAuthenticationToSign          -> asValidDanishSSN
+            DKNemIDPIDAuthenticationToSign          -> Good
+            DKNemIDCVRAuthenticationToSign          -> asValidDanishCVR
             StandardAuthenticationToSign            -> Good
             SMSPinAuthenticationToSign              -> Good
             NOBankIDAuthenticationToSign            -> Good
@@ -418,8 +421,11 @@ guardCanSetAuthenticationToSignForSignatoryWithValue slid newAuthToSign mSSN mMo
         Bad -> do
           let
             name = case newAuthToSign of
-              SEBankIDAuthenticationToSign -> "Swedish BankID"
-              DKNemIDAuthenticationToSign  -> "Danish NemID"
+              SEBankIDAuthenticationToSign      -> "Swedish BankID"
+              LegacyDKNemIDAuthenticationToSign -> "Danish NemID"
+              DKNemIDCPRAuthenticationToSign    -> "Danish NemID"
+              DKNemIDPIDAuthenticationToSign    -> "Danish NemID"
+              DKNemIDCVRAuthenticationToSign    -> "Danish Employee NemID"
               auth ->
                 unexpectedError $ "unexpected authentication to sign: " <> showt auth
           apiError
@@ -471,7 +477,10 @@ guardCanSetAuthenticationToSignForSignatoryWithValue slid newAuthToSign mSSN mMo
       StandardAuthenticationToSign            -> return ()
       SEBankIDAuthenticationToSign            -> return ()
       NOBankIDAuthenticationToSign            -> return ()
-      DKNemIDAuthenticationToSign             -> return ()
+      LegacyDKNemIDAuthenticationToSign       -> return ()
+      DKNemIDCPRAuthenticationToSign          -> return ()
+      DKNemIDPIDAuthenticationToSign          -> return ()
+      DKNemIDCVRAuthenticationToSign          -> return ()
       IDINAuthenticationToSign                -> return ()
       FITupasAuthenticationToSign             -> return ()
       OnfidoDocumentCheckAuthenticationToSign -> return ()
