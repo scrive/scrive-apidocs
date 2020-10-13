@@ -1,14 +1,19 @@
 # API specification changelog
 
+## 0.10.8
+
+* Add support for specifying allowed document types when using Onfido for authentication.
+* Schema `AuthenticationOnfido`: add optional `allowed_document_types` field.
+* Schema `VersionResponse`: add fields `api_version` and `build_date`.
+
 ## 0.10.7
 
 * Add support for SMS OTP (one-time password) authentication via EID Hub.
 
 ## 0.10.6
 
-* Add Onfido authentication `method` to `AuthenticationOnfido` schema, can be
-  either `document` or `document_and_photo`.
-  `AuthenticationOnfido` is part of the `/templates/{template_id}/start` endpoint.
+* Add support for specifying which method when using Onfido for authentication.
+* Schema `AuthenticationOnfido`: add optional `method` field.
 
 ## 0.10.5
 

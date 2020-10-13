@@ -1,17 +1,21 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Flow.Core.Type.AuthenticationConfiguration
   ( AuthenticationConfiguration(..)
-  , OnfidoMethod(..)
   , AuthenticationProvider(..)
   , AuthenticationProviderOnfidoData(..)
+  , OnfidoDocumentType(..)
+  , OnfidoMethod(..)
+  , defaultOnfidoDocumentTypes
   ) where
 
 import Data.Aeson
 import Data.Aeson.Casing
 import Data.Aeson.Types
+import Data.Set (Set)
 import Data.Text
 import GHC.Generics
 import Optics
+import qualified Data.Set as Set
 
 aesonOptions :: Options
 aesonOptions =
@@ -32,7 +36,10 @@ instance ToJSON AuthenticationConfiguration where
       fieldsByProvider :: AuthenticationProvider -> Series
       fieldsByProvider SmsOtp = "provider" .= ("sms_pin" :: Text)
       fieldsByProvider (Onfido AuthenticationProviderOnfidoData {..}) =
-        "provider" .= ("onfido" :: Text) <> "method" .= method
+        "provider"
+          .= ("onfido" :: Text)
+          <> ("method" .= method)
+          <> ("allowed_document_types" .= allowedDocumentTypes)
 
 -- TODO FLOW-402: add sms_otp and deprecate sms_pin
 instance FromJSON AuthenticationConfiguration where
@@ -43,7 +50,9 @@ instance FromJSON AuthenticationConfiguration where
       getProvider :: Object -> Text -> Parser AuthenticationProvider
       getProvider _ "sms_pin" = pure SmsOtp
       getProvider o "onfido" =
-        Onfido . AuthenticationProviderOnfidoData <$> o .:? "method" .!= Document
+        (\a b -> Onfido $ AuthenticationProviderOnfidoData a b)
+          <$> (o .:? "method" .!= Document)
+          <*> (o .:? "allowed_document_types" .!= defaultOnfidoDocumentTypes)
       getProvider _ type' =
         fail $ "Unknown AuthenticationConfiguration provider type: " <> unpack type'
 
@@ -52,8 +61,26 @@ data AuthenticationProvider
     | Onfido AuthenticationProviderOnfidoData
   deriving (Show, Eq, Generic)
 
-newtype AuthenticationProviderOnfidoData = AuthenticationProviderOnfidoData
+data OnfidoDocumentType
+  = NationalIdentityCard
+  | DrivingLicence
+  | Passport
+  | ResidencePermit
+  deriving (Eq, Generic, Ord, Show)
+
+instance FromJSON OnfidoDocumentType where
+  parseJSON = genericParseJSON aesonOptions
+
+instance ToJSON OnfidoDocumentType where
+  toEncoding = genericToEncoding aesonOptions
+
+defaultOnfidoDocumentTypes :: Set OnfidoDocumentType
+defaultOnfidoDocumentTypes =
+  Set.fromList [NationalIdentityCard, DrivingLicence, Passport, ResidencePermit]
+
+data AuthenticationProviderOnfidoData = AuthenticationProviderOnfidoData
     { method :: OnfidoMethod
+    , allowedDocumentTypes :: Set OnfidoDocumentType
     }
   deriving (Show, Eq, Generic)
 

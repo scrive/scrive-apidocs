@@ -13,7 +13,11 @@ import qualified Flow.Server.Api.Instances as Instances
 import qualified Flow.Server.Api.Templates as Templates
 
 version :: AppM Version
-version = pure . Version . T.pack $ buildVcsNumber buildVersion
+version = pure Version { .. }
+  where
+    buildCommit = T.pack $ buildVcsNumber buildVersion
+    buildDate   = T.pack $ Version.buildDate buildVersion
+    apiVersion  = T.pack $ buildFlowApiVersion buildVersion
 
 api :: ServerT FlowApi AppM
 api = accountEndpoints :<|> Instances.userEndpoints :<|> noAuthEndpoints

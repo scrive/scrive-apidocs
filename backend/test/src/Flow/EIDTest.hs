@@ -11,6 +11,7 @@ import Doc.Types.Document hiding (Document)
 import Doc.Types.DocumentStatus
 import Doc.Types.SignatoryLink
 import Flow.Client
+import Flow.Core.Type.AuthenticationConfiguration
 import Flow.Model.Types.FlowUserId
 import Flow.OrphanTestInstances ()
 import Flow.Process.Internal
@@ -66,7 +67,7 @@ testAuthenticationConfiguration = do
     signatoryConfig = UserConfiguration
       (Email $ getEmail signatorySigLink)
       (Just $ AuthenticationConfiguration
-        (Onfido $ AuthenticationProviderOnfidoData Document)
+        (Onfido $ AuthenticationProviderOnfidoData Document defaultOnfidoDocumentTypes)
         1
       )
       (Just $ AuthenticationConfiguration SmsOtp 3)

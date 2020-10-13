@@ -278,7 +278,9 @@ If you want to enable authentication, make sure you haven't started an instance 
         "id": "test@flow.com",
         "auth_to_view": {
           "provider": "onfido",
-          "max_failures": 1
+          "max_failures": 1,
+          "method": "document_and_photo",
+          "allowed_document_types": ["national_identity_card", "driving_licence", "residence_permit"]
         },
         "auth_to_view_archived": {
           "provider": "sms_pin",
@@ -297,9 +299,9 @@ If you want to enable authentication, make sure you haven't started an instance 
 
 Now you can submit the modified parameters to the `flow/templates/${template_id}/start` API endpoint as per the previous step.
 
-With the above configuration the `user` participant will be required to authenticate with our partner `Onfido` before they can view any documents in the Flow and they will be allowed 1 unsuccessful authentication attempt before they are denied access to the Flow.
+With the above configuration the `user` participant will be required to authenticate with our partner `Onfido` before they can view any documents in the Flow and they will be allowed 1 unsuccessful authentication attempt before they are denied access to the Flow. Optional fields `method` and `allowed_document_types` illustrate further settings that Onfido provides. See the `AuthenticationOnfido` schema in the specification for more details.
 
-In addition they will be required to authenticate using an SMS pin if they wish to access the documents once the Flow is finished.
+In addition the participant will be required to authenticate using an SMS pin if they wish to access the documents once the Flow is complete. Note that they are given 3 attempts for every SMS they receive and if they fail it only counts as a single failure towards `max_failures`. So with the configuration above they have `2 * 3 = 6` tries in total.
 
 ### Interacting with Instances
 

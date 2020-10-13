@@ -51,6 +51,13 @@ import qualified Flow.Core.Type.AuthenticationConfiguration as Core
 eidProvider :: EIDServiceTransactionProvider
 eidProvider = EIDServiceTransactionProviderOnfido
 
+toEidDocumentType :: Core.OnfidoDocumentType -> OnfidoDocumentType
+toEidDocumentType = \case
+  Core.NationalIdentityCard -> NationalIdentityCard
+  Core.DrivingLicence       -> DrivingLicence
+  Core.Passport             -> Passport
+  Core.ResidencePermit      -> ResidencePermit
+
 beginEIDServiceTransaction
   :: Kontrakcja m
   => EIDServiceConf
@@ -78,8 +85,8 @@ beginEIDServiceTransaction conf authKind onfidoAuthenticationData instanceId use
           Core.Document         -> OnfidoDocumentCheck
           Core.DocumentAndPhoto -> OnfidoDocumentAndPhotoCheck
 
-    -- TODO FLOW-426: make document type configurable
-    let documentTypes = Set.fromList [DrivingLicence, Passport]
+    let documentTypes =
+          Set.map toEidDocumentType $ Core.allowedDocumentTypes onfidoAuthenticationData
 
     let providerParams = OnfidoEIDServiceProviderParams
           { onfidoparamMethod               = methodParam

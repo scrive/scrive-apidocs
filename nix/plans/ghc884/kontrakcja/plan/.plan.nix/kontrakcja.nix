@@ -568,29 +568,31 @@
           };
         "localization" = {
           depends = [
+            (hsPkgs."aeson" or (errorHandler.buildDepError "aeson"))
             (hsPkgs."base" or (errorHandler.buildDepError "base"))
             (hsPkgs."base-noprelude" or (errorHandler.buildDepError "base-noprelude"))
-            (hsPkgs."kontrakcja-prelude" or (errorHandler.buildDepError "kontrakcja-prelude"))
-            (hsPkgs."kontrakcja-appdir" or (errorHandler.buildDepError "kontrakcja-appdir"))
             (hsPkgs."base16-bytestring" or (errorHandler.buildDepError "base16-bytestring"))
             (hsPkgs."cond" or (errorHandler.buildDepError "cond"))
             (hsPkgs."data-default" or (errorHandler.buildDepError "data-default"))
             (hsPkgs."directory" or (errorHandler.buildDepError "directory"))
             (hsPkgs."exceptions" or (errorHandler.buildDepError "exceptions"))
             (hsPkgs."extra" or (errorHandler.buildDepError "extra"))
-            (hsPkgs."optics" or (errorHandler.buildDepError "optics"))
             (hsPkgs."filepath" or (errorHandler.buildDepError "filepath"))
             (hsPkgs."happstack-server" or (errorHandler.buildDepError "happstack-server"))
             (hsPkgs."hpqtypes" or (errorHandler.buildDepError "hpqtypes"))
+            (hsPkgs."kontrakcja-appdir" or (errorHandler.buildDepError "kontrakcja-appdir"))
+            (hsPkgs."kontrakcja-prelude" or (errorHandler.buildDepError "kontrakcja-prelude"))
             (hsPkgs."kontrakcja-templates" or (errorHandler.buildDepError "kontrakcja-templates"))
             (hsPkgs."lifted-base" or (errorHandler.buildDepError "lifted-base"))
             (hsPkgs."mtl" or (errorHandler.buildDepError "mtl"))
+            (hsPkgs."optics" or (errorHandler.buildDepError "optics"))
             (hsPkgs."split" or (errorHandler.buildDepError "split"))
-            (hsPkgs."utf8-string" or (errorHandler.buildDepError "utf8-string"))
             (hsPkgs."template-haskell" or (errorHandler.buildDepError "template-haskell"))
             (hsPkgs."text" or (errorHandler.buildDepError "text"))
             (hsPkgs."time" or (errorHandler.buildDepError "time"))
             (hsPkgs."transformers" or (errorHandler.buildDepError "transformers"))
+            (hsPkgs."utf8-string" or (errorHandler.buildDepError "utf8-string"))
+            (hsPkgs."yaml" or (errorHandler.buildDepError "yaml"))
             ];
           buildable = true;
           hsSourceDirs = [

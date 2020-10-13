@@ -1409,28 +1409,30 @@ Executable localization
 
   Main-Is: LocalizationMain.hs
 
-  Build-depends: base-noprelude
-               , kontrakcja-prelude
-               , kontrakcja-appdir
+  Build-depends: aeson
+               , base-noprelude
                , base16-bytestring
                , cond
                , data-default
                , directory
                , exceptions
                , extra
-               , optics
                , filepath
                , happstack-server
                , hpqtypes
+               , kontrakcja-appdir
+               , kontrakcja-prelude
                , kontrakcja-templates
                , lifted-base
                , mtl
+               , optics
                , split
-               , utf8-string
                , template-haskell
                , text
                , time
                , transformers
+               , utf8-string
+               , yaml
 
   Other-Modules:
               Templates

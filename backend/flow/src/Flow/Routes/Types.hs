@@ -22,8 +22,10 @@ type AddFlowPrefix api = "experimental" :> "flow" :> api
 flowPath :: Text
 flowPath = "experimental/flow"
 
-newtype Version = Version
-  { buildCommit :: Text
+data Version = Version
+  { apiVersion :: Text
+  , buildDate :: Text
+  , buildCommit :: Text
   } deriving (Generic)
 
 aesonOptions :: Options
