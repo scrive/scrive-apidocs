@@ -20,6 +20,7 @@ nixpkgs.stdenv.mkDerivation {
 
   buildPhase = ''
     mkdir -p Shake frontend frontend-elm texts templates
+    mkdir -p backend/flow/docs
 
     cp -r \
       ${kontrakcja-src}/nix \

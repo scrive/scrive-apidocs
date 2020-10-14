@@ -2047,6 +2047,15 @@ let
         sha512 = "Phlt0plgpIIBOGTT/ehfFnbNlfsDEiqmzE2KRXoX1bLIlir4X/MR+zSyBEkL05ffWgnRSf/DXv+WrUAVr93/ow==";
       };
     };
+    "bindings-1.5.0" = {
+      name = "bindings";
+      packageName = "bindings";
+      version = "1.5.0";
+      src = fetchurl {
+        url = "https://registry.npmjs.org/bindings/-/bindings-1.5.0.tgz";
+        sha512 = "p2q/t/mhvuOj/UeLlV6566GD/guowlr0hHxClI0W9m7MWYkL1F0hLo+0Aexs9HSPCtR1SXQ0TD3MMKrXZajbiQ==";
+      };
+    };
     "blob-0.0.5" = {
       name = "blob";
       packageName = "blob";
@@ -4232,6 +4241,15 @@ let
       src = fetchurl {
         url = "https://registry.npmjs.org/file-sync-cmp/-/file-sync-cmp-0.1.1.tgz";
         sha1 = "a5e7a8ffbfa493b43b923bbd4ca89a53b63b612b";
+      };
+    };
+    "file-uri-to-path-1.0.0" = {
+      name = "file-uri-to-path";
+      packageName = "file-uri-to-path";
+      version = "1.0.0";
+      src = fetchurl {
+        url = "https://registry.npmjs.org/file-uri-to-path/-/file-uri-to-path-1.0.0.tgz";
+        sha512 = "0Zt+s3L7Vf1biwWZ29aARiVYLx7iMGnEUl9x33fbB/j3jR81u/O2LbqK+Bm1CDSNDKVtJ/YjwY7TUd5SkeLQLw==";
       };
     };
     "fill-range-4.0.0" = {
@@ -7337,6 +7355,15 @@ let
       src = fetchurl {
         url = "https://registry.npmjs.org/mute-stream/-/mute-stream-0.0.8.tgz";
         sha512 = "nnbWWOkoWyUsTjKrhgD0dcz22mdkSnpYqbEjIm2nhwhuxlSkpywJmBo8h0ZqJdkp73mb90SssHkN4rsRaBAfAA==";
+      };
+    };
+    "nan-2.14.1" = {
+      name = "nan";
+      packageName = "nan";
+      version = "2.14.1";
+      src = fetchurl {
+        url = "https://registry.npmjs.org/nan/-/nan-2.14.1.tgz";
+        sha512 = "isWHgVjnFjh2x2yuJ/tj3JbwoHu3UC2dX5G/88Cm24yB6YopVgxvBObDY7n5xW6ExmFhJpSEQqFPvq9zaXc8Jw==";
       };
     };
     "nanomatch-1.2.13" = {
@@ -11282,6 +11309,7 @@ let
       sources."better-assert-1.0.2"
       sources."big.js-3.2.0"
       sources."binary-extensions-2.0.0"
+      sources."bindings-1.5.0"
       sources."blob-0.0.5"
       sources."bluebird-3.7.2"
       sources."bn.js-5.1.2"
@@ -11698,6 +11726,7 @@ let
         ];
       })
       sources."file-sync-cmp-0.1.1"
+      sources."file-uri-to-path-1.0.0"
       (sources."fill-range-4.0.0" // {
         dependencies = [
           sources."extend-shallow-2.0.1"
@@ -12280,6 +12309,7 @@ let
       sources."multicast-dns-6.2.3"
       sources."multicast-dns-service-types-1.1.0"
       sources."mute-stream-0.0.8"
+      sources."nan-2.14.1"
       sources."nanomatch-1.2.13"
       sources."native-request-1.0.7"
       sources."natural-compare-1.4.0"

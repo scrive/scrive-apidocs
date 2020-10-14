@@ -18,7 +18,6 @@ jobs:
           
           cachix authtoken ${{ secrets.CACHIX_AUTH_TOKEN }}
           cachix use scrive
-          cachix use iohk
       - env:
           SSH_KEY_PDFTOOLS: "${{ secrets.SSH_KEY_PDFTOOLS }}"
         name: Setup SSH
@@ -56,6 +55,7 @@ on:
       - "**.cabal"
       - cabal.project.freeze
       - "texts/**"
+      - "nix/**"
   push:
     branches:
       - master

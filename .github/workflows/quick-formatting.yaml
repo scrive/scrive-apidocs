@@ -20,7 +20,6 @@ jobs:
           
           cachix authtoken ${{ secrets.CACHIX_AUTH_TOKEN }}
           cachix use scrive
-          cachix use iohk
       - env:
           SSH_KEY_PDFTOOLS: "${{ secrets.SSH_KEY_PDFTOOLS }}"
         name: Setup SSH
@@ -56,7 +55,6 @@ jobs:
           
           cachix authtoken ${{ secrets.CACHIX_AUTH_TOKEN }}
           cachix use scrive
-          cachix use iohk
       - env:
           SSH_KEY_PDFTOOLS: "${{ secrets.SSH_KEY_PDFTOOLS }}"
         name: Setup SSH
@@ -96,7 +94,6 @@ jobs:
           
           cachix authtoken ${{ secrets.CACHIX_AUTH_TOKEN }}
           cachix use scrive
-          cachix use iohk
       - env:
           SSH_KEY_PDFTOOLS: "${{ secrets.SSH_KEY_PDFTOOLS }}"
         name: Setup SSH

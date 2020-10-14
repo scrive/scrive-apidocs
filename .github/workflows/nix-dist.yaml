@@ -18,7 +18,6 @@ jobs:
           
           cachix authtoken ${{ secrets.CACHIX_AUTH_TOKEN }}
           cachix use scrive
-          cachix use iohk
       - env:
           SSH_KEY_FLOW_FRONTEND: "${{ secrets.SSH_KEY_FLOW_FRONTEND }}"
           SSH_KEY_NEW_FRONTEND: "${{ secrets.SSH_KEY_NEW_FRONTEND }}"

@@ -29,8 +29,8 @@ fi
 
 source ~/.nix-profile/etc/profile.d/nix.sh
 
-echo "::add-path::/nix/var/nix/profiles/default/bin"
+echo "/nix/var/nix/profiles/default/bin" >> $GITHUB_PATH
 
-echo "::add-path::$HOME/.nix-profile/bin/"
-echo "::set-env name=NIX_PATH::$HOME/.nix-defexpr/channels"
-echo "::set-env name=NIX_SSL_CERT_FILE::$NIX_SSL_CERT_FILE"
+echo "$HOME/.nix-profile/bin/" >> $GITHUB_PATH
+echo "NIX_PATH=$HOME/.nix-defexpr/channels" >> $GITHUB_ENV
+echo "NIX_SSL_CERT_FILE=$NIX_SSL_CERT_FILE" >> $GITHUB_ENV

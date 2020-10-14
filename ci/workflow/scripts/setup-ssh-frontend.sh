@@ -15,7 +15,7 @@ then
   ssh-add - <<< "$SSH_KEY_FLOW_FRONTEND"
 fi
 
-echo "::set-env name=SSH_AUTH_SOCK::$SSH_AUTH_SOCK"
+echo "SSH_AUTH_SOCK=$SSH_AUTH_SOCK" >> $GITHUB_ENV
 
 export root_dir=$(pwd)
 mkdir .ssh

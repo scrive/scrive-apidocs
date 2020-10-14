@@ -42,6 +42,8 @@ let
     installPhase = ''
       mkdir -p $out
       cp -r frontend frontend-elm texts templates $out/
+      mkdir -p $out/backend/flow
+      cp -r backend/flow/docs $out/backend/flow/
     '';
   };
 in

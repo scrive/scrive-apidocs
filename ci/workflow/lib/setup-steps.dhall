@@ -24,7 +24,6 @@ let cachix-step = Step ::
 
       cachix authtoken ''${{ secrets.CACHIX_AUTH_TOKEN }}
       cachix use scrive
-      cachix use iohk
       ''
   }
 

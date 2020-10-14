@@ -5,7 +5,7 @@ set -eux
 eval $(ssh-agent)
 ssh-add - <<< "$SSH_KEY_PDFTOOLS"
 
-echo "::set-env name=SSH_AUTH_SOCK::$SSH_AUTH_SOCK"
+echo "SSH_AUTH_SOCK=$SSH_AUTH_SOCK" >> $GITHUB_ENV
 
 mkdir -p ~/.ssh
 if [ ! -f ~/.ssh/known_hosts ]
