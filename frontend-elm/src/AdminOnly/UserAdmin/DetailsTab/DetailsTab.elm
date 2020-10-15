@@ -33,6 +33,7 @@ import Language exposing (enumLanguage)
 import List as L
 import Maybe as M
 import Maybe.Extra as M
+import Return exposing (..)
 import Time exposing (Month(..))
 import Url.Parser exposing (map)
 import Utils exposing (..)
@@ -89,7 +90,7 @@ tabName =
     "details"
 
 
-init : (Msg -> msg) -> String -> ( Model, Cmd msg )
+init : (Msg -> msg) -> String -> Return msg Model
 init embed uid =
     let
         model =
@@ -102,7 +103,7 @@ init embed uid =
             , mChangePasswordModal = Nothing
             }
     in
-    ( model, Cmd.map embed <| getUserCmd uid )
+    return model <| Cmd.map embed <| getUserCmd uid
 
 
 getUserCmd : String -> Cmd Msg
@@ -128,7 +129,7 @@ handleSetEnum model enum str setter =
             modifyUser (\u -> setter u value) model
 
 
-update : (Msg -> msg) -> Globals msg -> Msg -> Model -> ( Model, Cmd msg )
+update : (Msg -> msg) -> Globals msg -> Msg -> Model -> Return msg Model
 update embed globals msg model =
     case msg of
         GotUser result ->
@@ -144,76 +145,70 @@ update embed globals msg model =
                         ( changePasswordModal, changePasswordModalCmd ) =
                             ChangePasswordModal.init user
                     in
-                    ( { model
-                        | sUser = Success user
-                        , mDeleteUserModal = Just deleteUserModal
-                        , mMoveUserModal = Just moveUserModal
-                        , mChangePasswordModal = Just changePasswordModal
-                      }
-                    , Cmd.batch
-                        [ deleteUserModalCmd
-                        , moveUserModalCmd
-                        , changePasswordModalCmd
-                        ]
-                    )
+                    return
+                        { model
+                            | sUser = Success user
+                            , mDeleteUserModal = Just deleteUserModal
+                            , mMoveUserModal = Just moveUserModal
+                            , mChangePasswordModal = Just changePasswordModal
+                        }
+                    <|
+                        Cmd.batch
+                            [ deleteUserModalCmd
+                            , moveUserModalCmd
+                            , changePasswordModalCmd
+                            ]
 
                 Err _ ->
-                    ( { model | sUser = Failure }, Cmd.none )
+                    singleton { model | sUser = Failure }
 
         -- FORM SETTERS
         SetEmail email ->
-            ( modifyUser (\u -> { u | email = email }) model, Cmd.none )
+            singleton <| modifyUser (\u -> { u | email = email }) model
 
         SetFirstName firstName ->
-            ( modifyUser (\u -> { u | firstName = firstName }) model, Cmd.none )
+            singleton <| modifyUser (\u -> { u | firstName = firstName }) model
 
         SetSecondName secondName ->
-            ( modifyUser (\u -> { u | secondName = secondName }) model, Cmd.none )
+            singleton <| modifyUser (\u -> { u | secondName = secondName }) model
 
         SetPersonalNumber personalNumber ->
-            ( modifyUser (\u -> { u | personalNumber = personalNumber }) model, Cmd.none )
+            singleton <| modifyUser (\u -> { u | personalNumber = personalNumber }) model
 
         SetPhone phone ->
-            ( modifyUser (\u -> { u | phone = phone }) model, Cmd.none )
+            singleton <| modifyUser (\u -> { u | phone = phone }) model
 
         SetCompanyPosition companyPosition ->
-            ( modifyUser (\u -> { u | companyPosition = companyPosition }) model, Cmd.none )
+            singleton <| modifyUser (\u -> { u | companyPosition = companyPosition }) model
 
         SetCallbackUrl callbackUrl ->
-            ( modifyUser (\u -> { u | callbackUrl = callbackUrl }) model, Cmd.none )
+            singleton <| modifyUser (\u -> { u | callbackUrl = callbackUrl }) model
 
         SetAccountType str ->
-            ( handleSetEnum model enumAccountType str (\u v -> { u | accountType = v })
-            , Cmd.none
-            )
+            singleton <| handleSetEnum model enumAccountType str (\u v -> { u | accountType = v })
 
         SetLanguage str ->
-            ( handleSetEnum model enumLanguage str (\u v -> { u | language = v })
-            , Cmd.none
-            )
+            singleton <| handleSetEnum model enumLanguage str (\u v -> { u | language = v })
 
         SubmitForm ->
             case fromStatus model.sUser of
                 Just user ->
-                    ( model
-                    , Http.post
-                        { url = "/adminonly/useradmin/" ++ user.id
-                        , body = formBody globals (User.formValues user)
-                        , expect =
-                            Http.expectJson (embed << GotSaveResponse)
-                                (D.field "changed" D.bool)
-                        }
-                    )
+                    return model <|
+                        Http.post
+                            { url = "/adminonly/useradmin/" ++ user.id
+                            , body = formBody globals (User.formValues user)
+                            , expect =
+                                Http.expectJson (embed << GotSaveResponse)
+                                    (D.field "changed" D.bool)
+                            }
 
                 Nothing ->
-                    ( model, Cmd.none )
+                    singleton model
 
         GotSaveResponse response ->
             case response of
                 Err _ ->
-                    ( model
-                    , globals.flashMessage <| FlashMessage.error "Request failed."
-                    )
+                    return model <| globals.flashMessage <| FlashMessage.error "Request failed."
 
                 Ok changed ->
                     let
@@ -224,20 +219,17 @@ update embed globals msg model =
                             else
                                 FlashMessage.error "Failure. User already exists."
                     in
-                    ( model
-                    , globals.flashMessage flashMessage
-                    )
+                    return model <| globals.flashMessage flashMessage
 
         -- DELETE USER
         DeleteUserClicked ->
-            case model.mDeleteUserModal of
-                Nothing ->
-                    ( model, Cmd.none )
+            singleton <|
+                case model.mDeleteUserModal of
+                    Nothing ->
+                        model
 
-                Just deleteUserModal ->
-                    ( { model | mDeleteUserModal = Just <| DeleteUserModal.show deleteUserModal }
-                    , Cmd.none
-                    )
+                    Just deleteUserModal ->
+                        { model | mDeleteUserModal = Just <| DeleteUserModal.show deleteUserModal }
 
         DeleteUserModalMsg modalMsg ->
             let
@@ -247,48 +239,42 @@ update embed globals msg model =
                 ( newDeleteUserModal, cmd ) =
                     maybeUpdate updateDeleteUserModal model.mDeleteUserModal
             in
-            ( { model | mDeleteUserModal = newDeleteUserModal }, cmd )
+            return { model | mDeleteUserModal = newDeleteUserModal } cmd
 
         -- RESEND STATUS
         ResendInvitationClicked ->
             case fromStatus model.sUser of
                 Nothing ->
-                    ( model, Cmd.none )
+                    singleton model
 
                 Just user ->
                     case model.sResend of
                         Loading ->
-                            ( model, Cmd.none )
+                            singleton model
 
                         _ ->
-                            ( { model | sResend = Loading }
-                            , Http.post
-                                { url = "/adminonly/useradmin/sendinviteagain"
-                                , body = formBody globals [ ( "userid", user.id ) ]
-                                , expect = Http.expectString (embed << GotResendInvitationResponse)
-                                }
-                            )
+                            return { model | sResend = Loading } <|
+                                Http.post
+                                    { url = "/adminonly/useradmin/sendinviteagain"
+                                    , body = formBody globals [ ( "userid", user.id ) ]
+                                    , expect = Http.expectString (embed << GotResendInvitationResponse)
+                                    }
 
         GotResendInvitationResponse response ->
             case response of
                 Ok str ->
-                    ( { model | sResend = Success str }
-                    , globals.flashMessage <|
-                        FlashMessage.success "Invitation was sent"
-                    )
+                    return { model | sResend = Success str } <| globals.flashMessage <| FlashMessage.success "Invitation was sent"
 
                 Err _ ->
-                    ( { model | sResend = Failure }
-                    , globals.flashMessage <|
-                        FlashMessage.error "Resending invitation failed"
-                    )
+                    return { model | sResend = Failure } <| globals.flashMessage <| FlashMessage.error "Resending invitation failed"
 
         -- MOVE USER
         MoveUserClicked ->
             model.mMoveUserModal
                 |> M.map
-                    (\modal -> ( { model | mMoveUserModal = Just <| MoveUserModal.show modal }, Cmd.none ))
-                |> M.withDefault ( model, Cmd.none )
+                    (\modal -> { model | mMoveUserModal = Just <| MoveUserModal.show modal })
+                |> M.withDefault model
+                |> singleton
 
         MoveUserModalMsg modalMsg ->
             let
@@ -298,18 +284,14 @@ update embed globals msg model =
                 ( newMoveUserModal, cmd ) =
                     maybeUpdate updateMoveUserModal model.mMoveUserModal
             in
-            ( { model | mMoveUserModal = newMoveUserModal }, cmd )
+            return { model | mMoveUserModal = newMoveUserModal } cmd
 
         -- CHANGE PASSWORD
         ChangePasswordClicked ->
             model.mChangePasswordModal
-                |> M.map
-                    (\modal ->
-                        ( { model | mChangePasswordModal = Just <| ChangePasswordModal.show modal }
-                        , Cmd.none
-                        )
-                    )
-                |> M.withDefault ( model, Cmd.none )
+                |> M.map (\modal -> { model | mChangePasswordModal = Just <| ChangePasswordModal.show modal })
+                |> M.withDefault model
+                |> singleton
 
         ChangePasswordModalMsg modalMsg ->
             let
@@ -319,80 +301,75 @@ update embed globals msg model =
                 ( newChangePasswordModal, cmd ) =
                     maybeUpdate updateChangePasswordModal model.mChangePasswordModal
             in
-            ( { model | mChangePasswordModal = newChangePasswordModal }, cmd )
+            return { model | mChangePasswordModal = newChangePasswordModal } cmd
 
         -- SEND RESET PASSWORD LINK
         ResetPasswordClicked ->
             case ( fromStatus model.sUser, model.resetPasswordLoading ) of
                 ( Just user, False ) ->
-                    ( { model | resetPasswordLoading = True }
-                    , Http.post
-                        { url = "/api/frontend/sendpasswordresetmail"
-                        , body = formBody globals [ ( "email", user.email ) ]
-                        , expect = Http.expectString (embed << GotResetPasswordResponse)
-                        }
-                    )
+                    return { model | resetPasswordLoading = True } <|
+                        Http.post
+                            { url = "/api/frontend/sendpasswordresetmail"
+                            , body = formBody globals [ ( "email", user.email ) ]
+                            , expect = Http.expectString (embed << GotResetPasswordResponse)
+                            }
 
                 _ ->
-                    ( model, Cmd.none )
+                    singleton model
 
         GotResetPasswordResponse response ->
-            ( { model | resetPasswordLoading = False }
-            , case ( fromStatus model.sUser, response ) of
-                ( Just user, Ok _ ) ->
-                    globals.flashMessage <|
-                        FlashMessage.success "A password reset link was sent to the user's email address."
+            return { model | resetPasswordLoading = False } <|
+                case ( fromStatus model.sUser, response ) of
+                    ( Just user, Ok _ ) ->
+                        globals.flashMessage <|
+                            FlashMessage.success "A password reset link was sent to the user's email address."
 
-                ( Nothing, Ok _ ) ->
-                    Cmd.none
+                    ( Nothing, Ok _ ) ->
+                        Cmd.none
 
-                ( _, Err _ ) ->
-                    globals.flashMessage <|
-                        FlashMessage.error "Error sending the password reset link."
-            )
+                    ( _, Err _ ) ->
+                        globals.flashMessage <|
+                            FlashMessage.error "Error sending the password reset link."
 
         -- DISABLE TWO-FACTOR AUTHENTICATION
         DisableTwoFAClicked ->
             case fromStatus model.sUser of
                 Nothing ->
-                    ( model, Cmd.none )
+                    singleton model
 
                 Just user ->
                     case model.sDisableTwoFA of
                         Loading ->
-                            ( model, Cmd.none )
+                            singleton model
 
                         _ ->
-                            ( { model | sDisableTwoFA = Loading }
-                            , Http.post
-                                { url = "/adminonly/useradmin/disable2fa/" ++ user.id
-                                , body = formBody globals []
-                                , expect = Http.expectString (embed << GotDisableTwoFAResponse)
-                                }
-                            )
+                            return { model | sDisableTwoFA = Loading } <|
+                                Http.post
+                                    { url = "/adminonly/useradmin/disable2fa/" ++ user.id
+                                    , body = formBody globals []
+                                    , expect = Http.expectString (embed << GotDisableTwoFAResponse)
+                                    }
 
         GotDisableTwoFAResponse response ->
             case ( fromStatus model.sUser, response ) of
                 ( Just user, Ok str ) ->
-                    ( { model | sDisableTwoFA = Success str }
-                    , Cmd.batch
-                        [ Cmd.map embed <| getUserCmd user.id
-                        , globals.flashMessage <|
-                            FlashMessage.success "Two-factor authentication was disabled."
-                        ]
-                    )
+                    return { model | sDisableTwoFA = Success str } <|
+                        Cmd.batch
+                            [ Cmd.map embed <| getUserCmd user.id
+                            , globals.flashMessage <| FlashMessage.success "Two-factor authentication was disabled."
+                            ]
 
                 ( Nothing, Ok _ ) ->
-                    ( model, Cmd.none )
+                    singleton model
 
                 ( _, Err _ ) ->
-                    ( { model | sDisableTwoFA = Failure }
-                    , globals.flashMessage <|
-                        FlashMessage.error "Error disabling two-factor authentication."
-                    )
+                    return { model | sDisableTwoFA = Failure } <|
+                        globals.flashMessage <|
+                            FlashMessage.error "Error disabling two-factor authentication."
 
         SetTwoFAMandatory newMandatory ->
-            ( modifyUser (\u -> { u | twoFAMandatory = newMandatory }) model, Cmd.none )
+            singleton <|
+                modifyUser (\u -> { u | twoFAMandatory = newMandatory }) model
 
 
 view : (Msg -> msg) -> Model -> Html msg

@@ -34,6 +34,7 @@ import Http
 import List as L
 import Maybe as M
 import Maybe.Extra as M
+import Return exposing (..)
 import Time exposing (Month(..))
 import Url.Parser exposing (map)
 import Utils exposing (..)
@@ -79,7 +80,7 @@ tabName =
     "details"
 
 
-init : (Msg -> msg) -> String -> ( Model, Cmd msg )
+init : (Msg -> msg) -> String -> Return msg Model
 init embed ugid =
     let
         model =
@@ -90,7 +91,7 @@ init embed ugid =
             , mDeletionRequest = Nothing
             }
     in
-    ( model, Cmd.map embed <| Cmd.getUserGroup GotUserGroup ugid )
+    return model <| Cmd.map embed <| Cmd.getUserGroup GotUserGroup ugid
 
 
 modifyUserGroup : (UserGroup -> UserGroup) -> Model -> Model
@@ -98,7 +99,7 @@ modifyUserGroup modify model =
     { model | sUserGroup = statusMap modify model.sUserGroup }
 
 
-update : (Msg -> msg) -> Globals msg -> Msg -> Model -> ( Model, Cmd msg )
+update : (Msg -> msg) -> Globals msg -> Msg -> Model -> Return msg Model
 update embed globals msg model =
     case msg of
         GotUserGroup result ->
@@ -119,25 +120,26 @@ update embed globals msg model =
                         ( deletionRequest, deletionRequestCmd ) =
                             DeletionRequest.init deletionRequestParams
                     in
-                    ( { model
-                        | sUserGroup = Success userGroup
-                        , origParentID = userGroup.parentID
-                        , sNewParentName = Loading
-                        , mMergeUserGroupModal = Just mergeModal
-                        , mDeletionRequest = Just deletionRequest
-                      }
-                    , Cmd.batch [ mergeModalCmd, deletionRequestCmd ]
-                    )
+                    return
+                        { model
+                            | sUserGroup = Success userGroup
+                            , origParentID = userGroup.parentID
+                            , sNewParentName = Loading
+                            , mMergeUserGroupModal = Just mergeModal
+                            , mDeletionRequest = Just deletionRequest
+                        }
+                    <|
+                        Cmd.batch [ mergeModalCmd, deletionRequestCmd ]
 
                 Err _ ->
-                    ( { model | sUserGroup = Failure }, Cmd.none )
+                    singleton { model | sUserGroup = Failure }
 
         -- FORM SETTERS
         SetStringField name value ->
-            ( modifyUserGroup (UserGroup.setStringField name value) model, Cmd.none )
+            singleton <| modifyUserGroup (UserGroup.setStringField name value) model
 
         SetBoolField name value ->
-            ( modifyUserGroup (UserGroup.setBoolField name value) model, Cmd.none )
+            singleton <| modifyUserGroup (UserGroup.setBoolField name value) model
 
         SetIntField name mRange value ->
             let
@@ -154,23 +156,23 @@ update embed globals msg model =
                         |> M.andThen String.toInt
                         |> M.map mClamp
             in
-            ( modifyUserGroup (UserGroup.setIntField name mInt) model, Cmd.none )
+            singleton <| modifyUserGroup (UserGroup.setIntField name mInt) model
 
         SetAddressIsInherited value ->
             case ( value, statusMap .inheritedAddress model.sUserGroup ) of
                 ( True, Success Nothing ) ->
-                    ( model, globals.flashMessage <| FlashMessage.error "Top level user group cannot inherit" )
+                    return model <| globals.flashMessage <| FlashMessage.error "Top level user group cannot inherit"
 
                 _ ->
-                    ( modifyUserGroup (UserGroup.setBoolField "addressIsInherited" value) model, Cmd.none )
+                    singleton <| modifyUserGroup (UserGroup.setBoolField "addressIsInherited" value) model
 
         SetSettingsIsInherited value ->
             case ( value, statusMap .inheritedSettings model.sUserGroup ) of
                 ( True, Success Nothing ) ->
-                    ( model, globals.flashMessage <| FlashMessage.error "Top level user group cannot inherit" )
+                    return model <| globals.flashMessage <| FlashMessage.error "Top level user group cannot inherit"
 
                 _ ->
-                    ( modifyUserGroup (UserGroup.setBoolField "settingsIsInherited" value) model, Cmd.none )
+                    singleton <| modifyUserGroup (UserGroup.setBoolField "settingsIsInherited" value) model
 
         SetParentID newParentID ->
             let
@@ -184,10 +186,10 @@ update embed globals msg model =
                     model2 =
                         { model1 | sNewParentName = Loading }
                 in
-                ( model2, Cmd.map embed <| Cmd.getUserGroup GotParentUserGroup newParentID )
+                return model2 <| Cmd.map embed <| Cmd.getUserGroup GotParentUserGroup newParentID
 
             else
-                ( model1, Cmd.none )
+                singleton model1
 
         SetSfAccountID newSfAccountID ->
             let
@@ -196,49 +198,48 @@ update embed globals msg model =
                         | sUserGroup = statusMap (UserGroup.setInternalTag "sf-account-id" <| stringNonEmpty newSfAccountID) model.sUserGroup
                     }
             in
-            ( model1, Cmd.none )
+            singleton model1
 
         GotParentUserGroup response ->
             case response of
                 Err _ ->
-                    ( { model | sNewParentName = Failure }, Cmd.none )
+                    singleton { model | sNewParentName = Failure }
 
                 Ok userGroup ->
-                    ( { model | sNewParentName = Success userGroup.name }, Cmd.none )
+                    singleton { model | sNewParentName = Success userGroup.name }
 
         SubmitForm ->
             case fromStatus model.sUserGroup of
                 Just userGroup ->
-                    ( model
-                    , Http.post
-                        { url = "/adminonly/companyadmin/" ++ userGroup.id
-                        , body = formBody globals <| UserGroup.formValues userGroup
-                        , expect = Http.expectString <| embed << GotSaveResponse
-                        }
-                    )
+                    return model <|
+                        Http.post
+                            { url = "/adminonly/companyadmin/" ++ userGroup.id
+                            , body = formBody globals <| UserGroup.formValues userGroup
+                            , expect = Http.expectString <| embed << GotSaveResponse
+                            }
 
                 Nothing ->
-                    ( model, Cmd.none )
+                    singleton model
 
         GotSaveResponse response ->
             case response of
                 Err _ ->
-                    ( model, globals.flashMessage <| FlashMessage.error "Request failed." )
+                    return model <| globals.flashMessage <| FlashMessage.error "Request failed."
 
                 Ok _ ->
-                    ( { model | sUserGroup = statusMap UserGroup.afterSaved model.sUserGroup }
-                    , Cmd.batch
-                        [ globals.flashMessage <| FlashMessage.success "Saved"
-                        , globals.setPageUrlFromModel -- reloads UserGroup Details
-                        ]
-                    )
+                    return { model | sUserGroup = statusMap UserGroup.afterSaved model.sUserGroup } <|
+                        Cmd.batch
+                            [ globals.flashMessage <| FlashMessage.success "Saved"
+                            , globals.setPageUrlFromModel -- reloads UserGroup Details
+                            ]
 
         -- MOVE USER
         MergeUserGroupClicked ->
             model.mMergeUserGroupModal
                 |> M.map
-                    (\modal -> ( { model | mMergeUserGroupModal = Just <| MergeUserGroupModal.show modal }, Cmd.none ))
-                |> M.withDefault ( model, Cmd.none )
+                    (\modal -> { model | mMergeUserGroupModal = Just <| MergeUserGroupModal.show modal })
+                |> M.withDefault model
+                |> singleton
 
         MergeUserGroupModalMsg modalMsg ->
             let
@@ -248,7 +249,7 @@ update embed globals msg model =
                 ( newMergeUserGroupModal, cmd ) =
                     maybeUpdate updateMergeUserGroupModal model.mMergeUserGroupModal
             in
-            ( { model | mMergeUserGroupModal = newMergeUserGroupModal }, cmd )
+            return { model | mMergeUserGroupModal = newMergeUserGroupModal } cmd
 
         DeletionRequestMsg deletionRequestMsg ->
             case ( model.sUserGroup, model.mDeletionRequest ) of
@@ -265,10 +266,10 @@ update embed globals msg model =
                         ( newDeletionRequest, cmd ) =
                             DeletionRequest.update params deletionRequestMsg deletionRequest
                     in
-                    ( { model | mDeletionRequest = Just newDeletionRequest }, cmd )
+                    return { model | mDeletionRequest = Just newDeletionRequest } cmd
 
                 _ ->
-                    ( model, Cmd.none )
+                    singleton model
 
 
 view : (Msg -> msg) -> Model -> Html msg

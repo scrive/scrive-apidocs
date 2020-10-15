@@ -26,6 +26,7 @@ import Either exposing (Either(..))
 import EnumExtra as Enum
 import Html exposing (Html, text)
 import Maybe as M
+import Return exposing (..)
 import Url.Parser as UP exposing ((</>), (<?>), Parser)
 import Url.Parser.Query as UPQ
 import Utils exposing (..)
@@ -78,7 +79,7 @@ type Msg
     | FoldersTabMsg FoldersTab.Msg
 
 
-init : (Msg -> msg) -> Globals msg -> Page -> ( Model, Cmd msg )
+init : (Msg -> msg) -> Globals msg -> Page -> Return msg Model
 init embed globals page =
     let
         model =
@@ -246,17 +247,16 @@ pageFromModel model =
             Just model.page
 
 
-update : (Msg -> msg) -> Globals msg -> Msg -> Model -> ( Model, Cmd msg )
+update : (Msg -> msg) -> Globals msg -> Msg -> Model -> Return msg Model
 update embed globals msg model =
     case msg of
         TabMsg state ->
-            ( { model | tabState = state }
-            , if state == Tab.customInitialState "goback" then
-                globals.gotoUserGroupAdminTab
+            return { model | tabState = state } <|
+                if state == Tab.customInitialState "goback" then
+                    globals.gotoUserGroupAdminTab
 
-              else
-                Cmd.none
-            )
+                else
+                    Cmd.none
 
         DetailsTabMsg tabMsg ->
             let
@@ -266,7 +266,7 @@ update embed globals msg model =
                 ( newDetailsTab, cmd ) =
                     maybeUpdate updateDetailsTab model.mDetailsTab
             in
-            ( { model | mDetailsTab = newDetailsTab }, cmd )
+            return { model | mDetailsTab = newDetailsTab } cmd
 
         UsersTabMsg tabMsg ->
             let
@@ -276,14 +276,14 @@ update embed globals msg model =
                 ( newUsersTab, cmd ) =
                     maybeUpdate updateUsersTab model.mUsersTab
             in
-            ( { model | mUsersTab = newUsersTab }, cmd )
+            return { model | mUsersTab = newUsersTab } cmd
 
         StructureTabMsg tabMsg ->
             let
                 ( newStructureTab, cmd ) =
                     maybeUpdate (StructureTab.update tabMsg) model.mStructureTab
             in
-            ( { model | mStructureTab = newStructureTab }, cmd )
+            return { model | mStructureTab = newStructureTab } cmd
 
         BrandingTabMsg tabMsg ->
             let
@@ -293,7 +293,7 @@ update embed globals msg model =
                 ( newUserGroupBranding, cmd ) =
                     maybeUpdate updateBrandingTab model.mBrandingTab
             in
-            ( { model | mBrandingTab = newUserGroupBranding }, cmd )
+            return { model | mBrandingTab = newUserGroupBranding } cmd
 
         PaymentsTabMsg tabMsg ->
             let
@@ -303,7 +303,7 @@ update embed globals msg model =
                 ( newPaymentsTab, cmd ) =
                     maybeUpdate updatePaymentsTab model.mPaymentsTab
             in
-            ( { model | mPaymentsTab = newPaymentsTab }, cmd )
+            return { model | mPaymentsTab = newPaymentsTab } cmd
 
         StatisticsTabMsg tabMsg ->
             let
@@ -313,7 +313,7 @@ update embed globals msg model =
                 ( newStatisticsTab, cmd ) =
                     maybeUpdate updateStatisticsTab model.mStatisticsTab
             in
-            ( { model | mStatisticsTab = newStatisticsTab }, cmd )
+            return { model | mStatisticsTab = newStatisticsTab } cmd
 
         TemplatesTabMsg tabMsg ->
             let
@@ -323,7 +323,7 @@ update embed globals msg model =
                 ( newTemplatesTab, cmd ) =
                     maybeUpdate updateTemplatesTab model.mTemplatesTab
             in
-            ( { model | mTemplatesTab = newTemplatesTab }, cmd )
+            return { model | mTemplatesTab = newTemplatesTab } cmd
 
         DocumentsTabMsg tabMsg ->
             let
@@ -333,7 +333,7 @@ update embed globals msg model =
                 ( newDocumentsTab, cmd ) =
                     maybeUpdate updateDocumentsTab model.mDocumentsTab
             in
-            ( { model | mDocumentsTab = newDocumentsTab }, cmd )
+            return { model | mDocumentsTab = newDocumentsTab } cmd
 
         FoldersTabMsg tabMsg ->
             let
@@ -343,7 +343,7 @@ update embed globals msg model =
                 ( newFoldersTab, cmd ) =
                     maybeUpdate updateFoldersTab model.mFoldersTab
             in
-            ( { model | mFoldersTab = newFoldersTab }, cmd )
+            return { model | mFoldersTab = newFoldersTab } cmd
 
 
 
@@ -351,7 +351,7 @@ update embed globals msg model =
 -- It might be more reasonable to use `*Tab.init` instead for more reliable behavior.
 
 
-updatePage : (Msg -> msg) -> Page -> Model -> ( Model, Cmd msg )
+updatePage : (Msg -> msg) -> Page -> Model -> Return msg Model
 updatePage embed page model =
     case page.tab of
         DetailsTab ->
@@ -359,13 +359,13 @@ updatePage embed page model =
                 ( tab, tabCmd ) =
                     DetailsTab.init (embed << DetailsTabMsg) page.ugid
             in
-            ( { model
-                | tabState = Tab.customInitialState DetailsTab.tabName
-                , page = page
-                , mDetailsTab = Just tab
-              }
-            , tabCmd
-            )
+            return
+                { model
+                    | tabState = Tab.customInitialState DetailsTab.tabName
+                    , page = page
+                    , mDetailsTab = Just tab
+                }
+                tabCmd
 
         UsersTab tabPage ->
             let
@@ -375,13 +375,13 @@ updatePage embed page model =
                         |> M.withDefault
                             (UsersTab.init (embed << UsersTabMsg) page.ugid tabPage)
             in
-            ( { model
-                | mUsersTab = Just tab
-                , page = page
-                , tabState = Tab.customInitialState UsersTab.tabName
-              }
-            , tabCmd
-            )
+            return
+                { model
+                    | mUsersTab = Just tab
+                    , page = page
+                    , tabState = Tab.customInitialState UsersTab.tabName
+                }
+                tabCmd
 
         StructureTab ->
             let
@@ -391,13 +391,13 @@ updatePage embed page model =
                         |> M.withDefault
                             (StructureTab.init (embed << StructureTabMsg) page.ugid)
             in
-            ( { model
-                | tabState = Tab.customInitialState StructureTab.tabName
-                , page = page
-                , mStructureTab = Just tab
-              }
-            , tabCmd
-            )
+            return
+                { model
+                    | tabState = Tab.customInitialState StructureTab.tabName
+                    , page = page
+                    , mStructureTab = Just tab
+                }
+                tabCmd
 
         BrandingTab tabPage ->
             let
@@ -411,13 +411,13 @@ updatePage embed page model =
                                 }
                             )
             in
-            ( { model
-                | tabState = Tab.customInitialState UserGroupBrandingTab.tabName
-                , page = page
-                , mBrandingTab = Just tab
-              }
-            , tabCmd
-            )
+            return
+                { model
+                    | tabState = Tab.customInitialState UserGroupBrandingTab.tabName
+                    , page = page
+                    , mBrandingTab = Just tab
+                }
+                tabCmd
 
         PaymentsTab ->
             let
@@ -427,13 +427,13 @@ updatePage embed page model =
                         |> M.withDefault
                             (PaymentsTab.init (embed << PaymentsTabMsg) page.ugid)
             in
-            ( { model
-                | tabState = Tab.customInitialState PaymentsTab.tabName
-                , page = page
-                , mPaymentsTab = Just tab
-              }
-            , tabCmd
-            )
+            return
+                { model
+                    | tabState = Tab.customInitialState PaymentsTab.tabName
+                    , page = page
+                    , mPaymentsTab = Just tab
+                }
+                tabCmd
 
         StatisticsTab tabPage ->
             let
@@ -443,13 +443,13 @@ updatePage embed page model =
                         |> M.withDefault
                             (StatisticsTab.init (embed << StatisticsTabMsg) tabPage (ConfigForUserGroup page.ugid))
             in
-            ( { model
-                | tabState = Tab.customInitialState StatisticsTab.tabName
-                , page = page
-                , mStatisticsTab = Just tab
-              }
-            , tabCmd
-            )
+            return
+                { model
+                    | tabState = Tab.customInitialState StatisticsTab.tabName
+                    , page = page
+                    , mStatisticsTab = Just tab
+                }
+                tabCmd
 
         TemplatesTab tabPage ->
             let
@@ -459,13 +459,13 @@ updatePage embed page model =
                         |> M.withDefault
                             (DocumentsTab.init (embed << TemplatesTabMsg) (ConfigForUserGroupTmpl page.ugid) tabPage.paginationPageNum)
             in
-            ( { model
-                | mTemplatesTab = Just tab
-                , page = page
-                , tabState = Tab.customInitialState DocumentsTab.tabTemplates
-              }
-            , tabCmd
-            )
+            return
+                { model
+                    | mTemplatesTab = Just tab
+                    , page = page
+                    , tabState = Tab.customInitialState DocumentsTab.tabTemplates
+                }
+                tabCmd
 
         DocumentsTab tabPage ->
             let
@@ -475,13 +475,13 @@ updatePage embed page model =
                         |> M.withDefault
                             (DocumentsTab.init (embed << DocumentsTabMsg) (ConfigForUserGroupDocs page.ugid) tabPage.paginationPageNum)
             in
-            ( { model
-                | mDocumentsTab = Just tab
-                , page = page
-                , tabState = Tab.customInitialState DocumentsTab.tabName
-              }
-            , tabCmd
-            )
+            return
+                { model
+                    | mDocumentsTab = Just tab
+                    , page = page
+                    , tabState = Tab.customInitialState DocumentsTab.tabName
+                }
+                tabCmd
 
         FoldersTab ->
             let
@@ -491,13 +491,13 @@ updatePage embed page model =
                         |> M.withDefault
                             (FoldersTab.init (embed << FoldersTabMsg) page.ugid)
             in
-            ( { model
-                | tabState = Tab.customInitialState FoldersTab.tabName
-                , page = page
-                , mFoldersTab = Just tab
-              }
-            , tabCmd
-            )
+            return
+                { model
+                    | tabState = Tab.customInitialState FoldersTab.tabName
+                    , page = page
+                    , mFoldersTab = Just tab
+                }
+                tabCmd
 
 
 view : (Msg -> msg) -> Model -> Html msg

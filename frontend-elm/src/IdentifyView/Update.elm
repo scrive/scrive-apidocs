@@ -12,6 +12,7 @@ import Lib.Types.Document exposing (Document(..), DocumentStatus(..))
 import Lib.Types.FlashMessage exposing (FlashMessage(..))
 import Lib.Types.ID exposing (showId)
 import Lib.Types.SignatoryLink exposing (AuthenticationToViewMethod(..), SignatoryLink(..))
+import Return exposing (..)
 
 
 subscriptions : Model -> Sub Msg
@@ -22,7 +23,7 @@ subscriptions _ =
 port errorTraceMsg : JE.Value -> Cmd msg
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model -> Return Msg Model
 update msg model =
     let
         errorFlashMessage str =
@@ -52,14 +53,14 @@ update msg model =
                         Error _ ->
                             JE.object fields
             in
-            ( model, errorTraceMsg object )
+            return model <| errorTraceMsg object
 
         AddFlashMessageMsg flashMessage ->
             let
                 ( newFlashMessages, cmd ) =
                     FlashMessage.addFlashMessage { embed = FlashMessageMsg } flashMessage model.flashMessages
             in
-            ( { model | flashMessages = newFlashMessages }, cmd )
+            return { model | flashMessages = newFlashMessages } cmd
 
         SMSPinMsg msg_ ->
             case model.state of
@@ -73,7 +74,7 @@ update msg model =
                                 newState =
                                     IdentifyView { flags = flags, innerModel = IdentifySMSPin params newInnerState }
                             in
-                            ( { model | state = newState }, cmd )
+                            return { model | state = newState } cmd
 
                         _ ->
                             errorFlashMessage "Internal error: got SMSPin message while in an incompatible state."
@@ -96,7 +97,7 @@ update msg model =
                                         , innerModel = IdentifyGenericEidService params newInnerState
                                         }
                             in
-                            ( { model | state = newState }, cmd )
+                            return { model | state = newState } cmd
 
                         _ ->
                             errorFlashMessage "Internal error: got GenericEidService message while in an incompatible state."
@@ -116,7 +117,7 @@ update msg model =
                                 newState =
                                     IdentifyView { flags = flags, innerModel = IdentifyRejection params newInnerState }
                             in
-                            ( { model | state = newState }, cmd )
+                            return { model | state = newState } cmd
 
                         _ ->
                             errorFlashMessage "Internal error: got Rejection message while in an incompatible state."
@@ -136,7 +137,7 @@ update msg model =
                         newState =
                             IdentifyView { flags = flags, innerModel = newInnerModel }
                     in
-                    ( { model | state = newState }, Cmd.none )
+                    singleton { model | state = newState }
 
                 _ ->
                     errorFlashMessage "Internal error: got EnterRejectionClicked message while in an incompatible state."
@@ -148,7 +149,7 @@ update msg model =
                         newState =
                             IdentifyView { flags = flags, innerModel = prevProviderModel }
                     in
-                    ( { model | state = newState }, Cmd.none )
+                    singleton { model | state = newState }
 
                 _ ->
                     errorFlashMessage "Internal error: got ExitRejection message while in an incompatible state."
@@ -158,4 +159,4 @@ update msg model =
                 ( newFlashMessages, cmd ) =
                     FlashMessage.update { embed = FlashMessageMsg } msg_ model.flashMessages
             in
-            ( { model | flashMessages = newFlashMessages }, cmd )
+            return { model | flashMessages = newFlashMessages } cmd

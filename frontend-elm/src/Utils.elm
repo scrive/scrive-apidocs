@@ -11,6 +11,7 @@ import Maybe as M
 import Parser as P exposing ((|.))
 import Platform.Cmd as Cmd
 import Result as R
+import Return exposing (..)
 import Task
 import Time exposing (Month(..), Posix)
 import Time.DateTime exposing (toPosix)
@@ -63,7 +64,7 @@ mapGlobals liftMessage globals =
     }
 
 
-maybeUpdate : (state -> ( state, Cmd cmd )) -> Maybe state -> ( Maybe state, Cmd cmd )
+maybeUpdate : (state -> Return cmd state) -> Maybe state -> Return cmd (Maybe state)
 maybeUpdate update mState =
     case mState of
         Just state ->
@@ -71,10 +72,10 @@ maybeUpdate update mState =
                 ( newState, cmd ) =
                     update state
             in
-            ( Just newState, cmd )
+            return newState cmd |> map Just
 
         Nothing ->
-            ( Nothing, Cmd.none )
+            singleton Nothing
 
 
 emptyPageUrl : PageUrl
@@ -248,11 +249,11 @@ boolToJson bool =
     ite bool "true" "false"
 
 
-handleSub : model -> (model -> Maybe sub) -> (sub -> model) -> (sub -> ( sub, Cmd msg )) -> ( model, Cmd msg )
+handleSub : model -> (model -> Maybe sub) -> (sub -> model) -> (sub -> Return msg sub) -> Return msg model
 handleSub model getMSub setSub updateSub =
     getMSub model
-        |> M.map (updateSub >> (\( m, cmd ) -> ( setSub m, cmd )))
-        |> M.withDefault ( model, Cmd.none )
+        |> M.map (updateSub >> map setSub)
+        |> M.withDefault (singleton model)
 
 
 
@@ -501,8 +502,3 @@ decodeDict e d =
                             )
     in
     go <| Enum.allValues e
-
-
-noCmd : a -> ( a, Cmd msg )
-noCmd state =
-    ( state, Cmd.none )

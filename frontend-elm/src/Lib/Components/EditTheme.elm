@@ -16,6 +16,7 @@ import Lib.Types.Theme exposing (..)
 import List exposing (map)
 import List.Extra as List
 import Maybe exposing (withDefault)
+import Return exposing (..)
 import String
 import Task
 import Tuple exposing (second)
@@ -70,7 +71,7 @@ type Msg
     | OnColorTextCommittedMsg ColorIdentifier
 
 
-update : (Msg -> msg) -> Msg -> EditThemeReadonly -> EditThemeState -> ( EditThemeState, Cmd msg )
+update : (Msg -> msg) -> Msg -> EditThemeReadonly -> EditThemeState -> Return msg EditThemeState
 update embed msg read =
     case msg of
         SetActiveThemeMsg id ->
@@ -100,10 +101,10 @@ update embed msg read =
         OnColorTextChangedMsg colorIdentifier colorText ->
             updatePartialColor colorIdentifier colorText
                 >> updateColorIfValidInput colorIdentifier colorText
-                >> noCmd
+                >> singleton
 
         OnColorTextCommittedMsg colorIdentifier ->
-            commitPartialColor colorIdentifier >> noCmd
+            commitPartialColor colorIdentifier >> singleton
 
 
 
@@ -111,14 +112,14 @@ update embed msg read =
 -- implements SetActiveThemeMsg
 
 
-setActiveTheme : EditThemeReadonly -> ThemeID -> EditThemeState -> ( EditThemeState, Cmd msg )
+setActiveTheme : EditThemeReadonly -> ThemeID -> EditThemeState -> Return msg EditThemeState
 setActiveTheme read id state =
     let
         activeTheme =
             withDefault state.themeBeingEdited <|
                 List.find (\theme -> theme.id == id) read.availableThemes
     in
-    noCmd <| { state | themeBeingEdited = activeTheme }
+    singleton <| { state | themeBeingEdited = activeTheme }
 
 
 
@@ -151,13 +152,13 @@ viewThemeSelector embed read selectedTheme =
 -- implements SetFontMsg
 
 
-setFont : Font -> EditThemeState -> ( EditThemeState, Cmd msg )
+setFont : Font -> EditThemeState -> Return msg EditThemeState
 setFont font state =
     let
         theme =
             state.themeBeingEdited
     in
-    noCmd <| { state | themeBeingEdited = { theme | font = font } }
+    singleton <| { state | themeBeingEdited = { theme | font = font } }
 
 
 
@@ -204,7 +205,7 @@ viewFontSelector embed selectedTheme =
 -- implements UpdateColorPickerMsg
 
 
-updateColorPicker : ColorIdentifier -> ColorPicker.Msg -> EditThemeState -> ( EditThemeState, Cmd msg )
+updateColorPicker : ColorIdentifier -> ColorPicker.Msg -> EditThemeState -> Return msg EditThemeState
 updateColorPicker colorIdentifier msg state =
     let
         theme =
@@ -224,20 +225,20 @@ updateColorPicker colorIdentifier msg state =
         newColors =
             Enum.insert colorIdentifier newColor theme.colors
     in
-    noCmd <| { state | colorPickers = newColorPickers, themeBeingEdited = { theme | colors = newColors } }
+    singleton <| { state | colorPickers = newColorPickers, themeBeingEdited = { theme | colors = newColors } }
 
 
 
 -- implements SetPopoverMsg
 
 
-setPopover : ColorIdentifier -> Popover.State -> EditThemeState -> ( EditThemeState, Cmd msg )
+setPopover : ColorIdentifier -> Popover.State -> EditThemeState -> Return msg EditThemeState
 setPopover colorIdentifier popover state =
     let
         newPopovers =
             Enum.insert colorIdentifier popover state.popovers
     in
-    noCmd <| { state | popovers = newPopovers }
+    singleton <| { state | popovers = newPopovers }
 
 
 
@@ -310,54 +311,54 @@ viewEditColor embed colorIdentifier state =
 -- implements SetThemeNameMsg
 
 
-setThemeName : String -> EditThemeState -> ( EditThemeState, Cmd msg )
+setThemeName : String -> EditThemeState -> Return msg EditThemeState
 setThemeName name state =
     let
         themeBeingEdited =
             state.themeBeingEdited
     in
-    noCmd <| { state | themeBeingEdited = { themeBeingEdited | name = name } }
+    singleton <| { state | themeBeingEdited = { themeBeingEdited | name = name } }
 
 
 
 -- implements OpenLogoFileSelectMsg
 
 
-openLogoFileSelect : (Msg -> msg) -> EditThemeState -> ( EditThemeState, Cmd msg )
+openLogoFileSelect : (Msg -> msg) -> EditThemeState -> Return msg EditThemeState
 openLogoFileSelect embed state =
     let
         callback : File -> msg
         callback file =
             embed <| LoadLogoFileMsg file
     in
-    ( state, FileSelect.file [ "image/png", "image/jpg", "image/jpeg" ] callback )
+    return state <| FileSelect.file [ "image/png", "image/jpg", "image/jpeg" ] callback
 
 
 
 -- implements LoadLogoFileMsg
 
 
-loadLogoFile : (Msg -> msg) -> File -> EditThemeState -> ( EditThemeState, Cmd msg )
+loadLogoFile : (Msg -> msg) -> File -> EditThemeState -> Return msg EditThemeState
 loadLogoFile embed file state =
     let
         callback : String -> msg
         callback contents =
             embed <| SetLogoMsg contents
     in
-    ( state, Task.perform callback <| File.toUrl file )
+    return state <| Task.perform callback <| File.toUrl file
 
 
 
 -- implements SetLogoMsg
 
 
-setLogo : String -> EditThemeState -> ( EditThemeState, Cmd msg )
+setLogo : String -> EditThemeState -> Return msg EditThemeState
 setLogo content state =
     let
         theme =
             state.themeBeingEdited
     in
-    noCmd <| { state | themeBeingEdited = { theme | logo = content } }
+    singleton <| { state | themeBeingEdited = { theme | logo = content } }
 
 
 

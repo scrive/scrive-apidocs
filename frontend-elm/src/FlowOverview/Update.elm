@@ -9,6 +9,7 @@ import Lib.Components.FlashMessage as FlashMessage exposing (addFlashMessage)
 import Lib.Misc.Cmd exposing (perform)
 import Lib.Misc.Http exposing (encodeError)
 import Lib.Types.FlashMessage exposing (FlashMessage(..))
+import Return exposing (..)
 
 
 port errorTraceMsg : JE.Value -> Cmd msg
@@ -39,7 +40,7 @@ errorCmd { message, source, error } =
         ]
 
 
-getDocuments : Model.Flags -> Model -> Model.GetInstanceView -> ( Model, Cmd Msg )
+getDocuments : Model.Flags -> Model -> Model.GetInstanceView -> Return Msg Model
 getDocuments flags model instance =
     let
         documentsToGet =
@@ -74,10 +75,10 @@ getDocuments flags model instance =
             updateModel model
                 (\inner -> { inner | mInstance = Just instance, mDocuments = mDocuments })
     in
-    ( newModel, Cmd.batch getDocumentCmds )
+    return newModel <| Cmd.batch getDocumentCmds
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model -> Return Msg Model
 update msg model =
     case msg of
         GetInstanceViewReceived result ->
@@ -89,86 +90,75 @@ update msg model =
 
                         -- {instance | status = Model.Failed}
                         Err error ->
-                            let
-                                cmd =
-                                    errorCmd
-                                        { message = "Internal error: failed to communicate with backend."
-                                        , source = "FlowOverview.Update.update GetInstanceViewReceived"
-                                        , error = error
-                                        }
-                            in
-                            ( model, cmd )
+                            return model <|
+                                errorCmd
+                                    { message = "Internal error: failed to communicate with backend."
+                                    , source = "FlowOverview.Update.update GetInstanceViewReceived"
+                                    , error = error
+                                    }
 
                 Failure _ ->
-                    ( model, Cmd.none )
+                    singleton model
 
         GetDocumentReceived result ->
             case result of
                 Ok document ->
-                    case model.state of
-                        AppOk { innerModel } ->
-                            let
-                                newDocuments =
-                                    case innerModel.mDocuments of
-                                        Nothing ->
-                                            Dict.singleton document.id document
+                    singleton <|
+                        case model.state of
+                            AppOk { innerModel } ->
+                                let
+                                    newDocuments =
+                                        case innerModel.mDocuments of
+                                            Nothing ->
+                                                Dict.singleton document.id document
 
-                                        Just docs ->
-                                            Dict.insert document.id document docs
+                                            Just docs ->
+                                                Dict.insert document.id document docs
 
-                                newModel =
-                                    updateModel model (\inner -> { inner | mDocuments = Just newDocuments })
-                            in
-                            ( newModel, Cmd.none )
+                                    newModel =
+                                        updateModel model (\inner -> { inner | mDocuments = Just newDocuments })
+                                in
+                                newModel
 
-                        Failure _ ->
-                            ( model, Cmd.none )
+                            Failure _ ->
+                                model
 
                 Err error ->
-                    let
-                        cmd =
-                            errorCmd
-                                { message = "Internal error: failed to communicate with backend."
-                                , source = "FlowOverview.Update.update GetDocumentReceived"
-                                , error = error
-                                }
-                    in
-                    ( model, cmd )
+                    return model <|
+                        errorCmd
+                            { message = "Internal error: failed to communicate with backend."
+                            , source = "FlowOverview.Update.update GetDocumentReceived"
+                            , error = error
+                            }
 
         EnterRejectionClicked ->
-            let
-                newModel =
-                    updateModel model (\inner -> { inner | mRejection = Just <| Model.Rejection { message = "" } })
-            in
-            ( newModel, Cmd.none )
+            singleton <|
+                updateModel model (\inner -> { inner | mRejection = Just <| Model.Rejection { message = "" } })
 
         RejectButtonClicked ->
             case model.state of
                 AppOk { flags, innerModel } ->
                     case innerModel.mRejection of
                         Just (Model.Rejection { message }) ->
-                            let
-                                postReq =
-                                    Http.post
-                                        { url = flags.flowApiUrl ++ "/instances/" ++ flags.flowInstanceId ++ "/reject"
-                                        , body = Http.jsonBody <| JE.object [ ( "message", JE.string message ) ]
-                                        , expect = Http.expectWhatever RejectCallback
-                                        }
-                            in
-                            ( model, postReq )
+                            return model <|
+                                Http.post
+                                    { url = flags.flowApiUrl ++ "/instances/" ++ flags.flowInstanceId ++ "/reject"
+                                    , body = Http.jsonBody <| JE.object [ ( "message", JE.string message ) ]
+                                    , expect = Http.expectWhatever RejectCallback
+                                    }
 
                         _ ->
-                            ( model, Cmd.none )
+                            singleton model
 
                 Failure _ ->
-                    ( model, Cmd.none )
+                    singleton model
 
         CancelButtonClicked ->
             let
                 newModel =
                     updateModel model (\inner -> { inner | mRejection = Nothing })
             in
-            ( newModel, Cmd.none )
+            singleton newModel
 
         RejectCallback res ->
             case res of
@@ -187,53 +177,44 @@ update msg model =
                                                     Nothing
                                     }
                                 )
-
-                        message =
-                            "Your rejection message has been sent. Thank you!"
-
-                        cmd =
-                            perform <| AddFlashMessage <| FlashSuccess message
                     in
-                    ( newModel, cmd )
+                    return newModel <| perform <| AddFlashMessage <| FlashSuccess "Your rejection message has been sent. Thank you!"
 
                 Err error ->
-                    let
-                        cmd =
-                            errorCmd
-                                { message = "Failed to reject the Flow"
-                                , source = "FlowOverview.Update.update RejectCallback"
-                                , error = error
-                                }
-                    in
-                    ( model, cmd )
+                    return model <|
+                        errorCmd
+                            { message = "Failed to reject the Flow"
+                            , source = "FlowOverview.Update.update RejectCallback"
+                            , error = error
+                            }
 
         UpdateTextarea message ->
             let
                 newModel =
                     updateModel model (\inner -> { inner | mRejection = Just <| Model.Rejection { message = message } })
             in
-            ( newModel, Cmd.none )
+            singleton newModel
 
         AddFlashMessage flashMessage ->
             let
                 ( newFlashMessages, cmd ) =
                     FlashMessage.addFlashMessage { embed = FlashMessageMsg } flashMessage model.flashMessages
             in
-            ( { model | flashMessages = newFlashMessages }, cmd )
+            return { model | flashMessages = newFlashMessages } cmd
 
         ErrorTrace fields ->
             let
                 object =
                     JE.object fields
             in
-            ( model, errorTraceMsg object )
+            return model <| errorTraceMsg object
 
         FlashMessageMsg msg_ ->
             let
                 ( newFlashMessages, cmd ) =
                     FlashMessage.update { embed = FlashMessageMsg } msg_ model.flashMessages
             in
-            ( { model | flashMessages = newFlashMessages }, cmd )
+            return { model | flashMessages = newFlashMessages } cmd
 
 
 updateModel : Model -> (Model.InnerModel -> Model.InnerModel) -> Model

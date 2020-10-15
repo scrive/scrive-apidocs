@@ -15,6 +15,7 @@ import Bootstrap.Alert as Alert
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (class)
 import List as L
+import Return exposing (..)
 import Time as T exposing (Posix)
 
 
@@ -59,15 +60,14 @@ success message =
     FlashMessage Success message
 
 
-init : (Msg -> msg) -> ( Model msg, Cmd msg )
+init : (Msg -> msg) -> Return msg (Model msg)
 init tomsg =
-    ( { alerts = []
-      , alertNextID = 1
-      , time = T.millisToPosix 0
-      , tomsg = tomsg
-      }
-    , Cmd.none
-    )
+    singleton
+        { alerts = []
+        , alertNextID = 1
+        , time = T.millisToPosix 0
+        , tomsg = tomsg
+        }
 
 
 addFlashMessage : FlashMessage -> Model msg -> Model msg
@@ -87,14 +87,15 @@ addFlashMessage (FlashMessage flashType message) model =
     }
 
 
-update : Msg -> Model msg -> ( Model msg, Cmd msg )
+update : Msg -> Model msg -> Return msg (Model msg)
 update msg model =
-    case msg of
-        AlertMsg id visibility ->
-            ( { model | alerts = L.map (updateAlert id visibility) model.alerts }, Cmd.none )
+    singleton <|
+        case msg of
+            AlertMsg id visibility ->
+                { model | alerts = L.map (updateAlert id visibility) model.alerts }
 
-        Tick time ->
-            ( expireAlerts { model | time = time }, Cmd.none )
+            Tick time ->
+                expireAlerts { model | time = time }
 
 
 updateAlert : Int -> Alert.Visibility -> AlertModel -> AlertModel

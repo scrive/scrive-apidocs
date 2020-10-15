@@ -18,6 +18,7 @@ import Lib.Types.Theme exposing (..)
 import List exposing (map)
 import Maybe exposing (withDefault)
 import Maybe.Extra as Maybe
+import Return exposing (..)
 import String
 import Task
 import Tuple exposing (..)
@@ -57,7 +58,7 @@ type Msg
     | SetInheritBrandingMsg Bool
 
 
-update : (Msg -> msg) -> Msg -> EditUserGroupBrandingState -> ( EditUserGroupBrandingState, Cmd msg )
+update : (Msg -> msg) -> Msg -> EditUserGroupBrandingState -> Return msg EditUserGroupBrandingState
 update embed msg =
     let
         updateBranding m state =
@@ -65,7 +66,7 @@ update embed msg =
                 ( newBranding, cmd ) =
                     m state.brandingBeingEdited
             in
-            ( { state | brandingBeingEdited = newBranding }, cmd )
+            return { state | brandingBeingEdited = newBranding } cmd
     in
     case msg of
         SetThemeMsg kind mId ->
@@ -95,7 +96,7 @@ update embed msg =
 -- implements SetThemeMsg
 
 
-setTheme : ThemeKind -> Maybe ThemeID -> UserGroupBranding -> ( UserGroupBranding, Cmd msg )
+setTheme : ThemeKind -> Maybe ThemeID -> UserGroupBranding -> Return msg UserGroupBranding
 setTheme kind mId state =
     let
         newThemes =
@@ -106,7 +107,7 @@ setTheme kind mId state =
                 Nothing ->
                     Enum.remove kind state.themes
     in
-    ( { state | themes = newThemes }, Cmd.none )
+    singleton { state | themes = newThemes }
 
 
 
@@ -162,64 +163,64 @@ viewThemeSelector embed kind read state =
 -- implements SetBrowserTitleMsg
 
 
-setBrowserTitle : String -> UserGroupBranding -> ( UserGroupBranding, Cmd msg )
+setBrowserTitle : String -> UserGroupBranding -> Return msg UserGroupBranding
 setBrowserTitle text state =
-    ( { state | browserTitle = stringNonEmpty text }, Cmd.none )
+    singleton { state | browserTitle = stringNonEmpty text }
 
 
 
 -- implements SetSmsOriginatorMsg
 
 
-setSmsOriginator : String -> UserGroupBranding -> ( UserGroupBranding, Cmd msg )
+setSmsOriginator : String -> UserGroupBranding -> Return msg UserGroupBranding
 setSmsOriginator text state =
-    ( { state | smsOriginator = stringNonEmpty text }, Cmd.none )
+    singleton { state | smsOriginator = stringNonEmpty text }
 
 
 
 -- implements OpenFaviconFileSelectMsg
 
 
-openFaviconFileSelect : (Msg -> msg) -> UserGroupBranding -> ( UserGroupBranding, Cmd msg )
+openFaviconFileSelect : (Msg -> msg) -> UserGroupBranding -> Return msg UserGroupBranding
 openFaviconFileSelect embed state =
     let
         callback : File -> msg
         callback file =
             embed <| LoadFaviconFileMsg file
     in
-    ( state, FileSelect.file [ "image/png", "image/jpg", "image/jpeg" ] callback )
+    return state <| FileSelect.file [ "image/png", "image/jpg", "image/jpeg" ] callback
 
 
 
 -- implements LoadFaviconFileMsg
 
 
-loadFaviconFile : (Msg -> msg) -> File -> UserGroupBranding -> ( UserGroupBranding, Cmd msg )
+loadFaviconFile : (Msg -> msg) -> File -> UserGroupBranding -> Return msg UserGroupBranding
 loadFaviconFile embed file state =
     let
         callback : String -> msg
         callback contents =
             embed <| SetFaviconMsg contents
     in
-    ( state, Task.perform callback <| File.toUrl file )
+    return state <| Task.perform callback <| File.toUrl file
 
 
 
 -- implements SetFaviconMsg
 
 
-setFavicon : String -> UserGroupBranding -> ( UserGroupBranding, Cmd msg )
+setFavicon : String -> UserGroupBranding -> Return msg UserGroupBranding
 setFavicon content state =
-    ( { state | favicon = stringNonEmpty content }, Cmd.none )
+    singleton { state | favicon = stringNonEmpty content }
 
 
 
 -- implements SetInheritBrandingMsg
 
 
-setInheritBranding : Bool -> EditUserGroupBrandingState -> ( EditUserGroupBrandingState, Cmd msg )
+setInheritBranding : Bool -> EditUserGroupBrandingState -> Return msg EditUserGroupBrandingState
 setInheritBranding inherit state =
-    ( { state | inherit = inherit }, Cmd.none )
+    singleton { state | inherit = inherit }
 
 
 

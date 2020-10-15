@@ -19,6 +19,7 @@ import Html exposing (Html, text)
 import Html.Attributes exposing (class, value)
 import Html.Events exposing (onClick, onInput)
 import Http
+import Return exposing (..)
 import Utils exposing (..)
 
 
@@ -39,7 +40,7 @@ type Msg
     | GotUserGroup (Result Http.Error UserGroup)
 
 
-init : (Msg -> msg) -> UserGroup -> ( Model, Cmd msg )
+init : (Msg -> msg) -> UserGroup -> Return msg Model
 init embed userGroup =
     let
         model =
@@ -50,14 +51,14 @@ init embed userGroup =
             , sNewUserGroupName = Success userGroup.name
             }
     in
-    ( model, Cmd.map embed <| Cmd.getUserGroup GotUserGroup model.newUserGroupID )
+    return model <| Cmd.map embed <| Cmd.getUserGroup GotUserGroup model.newUserGroupID
 
 
-update : (Msg -> msg) -> Globals msg -> Msg -> Model -> ( Model, Cmd msg )
+update : (Msg -> msg) -> Globals msg -> Msg -> Model -> Return msg Model
 update embed globals msg model =
     case msg of
         CloseModal ->
-            ( { model | modalVisibility = Modal.hidden }, Cmd.none )
+            singleton { model | modalVisibility = Modal.hidden }
 
         SetUserGroupID userGroupID ->
             if isInteger userGroupID then
@@ -68,45 +69,44 @@ update embed globals msg model =
                             , sNewUserGroupName = Loading
                         }
                 in
-                ( model1, Cmd.map embed <| Cmd.getUserGroup GotUserGroup model1.newUserGroupID )
+                return model1 <| Cmd.map embed <| Cmd.getUserGroup GotUserGroup model1.newUserGroupID
 
             else
-                ( { model | newUserGroupID = userGroupID }, Cmd.none )
+                singleton { model | newUserGroupID = userGroupID }
 
         GotResponse result ->
             case result of
                 Ok _ ->
-                    ( { model
-                        | response = Just result
-                        , modalVisibility = Modal.hidden
-                      }
-                    , Cmd.batch
-                        [ globals.gotoUserGroup model.newUserGroupID
-                        , globals.flashMessage <| FlashMessage.success "User was moved"
-                        ]
-                    )
+                    return
+                        { model
+                            | response = Just result
+                            , modalVisibility = Modal.hidden
+                        }
+                    <|
+                        Cmd.batch
+                            [ globals.gotoUserGroup model.newUserGroupID
+                            , globals.flashMessage <| FlashMessage.success "User was moved"
+                            ]
 
                 Err _ ->
-                    ( { model | response = Just result }
-                    , Cmd.none
-                    )
+                    singleton { model | response = Just result }
 
         GotUserGroup response ->
-            case response of
-                Err _ ->
-                    ( { model | sNewUserGroupName = Failure }, Cmd.none )
+            singleton <|
+                case response of
+                    Err _ ->
+                        { model | sNewUserGroupName = Failure }
 
-                Ok userGroup ->
-                    ( { model | sNewUserGroupName = Success userGroup.name }, Cmd.none )
+                    Ok userGroup ->
+                        { model | sNewUserGroupName = Success userGroup.name }
 
         SubmitForm ->
-            ( { model | response = Nothing }
-            , Http.post
-                { url = "/adminonly/companyadmin/merge/" ++ model.userGroup.id
-                , body = formBody globals [ ( "companyid", model.newUserGroupID ) ]
-                , expect = Http.expectString (embed << GotResponse)
-                }
-            )
+            return { model | response = Nothing } <|
+                Http.post
+                    { url = "/adminonly/companyadmin/merge/" ++ model.userGroup.id
+                    , body = formBody globals [ ( "companyid", model.newUserGroupID ) ]
+                    , expect = Http.expectString (embed << GotResponse)
+                    }
 
 
 show : Model -> Model

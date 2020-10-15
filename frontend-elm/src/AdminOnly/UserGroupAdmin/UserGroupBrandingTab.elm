@@ -22,6 +22,7 @@ import Lib.Types.Theme exposing (..)
 import List.Extra as List
 import Maybe exposing (withDefault)
 import Result exposing (Result(..))
+import Return exposing (..)
 import Utils exposing (..)
 import Vendor.ColorPickerExtra as ColorPicker
 import Vendor.Popover as Popover
@@ -108,7 +109,7 @@ type Msg
     | PresentFlashMessage FlashMessage
 
 
-update : (Msg -> msg) -> Globals msg -> Msg -> State -> ( State, Cmd msg )
+update : (Msg -> msg) -> Globals msg -> Msg -> State -> Return msg State
 update embed globals msg =
     case msg of
         SetEditTabStateMsg tabState ->
@@ -163,7 +164,7 @@ update embed globals msg =
                     ( newEditThemeState, cmd ) =
                         EditTheme.update (embed << EditThemeMsg) msg_ editThemeReadonly state.editThemeState
                 in
-                ( { state | editThemeState = newEditThemeState }, cmd )
+                return { state | editThemeState = newEditThemeState } cmd
 
         EditUserGroupBrandingMsg msg_ ->
             \state ->
@@ -185,16 +186,16 @@ update embed globals msg =
                         Maybe.withDefault state.previewTabState <|
                             Maybe.map (Tab.customInitialState << Enum.toString enumThemeKind) mPreviewThemeKind
                 in
-                ( { state | editUserGroupBrandingState = newBrandingState, previewTabState = newPreviewTabState }, cmd )
+                return { state | editUserGroupBrandingState = newBrandingState, previewTabState = newPreviewTabState } cmd
 
         PresentFlashMessage message ->
-            \state -> ( state, globals.flashMessage message )
+            singleton >> command (globals.flashMessage message)
 
 
-updatePage : (Msg -> msg) -> { ugid : String, page : Page } -> State -> ( State, Cmd msg )
+updatePage : (Msg -> msg) -> { ugid : String, page : Page } -> State -> Return msg State
 updatePage embed params state =
     if params.ugid == state.ugid then
-        ( { state | editTabPage = params.page }, Cmd.none )
+        singleton { state | editTabPage = params.page }
 
     else
         init embed { page = params.page, ugid = params.ugid }
@@ -205,7 +206,7 @@ pageFromModel =
     .editTabPage
 
 
-init : (Msg -> msg) -> { page : Page, ugid : String } -> ( State, Cmd msg )
+init : (Msg -> msg) -> { page : Page, ugid : String } -> Return msg State
 init embed { page, ugid } =
     let
         initialState =
@@ -256,14 +257,14 @@ init embed { page, ugid } =
     )
 
 
-setEditTabState : Tab.State -> State -> ( State, Cmd msg )
+setEditTabState : Tab.State -> State -> Return msg State
 setEditTabState tabState state =
-    ( { state | editTabState = tabState }, Cmd.none )
+    singleton { state | editTabState = tabState }
 
 
-setPreviewTabState : Tab.State -> State -> ( State, Cmd msg )
+setPreviewTabState : Tab.State -> State -> Return msg State
 setPreviewTabState tabState state =
-    ( { state | previewTabState = tabState }, Cmd.none )
+    singleton { state | previewTabState = tabState }
 
 
 view : (Msg -> msg) -> State -> Html msg
@@ -392,7 +393,7 @@ viewLoaded state =
         ]
 
 
-setDomainThemes : Enum.Dict ThemeKind Theme -> State -> ( State, Cmd msg )
+setDomainThemes : Enum.Dict ThemeKind Theme -> State -> Return msg State
 setDomainThemes domainThemes state =
     let
         editThemeState =
@@ -413,7 +414,7 @@ setDomainThemes domainThemes state =
                     }
             }
     in
-    ( newState, Cmd.none )
+    singleton newState
 
 
 getDomainThemes : (Msg -> msg) -> Cmd msg
@@ -454,7 +455,7 @@ getDomainThemes embed =
         }
 
 
-setUserGroupThemes : List Theme -> State -> ( State, Cmd msg )
+setUserGroupThemes : List Theme -> State -> Return msg State
 setUserGroupThemes themes state =
     let
         loadingState =
@@ -466,10 +467,10 @@ setUserGroupThemes themes state =
                 , loadingState = { loadingState | userGroupThemesLoaded = True }
             }
     in
-    ( newState, Cmd.none )
+    singleton newState
 
 
-setInheritedThemes : List Theme -> State -> ( State, Cmd msg )
+setInheritedThemes : List Theme -> State -> Return msg State
 setInheritedThemes themes state =
     let
         loadingState =
@@ -481,7 +482,7 @@ setInheritedThemes themes state =
                 , loadingState = { loadingState | inheritedThemesLoaded = True }
             }
     in
-    ( newState, Cmd.none )
+    singleton newState
 
 
 getUserGroupThemes_ : Bool -> (Msg -> msg) -> String -> Cmd msg
@@ -528,7 +529,7 @@ getInheritedThemes =
     getUserGroupThemes_ True
 
 
-setUserGroupBranding : UserGroupBranding -> Bool -> Maybe UserGroupBranding -> State -> ( State, Cmd msg )
+setUserGroupBranding : UserGroupBranding -> Bool -> Maybe UserGroupBranding -> State -> Return msg State
 setUserGroupBranding branding brandingInherited inheritableBranding state =
     let
         newBrandingBeingEdited =
@@ -552,7 +553,7 @@ setUserGroupBranding branding brandingInherited inheritableBranding state =
                 , inheritableBranding = inheritableBranding
             }
     in
-    ( newState, Cmd.none )
+    singleton newState
 
 
 getUserGroupBranding : (Msg -> msg) -> String -> Cmd msg
@@ -578,19 +579,19 @@ getUserGroupBranding embed ugid =
         }
 
 
-doSaveUserGroupBranding : (Msg -> msg) -> (List ( String, String ) -> Http.Body) -> State -> ( State, Cmd msg )
+doSaveUserGroupBranding : (Msg -> msg) -> (List ( String, String ) -> Http.Body) -> State -> Return msg State
 doSaveUserGroupBranding embed formBody state =
     if state.brandingInherited /= state.editUserGroupBrandingState.inherit then
         setInheritUserGroupBranding embed formBody state
 
     else if state.brandingInherited then
-        ( state, Cmd.none )
+        singleton state
 
     else
         saveUserGroupBranding embed formBody state
 
 
-saveUserGroupBranding : (Msg -> msg) -> (List ( String, String ) -> Http.Body) -> State -> ( State, Cmd msg )
+saveUserGroupBranding : (Msg -> msg) -> (List ( String, String ) -> Http.Body) -> State -> Return msg State
 saveUserGroupBranding embed formBody state =
     let
         callback : Result Http.Error () -> msg
@@ -617,10 +618,10 @@ saveUserGroupBranding embed formBody state =
                 , expect = Http.expectWhatever callback
                 }
     in
-    ( state, cmd )
+    return state cmd
 
 
-inheritUserGroupBrandingCallback : (Msg -> msg) -> (List ( String, String ) -> Http.Body) -> State -> ( State, Cmd msg )
+inheritUserGroupBrandingCallback : (Msg -> msg) -> (List ( String, String ) -> Http.Body) -> State -> Return msg State
 inheritUserGroupBrandingCallback embed formBody state =
     if state.editUserGroupBrandingState.inherit then
         let
@@ -638,7 +639,7 @@ inheritUserGroupBrandingCallback embed formBody state =
                     PresentFlashMessage <|
                         FlashMessage.success "User group branding saved."
         in
-        ( newState, perform brandingSavedMsg )
+        return newState <| perform brandingSavedMsg
 
     else
         let
@@ -650,7 +651,7 @@ inheritUserGroupBrandingCallback embed formBody state =
         saveUserGroupBranding embed formBody newState
 
 
-setInheritUserGroupBranding : (Msg -> msg) -> (List ( String, String ) -> Http.Body) -> State -> ( State, Cmd msg )
+setInheritUserGroupBranding : (Msg -> msg) -> (List ( String, String ) -> Http.Body) -> State -> Return msg State
 setInheritUserGroupBranding embed formBody state =
     let
         callback result =
@@ -677,10 +678,10 @@ setInheritUserGroupBranding embed formBody state =
                 , expect = Http.expectWhatever callback
                 }
     in
-    ( state, cmd )
+    return state cmd
 
 
-saveTheme : (FlashMessage -> Cmd msg) -> Theme -> State -> ( State, Cmd msg )
+saveTheme : (FlashMessage -> Cmd msg) -> Theme -> State -> Return msg State
 saveTheme presentFlashMessage theme state =
     let
         newState =
@@ -700,10 +701,10 @@ saveTheme presentFlashMessage theme state =
         cmd =
             presentFlashMessage <| FlashMessage.success "Theme saved."
     in
-    ( newState, cmd )
+    return newState cmd
 
 
-doSaveTheme : (Msg -> msg) -> (List ( String, String ) -> Http.Body) -> State -> ( State, Cmd msg )
+doSaveTheme : (Msg -> msg) -> (List ( String, String ) -> Http.Body) -> State -> Return msg State
 doSaveTheme embed formBody state =
     let
         theme =
@@ -731,10 +732,10 @@ doSaveTheme embed formBody state =
                 , expect = Http.expectWhatever callback
                 }
     in
-    ( state, cmd )
+    return state cmd
 
 
-deleteThemeCallback : (FlashMessage -> Cmd msg) -> ThemeID -> State -> ( State, Cmd msg )
+deleteThemeCallback : (FlashMessage -> Cmd msg) -> ThemeID -> State -> Return msg State
 deleteThemeCallback presentFlashMessage id state =
     let
         newUserGroupThemes =
@@ -762,10 +763,10 @@ deleteThemeCallback presentFlashMessage id state =
         cmd =
             presentFlashMessage <| FlashMessage.success "Theme deleted."
     in
-    ( newState, cmd )
+    return newState cmd
 
 
-doDeleteTheme : (Msg -> msg) -> (List ( String, String ) -> Http.Body) -> State -> ( State, Cmd msg )
+doDeleteTheme : (Msg -> msg) -> (List ( String, String ) -> Http.Body) -> State -> Return msg State
 doDeleteTheme embed formBody state =
     let
         callback : Result Http.Error () -> msg
@@ -795,14 +796,14 @@ doDeleteTheme embed formBody state =
                 , expect = Http.expectWhatever callback
                 }
     in
-    ( state, cmd )
+    return state cmd
 
 
 
 -- we need to update the newly created theme to the correct blueprint
 
 
-createThemeCallback : (Msg -> msg) -> (List ( String, String ) -> Http.Body) -> Theme -> ThemeID -> State -> ( State, Cmd msg )
+createThemeCallback : (Msg -> msg) -> (List ( String, String ) -> Http.Body) -> Theme -> ThemeID -> State -> Return msg State
 createThemeCallback embed formBody blueprint newThemeID state =
     let
         newTheme =
@@ -823,7 +824,7 @@ createThemeCallback embed formBody blueprint newThemeID state =
     doSaveTheme embed formBody newState
 
 
-doCreateTheme : (Msg -> msg) -> (List ( String, String ) -> Http.Body) -> Theme -> State -> ( State, Cmd msg )
+doCreateTheme : (Msg -> msg) -> (List ( String, String ) -> Http.Body) -> Theme -> State -> Return msg State
 doCreateTheme embed formBody blueprint state =
     let
         callback : Result Http.Error Theme -> msg
@@ -845,4 +846,4 @@ doCreateTheme embed formBody blueprint state =
                 , expect = Http.expectJson callback themeDecoder
                 }
     in
-    ( state, cmd )
+    return state cmd

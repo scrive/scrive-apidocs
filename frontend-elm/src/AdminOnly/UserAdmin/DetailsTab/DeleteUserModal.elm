@@ -15,6 +15,7 @@ import Html exposing (Html, p, text)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
 import Http
+import Return exposing (..)
 import Utils exposing (..)
 
 
@@ -31,51 +32,46 @@ type Msg
     | GotResponse (Result Http.Error String)
 
 
-init : User -> ( Model, Cmd msg )
+init : User -> Return msg Model
 init user =
-    let
-        model =
-            { modalVisibility = Modal.hidden
-            , response = Nothing
-            , user = user
-            }
-    in
-    ( model, Cmd.none )
+    singleton
+        { modalVisibility = Modal.hidden
+        , response = Nothing
+        , user = user
+        }
 
 
-update : (Msg -> msg) -> Globals msg -> Msg -> Model -> ( Model, Cmd msg )
+update : (Msg -> msg) -> Globals msg -> Msg -> Model -> Return msg Model
 update embed globals msg model =
     case msg of
         CloseModal ->
-            ( { model | modalVisibility = Modal.hidden }, Cmd.none )
+            singleton { model | modalVisibility = Modal.hidden }
 
         SubmitForm ->
-            ( { model | response = Nothing }
-            , Http.post
-                { url = "/adminonly/useradmin/delete/" ++ model.user.id
-                , body = formBody globals []
-                , expect = Http.expectString (embed << GotResponse)
-                }
-            )
+            return { model | response = Nothing } <|
+                Http.post
+                    { url = "/adminonly/useradmin/delete/" ++ model.user.id
+                    , body = formBody globals []
+                    , expect = Http.expectString (embed << GotResponse)
+                    }
 
         GotResponse result ->
             case result of
                 Ok _ ->
-                    ( { model
-                        | response = Just result
-                        , modalVisibility = Modal.hidden
-                      }
-                      -- redirect to list of company users
-                    , Cmd.batch
-                        [ globals.gotoUserGroupUsers model.user.userGroup.id
-                        , globals.flashMessage <| FlashMessage.success "User was deleted"
-                        ]
-                    )
+                    return
+                        { model
+                            | response = Just result
+                            , modalVisibility = Modal.hidden
+                        }
+                    <|
+                        -- redirect to list of company users
+                        Cmd.batch
+                            [ globals.gotoUserGroupUsers model.user.userGroup.id
+                            , globals.flashMessage <| FlashMessage.success "User was deleted"
+                            ]
 
                 Err _ ->
-                    ( { model | response = Just result }
-                    , Cmd.none
-                    )
+                    singleton { model | response = Just result }
 
 
 show : Model -> Model

@@ -1,5 +1,10 @@
 {
 
+      "Fresheyeball/elm-return" = {
+        sha256 = "0n4n2yrbn4g5qhjlmjgv2nij2w325i4j8mdfc8pvq58gni9svr9b";
+        version = "7.1.0";
+      };
+
       "genthaler/elm-enum" = {
         sha256 = "15i0ksy3zwxxy0s295fmwvajvyad515bfqkijd9avdyq69jgq08m";
         version = "1.0.2";

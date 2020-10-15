@@ -13,6 +13,7 @@ import Html.Attributes exposing (class, href)
 import Http
 import Json.Decode as D exposing (Decoder)
 import List as L
+import Return exposing (..)
 import Utils exposing (..)
 
 
@@ -41,7 +42,7 @@ tabName =
     "structure"
 
 
-init : (Msg -> msg) -> String -> ( Model, Cmd msg )
+init : (Msg -> msg) -> String -> Return msg Model
 init embed ugid =
     let
         model =
@@ -49,7 +50,7 @@ init embed ugid =
             , sStructure = Loading
             }
     in
-    ( model, Cmd.map embed <| getStructureCmd model )
+    return model <| Cmd.map embed <| getStructureCmd model
 
 
 getStructureCmd : Model -> Cmd Msg
@@ -62,25 +63,22 @@ getStructureCmd model =
         }
 
 
-setUserGroupID : (Msg -> msg) -> String -> Model -> ( Model, Cmd msg )
-setUserGroupID embed ugid model0 =
-    let
-        model =
-            { model0 | ugid = ugid }
-    in
-    ( model, Cmd.map embed <| getStructureCmd model )
+setUserGroupID : (Msg -> msg) -> String -> Model -> Return msg Model
+setUserGroupID embed ugid model =
+    return { model | ugid = ugid } <| Cmd.map embed <| getStructureCmd model
 
 
-update : Msg -> Model -> ( Model, Cmd msg )
+update : Msg -> Model -> Return msg Model
 update msg model =
-    case msg of
-        GotStructure result ->
-            case result of
-                Ok structure ->
-                    ( { model | sStructure = Success structure }, Cmd.none )
+    singleton <|
+        case msg of
+            GotStructure result ->
+                case result of
+                    Ok structure ->
+                        { model | sStructure = Success structure }
 
-                Err _ ->
-                    ( { model | sStructure = Failure }, Cmd.none )
+                    Err _ ->
+                        { model | sStructure = Failure }
 
 
 view : (Msg -> msg) -> Model -> Html msg

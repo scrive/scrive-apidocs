@@ -22,6 +22,7 @@ import Http.Detailed
 import Json.Decode as D exposing (Decoder)
 import Json.Encode as E
 import Maybe as M
+import Return exposing (..)
 import Util.APIError exposing (apiErrorMessage)
 import Utils exposing (..)
 
@@ -43,7 +44,7 @@ type Msg
     | SetNewParentID String
 
 
-init : Folder -> ( Model, Cmd msg )
+init : Folder -> Return msg Model
 init folder =
     let
         model =
@@ -54,7 +55,7 @@ init folder =
             , sNewParentFolder = Loading
             }
     in
-    ( model, Cmd.none )
+    singleton model
 
 
 getParentFolderCmd : String -> Cmd Msg
@@ -65,16 +66,15 @@ getParentFolderCmd fid =
         }
 
 
-update : (Msg -> msg) -> Globals msg -> Msg -> Cmd msg -> Model -> ( Model, Cmd msg )
+update : (Msg -> msg) -> Globals msg -> Msg -> Cmd msg -> Model -> Return msg Model
 update embed globals msg onSuccessCmd model =
     case msg of
         CloseModal ->
-            ( { model | modalVisibility = Modal.hidden }, Cmd.none )
+            singleton { model | modalVisibility = Modal.hidden }
 
         SetNewParentID folderID ->
-            ( { model | newParentID = folderID }
-            , ite (isInteger folderID) (Cmd.map embed <| getParentFolderCmd folderID) Cmd.none
-            )
+            return { model | newParentID = folderID } <|
+                ite (isInteger folderID) (Cmd.map embed <| getParentFolderCmd folderID) Cmd.none
 
         SubmitForm ->
             let
@@ -87,45 +87,38 @@ update embed globals msg onSuccessCmd model =
                       )
                     ]
             in
-            ( model
-            , Http.post
-                { url = "/api/frontend/folders/" ++ model.folder.id ++ "/update"
-                , body = formBody globals reqParams
-                , expect = Http.Detailed.expectString (embed << GotResponse)
-                }
-            )
+            return model <|
+                Http.post
+                    { url = "/api/frontend/folders/" ++ model.folder.id ++ "/update"
+                    , body = formBody globals reqParams
+                    , expect = Http.Detailed.expectString (embed << GotResponse)
+                    }
 
         GotResponse result ->
             case result of
                 Ok _ ->
-                    ( { model | modalVisibility = Modal.hidden }
-                    , Cmd.batch
-                        [ globals.flashMessage <| FlashMessage.success "Folder was moved"
-                        , onSuccessCmd
-                        ]
-                    )
+                    return { model | modalVisibility = Modal.hidden } <|
+                        Cmd.batch
+                            [ globals.flashMessage <| FlashMessage.success "Folder was moved"
+                            , onSuccessCmd
+                            ]
 
                 Err error ->
-                    ( model
-                    , globals.flashMessage <|
-                        FlashMessage.error (apiErrorMessage error "Error moving the folder")
-                    )
+                    return model <| globals.flashMessage <| FlashMessage.error (apiErrorMessage error "Error moving the folder")
 
         GotParentFolder result ->
-            case result of
-                Ok folder ->
-                    ( { model | sNewParentFolder = Success folder }, Cmd.none )
+            singleton <|
+                case result of
+                    Ok folder ->
+                        { model | sNewParentFolder = Success folder }
 
-                Err _ ->
-                    ( { model | sNewParentFolder = Failure }, Cmd.none )
+                    Err _ ->
+                        { model | sNewParentFolder = Failure }
 
 
-show : (Msg -> msg) -> Model -> ( Model, Cmd msg )
-show embed model0 =
+show : (Msg -> msg) -> Model -> Return msg Model
+show embed model =
     let
-        model =
-            { model0 | modalVisibility = Modal.shown }
-
         cmd =
             case model.mOrigParentID of
                 Just origParentID ->
@@ -134,7 +127,7 @@ show embed model0 =
                 Nothing ->
                     Cmd.none
     in
-    ( model, cmd )
+    return { model | modalVisibility = Modal.shown } cmd
 
 
 view : (Msg -> msg) -> Model -> Html msg

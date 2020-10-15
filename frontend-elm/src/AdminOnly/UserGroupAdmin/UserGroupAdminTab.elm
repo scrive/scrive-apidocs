@@ -25,6 +25,7 @@ import Http
 import Json.Decode as D exposing (Decoder)
 import List as L
 import Maybe as M
+import Return exposing (..)
 import Time exposing (Month(..))
 import Tuple
 import Url.Builder as UB
@@ -74,7 +75,7 @@ tabName =
     "companyadmin"
 
 
-init : (Msg -> msg) -> Page -> ( Model, Cmd msg )
+init : (Msg -> msg) -> Page -> Return msg Model
 init embed page =
     let
         model =
@@ -84,7 +85,7 @@ init embed page =
             , mPaginationTotal = Nothing
             }
     in
-    ( model, Cmd.map embed <| getUserGroupsCmd model )
+    return model <| Cmd.map embed <| getUserGroupsCmd model
 
 
 getUserGroupsCmd : Model -> Cmd Msg
@@ -142,7 +143,7 @@ pageFromFilterSearch mFilterStr mSearch mPaginationPageNum =
     }
 
 
-update : (Msg -> msg) -> Globals msg -> Msg -> Model -> ( Model, Cmd msg )
+update : (Msg -> msg) -> Globals msg -> Msg -> Model -> Return msg Model
 update _ globals msg model =
     let
         page =
@@ -150,51 +151,42 @@ update _ globals msg model =
     in
     case msg of
         SetSearch search ->
-            ( { model | search = search }, Cmd.none )
+            singleton { model | search = search }
 
         SetFilter filterString ->
             case findEnumValue enumFilter filterString of
                 Err _ ->
-                    ( model, Cmd.none )
+                    singleton model
 
                 Ok filter ->
-                    ( { model | page = { page | mFilter = Just filter } }
-                    , -- we do not initiate the search from here, because it will be
-                      -- triggered by the Url change
-                      globals.setPageUrlFromModel
-                    )
+                    return { model | page = { page | mFilter = Just filter } }
+                        -- we do not initiate the search from here, because it will be
+                        -- triggered by the Url change
+                        globals.setPageUrlFromModel
 
         FormSubmitted ->
-            ( { model | page = { page | mSearch = stringNonEmpty model.search } }
-            , -- we do not initiate the search from here, because it will be
-              -- triggered by the Url change
-              globals.setPageUrlFromModel
-            )
+            return { model | page = { page | mSearch = stringNonEmpty model.search } }
+                -- we do not initiate the search from here, because it will be
+                -- triggered by the Url change
+                globals.setPageUrlFromModel
 
         GotUserGroupList result ->
-            case result of
-                Ok ( total, userGroupList ) ->
-                    ( { model | userGroupList = Success userGroupList, mPaginationTotal = Just total }
-                    , Cmd.none
-                    )
+            singleton <|
+                case result of
+                    Ok ( total, userGroupList ) ->
+                        { model | userGroupList = Success userGroupList, mPaginationTotal = Just total }
 
-                Err _ ->
-                    ( { model | userGroupList = Failure, mPaginationTotal = Nothing }
-                    , Cmd.none
-                    )
+                    Err _ ->
+                        { model | userGroupList = Failure, mPaginationTotal = Nothing }
 
         TableRowClicked userGroupID ->
-            ( model
-            , globals.gotoUserGroup userGroupID
-            )
+            return model <| globals.gotoUserGroup userGroupID
 
         PaginationMsg pageNum ->
-            ( { model | page = { page | paginationPageNum = pageNum } }
-            , globals.setPageUrlFromModel
-            )
+            return { model | page = { page | paginationPageNum = pageNum } } globals.setPageUrlFromModel
 
 
-updatePage : (Msg -> msg) -> Page -> Model -> ( Model, Cmd msg )
+updatePage : (Msg -> msg) -> Page -> Model -> Return msg Model
 updatePage embed page model0 =
     let
         model =
@@ -203,7 +195,7 @@ updatePage embed page model0 =
                 , search = M.withDefault "" page.mSearch
             }
     in
-    ( model, Cmd.map embed <| getUserGroupsCmd model )
+    return model <| Cmd.map embed <| getUserGroupsCmd model
 
 
 fromPage : Page -> PageUrl

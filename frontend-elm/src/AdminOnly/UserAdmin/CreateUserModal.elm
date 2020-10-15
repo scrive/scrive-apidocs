@@ -26,6 +26,7 @@ import Json.Decode as D exposing (Decoder)
 import Language exposing (Language, enumLanguage)
 import List as L
 import Maybe as M
+import Return exposing (..)
 import Utils exposing (..)
 
 
@@ -55,31 +56,28 @@ type Msg
     | GotResponse (Result Http.Error Response)
 
 
-init : Config -> ( Model, Cmd msg )
+init : Config -> Return msg Model
 init config =
-    let
-        model =
-            { modalVisibility = Modal.hidden
-            , config = config
-            , email = ""
-            , firstName = ""
-            , secondName = ""
-            , language = Language.English
-            , isUserGroupAdmin = False
-            }
-    in
-    ( model, Cmd.none )
+    singleton
+        { modalVisibility = Modal.hidden
+        , config = config
+        , email = ""
+        , firstName = ""
+        , secondName = ""
+        , language = Language.English
+        , isUserGroupAdmin = False
+        }
 
 
 type alias UserCreated =
     Maybe (Result String String)
 
 
-update : (Msg -> msg) -> (UserCreated -> msg) -> Globals msg -> Msg -> Model -> ( Model, Cmd msg )
+update : (Msg -> msg) -> (UserCreated -> msg) -> Globals msg -> Msg -> Model -> Return msg Model
 update embed userCreatedMsg globals msg model =
     case msg of
         CloseModal ->
-            ( { model | modalVisibility = Modal.hidden }, Cmd.none )
+            singleton { model | modalVisibility = Modal.hidden }
 
         SubmitForm ->
             let
@@ -99,37 +97,35 @@ update embed userCreatedMsg globals msg model =
             in
             case model.config of
                 CreateUserInUserGroup ugid ->
-                    ( model
-                    , submit ("/adminonly/companyadmin/users/" ++ ugid)
-                        (if model.isUserGroupAdmin then
-                            [ ( "iscompanyadmin", "" ) ]
+                    return model <|
+                        submit ("/adminonly/companyadmin/users/" ++ ugid)
+                            (if model.isUserGroupAdmin then
+                                [ ( "iscompanyadmin", "" ) ]
 
-                         else
-                            []
-                        )
-                    )
+                             else
+                                []
+                            )
 
         SetEmail email ->
-            ( { model | email = email }, Cmd.none )
+            singleton { model | email = email }
 
         SetFirstName firstName ->
-            ( { model | firstName = firstName }, Cmd.none )
+            singleton { model | firstName = firstName }
 
         SetSecondName secondName ->
-            ( { model | secondName = secondName }, Cmd.none )
+            singleton { model | secondName = secondName }
 
         SetLanguage languageString ->
-            ( case findEnumValue enumLanguage languageString of
-                Err _ ->
-                    model
+            singleton <|
+                case findEnumValue enumLanguage languageString of
+                    Err _ ->
+                        model
 
-                Ok language ->
-                    { model | language = language }
-            , Cmd.none
-            )
+                    Ok language ->
+                        { model | language = language }
 
         SetIsUserGroupAdmin isAdmin ->
-            ( { model | isUserGroupAdmin = isAdmin }, Cmd.none )
+            singleton { model | isUserGroupAdmin = isAdmin }
 
         GotResponse result ->
             let
@@ -139,17 +135,13 @@ update embed userCreatedMsg globals msg model =
             case result of
                 Ok r ->
                     if r.success then
-                        ( { model | modalVisibility = Modal.hidden }
-                        , callback <| Just <| Ok "User created."
-                        )
+                        return { model | modalVisibility = Modal.hidden } <| callback <| Just <| Ok "User created."
 
                     else
-                        ( model
-                        , callback <| Just <| Err <| M.withDefault "Error creating a user." r.error
-                        )
+                        return model <| callback <| Just <| Err <| M.withDefault "Error creating a user." r.error
 
                 Err _ ->
-                    ( model, callback <| Just <| Err "Error creating a user." )
+                    return model <| callback <| Just <| Err "Error creating a user."
 
 
 type alias Response =
