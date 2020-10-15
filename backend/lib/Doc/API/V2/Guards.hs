@@ -397,6 +397,7 @@ guardCanSetAuthenticationToSignForSignatoryWithValue slid newAuthToSign mSSN mMo
       -- validate is non-trivial iff authToSignNeedsPersonalNumber newAuthToSign = True
       let validate = case newAuthToSign of
             SEBankIDAuthenticationToSign            -> asValidSEBankIdPersonalNumber
+            -- for now DK NemID requires personal/employee number to be entered by author
             LegacyDKNemIDAuthenticationToSign       -> asValidDanishSSN
             DKNemIDCPRAuthenticationToSign          -> asValidDanishSSN
             DKNemIDPIDAuthenticationToSign          -> Good
@@ -410,14 +411,24 @@ guardCanSetAuthenticationToSignForSignatoryWithValue slid newAuthToSign mSSN mMo
             OnfidoDocumentAndPhotoCheckAuthenticationToSign -> Good
             VerimiQesAuthenticationToSign           -> Good
 
-      -- Empty is allowed only if we don't need it for
-      -- AuthenticationToViewMethod
       case validate ssn of
-        Empty -> do
-          when (authToViewNeedsPersonalNumber authToView)
-            . apiError
+        Empty
+          | authToViewNeedsPersonalNumber authToView
+          -> apiError
             $ signatoryStateError
                 "You provided an empty authentication value, needs a value for authentication to view"
+          | newAuthToSign
+            `elem` [ LegacyDKNemIDAuthenticationToSign
+                   , DKNemIDCPRAuthenticationToSign
+                   , DKNemIDCVRAuthenticationToSign
+                   ]
+          ->
+            -- TODO: remove that statement when NemID allows to enter CPR/CVR before signing
+             apiError
+            $ signatoryStateError
+                "You provided an empty authentication value, but NemID CPR/CVR needs needs a value for authentication to sign"
+          | otherwise
+          -> return ()
         Bad -> do
           let
             name = case newAuthToSign of

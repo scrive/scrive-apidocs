@@ -508,6 +508,7 @@
 "_documentSentOnBy":"Initiated on $time$ by $identifier$",
 "_documentText":"Document",
 "_docviewChangeAuthenticationModalAccept":"Save",
+"_docviewChangeAuthenticationModalErrorCVR":"Invalid CVR number",
 "_docviewChangeAuthenticationModalErrorEID":"Invalid personal ID number",
 "_docviewChangeAuthenticationModalErrorFlashMessage":"Something went wrong.",
 "_docviewChangeAuthenticationModalErrorPhone":"Wrong format. Correct format is +46701234567",
