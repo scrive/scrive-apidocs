@@ -22,6 +22,7 @@ module Kontra
 
 import Control.Monad.Base
 import Control.Monad.Catch
+import Control.Monad.Extra (ifM)
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
 import Crypto.RNG
@@ -136,21 +137,19 @@ isSales ctx = case ctx ^. #maybeUser of
 
 -- | Will 404 if not logged in as an admin.
 onlyAdmin :: Kontrakcja m => m a -> m a
-onlyAdmin m = do
-  admin <- isAdmin <$> getContext
-  if admin then m else respond404
+onlyAdmin = only isAdmin
 
 -- | Will 404 if not logged in as a sales admin.
 onlySalesOrAdmin :: Kontrakcja m => m a -> m a
-onlySalesOrAdmin m = do
-  admin <- (isAdmin || isSales) <$> getContext
-  if admin then m else respond404
+onlySalesOrAdmin = only $ isAdmin || isSales
 
 -- | Will 404 if the testing backdoor isn't open.
 onlyBackdoorOpen :: Kontrakcja m => m a -> m a
-onlyBackdoorOpen a = do
-  backdoorOpen <- view #isMailBackdoorOpen <$> getContext
-  if backdoorOpen then a else respond404
+onlyBackdoorOpen = only $ view #isMailBackdoorOpen
+
+-- | Will 404 if the context predicate is not met
+only :: Kontrakcja m => (Context -> Bool) -> m a -> m a
+only f = ifM (not f <$> getContext) respond404
 
 -- | Sticks the logged in user onto the context.
 logUserToContext :: Kontrakcja m => Maybe User -> m ()
