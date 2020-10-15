@@ -47,7 +47,7 @@ module.exports = React.createClass({
     } else {
       var superthis = this;
       var ams = [
-        "standard", "se_bankid", "no_bankid", "dk_nemid_cpr", "dk_nemid_pid", "dk_nemid_cvr",
+        "standard", "se_bankid", "no_bankid", "dk_nemid_pid", "dk_nemid_cpr", "dk_nemid_cvr",
         "nl_idin", "fi_tupas", "onfido_document_check", "onfido_document_and_photo_check",
         "verimi_qes", "sms_pin"
       ]

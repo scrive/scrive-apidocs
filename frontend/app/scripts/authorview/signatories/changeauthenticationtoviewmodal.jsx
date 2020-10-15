@@ -302,15 +302,6 @@ var Modal = require("../../common/modal");
         options.push(noBankid);
       }
 
-      var dkNemidCPR = {
-        name: localization.docview.signatory.authenticationToViewDKNemIDCPR,
-        selected: model.isAuthenticationDKNemIDCPR(),
-        value: model.DKNemIDCPRAuthenticationValue()
-      };
-      if (ff.canUseDKCPRAuthenticationToView() && isAvailable(dkNemidCPR.value)) {
-        options.push(dkNemidCPR);
-      }
-
       var dkNemidPID = {
         name: localization.docview.signatory.authenticationToViewDKNemIDPID,
         selected: model.isAuthenticationDKNemIDPID(),
@@ -318,6 +309,15 @@ var Modal = require("../../common/modal");
       };
       if (ff.canUseDKPIDAuthenticationToView() && isAvailable(dkNemidPID.value)) {
         options.push(dkNemidPID);
+      }
+
+      var dkNemidCPR = {
+        name: localization.docview.signatory.authenticationToViewDKNemIDCPR,
+        selected: model.isAuthenticationDKNemIDCPR(),
+        value: model.DKNemIDCPRAuthenticationValue()
+      };
+      if (ff.canUseDKCPRAuthenticationToView() && isAvailable(dkNemidCPR.value)) {
+        options.push(dkNemidCPR);
       }
 
       var dkNemidCVR = {
