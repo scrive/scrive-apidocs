@@ -57,6 +57,7 @@ import Util.CSVUtil
 import Util.MonadUtils
 import Util.SignatoryLinkUtils
 import Util.ZipUtil
+import qualified Flow.Model as FlowModel
 
 handleArchiveDocumentsAction
   :: forall m a
@@ -66,9 +67,13 @@ handleArchiveDocumentsAction
   -> (User -> [AccessRole] -> Actor -> DocumentT m a)
   -> m [a]
 handleArchiveDocumentsAction actionStr docPermission m = do
-  ctx          <- getContext
-  user         <- guardJust $ contextUser ctx
-  ids          <- getCriticalField asValidDocIDList "documentids"
+  ctx  <- getContext
+  user <- guardJust $ contextUser ctx
+  ids  <- getCriticalField asValidDocIDList "documentids"
+  unlessM (null <$> FlowModel.selectInstanceIdsByDocumentIds ids) $ failWithMsg
+    user
+    ids
+    "You cannot perform archive operations on documents which are part of a flow"
   allUserRoles <- getRolesIncludingInherited user
   docs         <- dbQuery
     $ GetDocuments DocumentsOfWholeUniverse [DocumentFilterByDocumentIDs ids] [] 100

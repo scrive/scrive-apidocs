@@ -17,6 +17,7 @@ module Flow.Model
     , selectFullInstance
     , selectInstance
     , selectInstanceIdByDocumentId
+    , selectInstanceIdsByDocumentIds
     , selectInstanceKeyValues
     , selectInstancesByUserID
     , selectSignatoryIdsByInstanceUser
@@ -225,6 +226,15 @@ selectInstanceIdByDocumentId documentId = do
     sqlWhereEq "document_id" documentId
     sqlWhereEq "type"        ("document" :: Text)
   fetchMaybe runIdentity
+
+selectInstanceIdsByDocumentIds
+  :: (MonadDB m, MonadThrow m) => [DocumentID] -> m [InstanceId]
+selectInstanceIdsByDocumentIds docIds = do
+  runQuery_ . sqlSelect "flow_instance_key_value_store" $ do
+    sqlResult "instance_id"
+    sqlWhereIn "document_id" docIds
+    sqlWhereEq "type" ("document" :: Text)
+  fetchMany runIdentity
 
 fetchKeyValues
   :: MonadDB m => m [(Text, Text, Maybe DocumentID, Maybe UserID, Maybe Text)]
