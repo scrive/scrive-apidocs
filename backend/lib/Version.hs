@@ -7,7 +7,7 @@ module Version
 where
 
 import Control.Exception.Lifted as E
-import Data.Aeson
+import Data.Aeson (defaultOptions, genericParseJSON)
 import Data.Yaml
 import GHC.Generics
 import System.Environment
@@ -33,8 +33,8 @@ instance FromJSON Info where
 
 readFlowApiVersion :: IO String
 readFlowApiVersion = do
-  spec <- decodeFileThrow "backend/flow/docs/api.yaml"
-  pure . version $ info spec
+  result <- decodeFileEither "backend/flow/docs/api.yaml"
+  pure $ either (const "flow_api_version") (version . info) result
 
 genBuildVersion :: IO BuildVersion
 genBuildVersion = do
