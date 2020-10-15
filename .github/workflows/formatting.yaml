@@ -2,9 +2,7 @@
 jobs:
   detect-unused:
     runs-on:
-      - linux
-      - self-hosted
-      - build-runner
+      - ubuntu-20.04
     steps:
       - name: Checkout Code
         uses: "actions/checkout@v2"
@@ -37,9 +35,7 @@ jobs:
             --run "detect_old_localizations"
   formatting:
     runs-on:
-      - linux
-      - self-hosted
-      - build-runner
+      - ubuntu-20.04
     steps:
       - name: Checkout Code
         uses: "actions/checkout@v2"
@@ -76,9 +72,7 @@ jobs:
           path: "_build/formatting.patch"
   hlint:
     runs-on:
-      - linux
-      - self-hosted
-      - build-runner
+      - ubuntu-20.04
     steps:
       - name: Checkout Code
         uses: "actions/checkout@v2"
