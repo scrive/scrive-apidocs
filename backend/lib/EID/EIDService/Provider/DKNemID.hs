@@ -40,19 +40,11 @@ import Util.HasSomeUserInfo
 provider :: EIDServiceTransactionProvider
 provider = EIDServiceTransactionProviderDKNemID
 
-data DKNemIDMethod = DKNemIDPersonalKeycard | DKNemIDEmployeeKeycard | DKNemIDEmployeeKeyfile deriving (Show, Eq)
-
-instance ToJSON DKNemIDMethod where
-  toJSON method = case method of
-    DKNemIDPersonalKeycard -> "PersonalKeycard"
-    DKNemIDEmployeeKeycard -> "EmployeeKeycard"
-    DKNemIDEmployeeKeyfile -> "EmployeeKeyfile"
-
 data DKNemIDEIDServiceProviderAuthParams = DKNemIDEIDServiceProviderAuthParams {
     cdkestUILocale :: Lang
   , cdkestLimitedClientMode :: Bool
   , cdkestRequestCPR :: Bool
-  , cdkestMethod :: DKNemIDMethod
+  , cdkestMethod :: EIDServiceDKNemIDInternalProvider
   }
 
 instance ToJSON DKNemIDEIDServiceProviderAuthParams where
@@ -116,7 +108,7 @@ beginAuthTransaction conf authToViewKind doc sl = do
         , redSignatoryLinkID = signatorylinkid sl
         , redPostRedirectUrl = mkontraRedirect
         }
-  let requestCPR = nemIDMethod == DKNemIDPersonalKeycard
+  let requestCPR = nemIDMethod == EIDServiceNemIDPersonalKeyCard
       createReq  = CreateEIDServiceTransactionRequest
         { cestProvider           = provider
         , cestMethod             = EIDServiceAuthMethod
@@ -134,14 +126,14 @@ beginAuthTransaction conf authToViewKind doc sl = do
   return (tid, object ["accessUrl" .= turl], EIDServiceTransactionStatusStarted)
   where
     resolveDKNemIDAuthMethod = \case
-      Nothing             -> return DKNemIDPersonalKeycard
-      Just "dk_nemid_cpr" -> return DKNemIDPersonalKeycard
-      Just "dk_nemid_pid" -> return DKNemIDPersonalKeycard
-      Just "dk_nemid_cvr" -> return DKNemIDEmployeeKeyfile
+      Nothing             -> return EIDServiceNemIDPersonalKeyCard
+      Just "dk_nemid_cpr" -> return EIDServiceNemIDPersonalKeyCard
+      Just "dk_nemid_pid" -> return EIDServiceNemIDPersonalKeyCard
+      Just "dk_nemid_cvr_keyfile" -> return EIDServiceNemIDEmployeeKeyFile
+      Just "dk_nemid_cvr_keycard" -> return EIDServiceNemIDEmployeeKeyCard
       Just s              -> do
         logAttention_ $ "No such DK NemID auth method" <> s
         internalError
-
 
 data DKNemIDEIDServiceAuthCompletionData = DKNemIDEIDServiceAuthCompletionData
   { eidnidInternalProvider :: EIDServiceDKNemIDInternalProvider
@@ -165,8 +157,7 @@ instance FromJSON DKNemIDEIDServiceAuthCompletionData where
       withObject "object" (.: "providerParameters") outer
       >>= withObject "object" (.: "auth")
       >>= withObject "object" (.: providerName)
-    method <- withObject "object" (.: "method") providerParams
-    ip     <- resolveInternalProvider method
+    ip <- withObject "object" (.:? "method") providerParams
     withObject "object" (.: "providerInfo") outer
       >>= withObject "object" (.: providerAuth)
       >>= withObject "object" (.: "completionData")
@@ -189,7 +180,7 @@ instance FromJSON DKNemIDEIDServiceAuthCompletionData where
                 "object"
                 (\cd -> (,) <$> cd .: "certificate" <*> cd .: "distinguishedName")
               return DKNemIDEIDServiceAuthCompletionData
-                { eidnidInternalProvider  = ip
+                { eidnidInternalProvider  = fromMaybe EIDServiceNemIDPersonalKeyCard ip
                 , eidnidCPR               = cpr
                 , eidnidBirthDate         = dob
                 , eidnidCertificate       = cer
@@ -201,12 +192,6 @@ instance FromJSON DKNemIDEIDServiceAuthCompletionData where
     where
       providerName = toEIDServiceProviderName provider
       providerAuth = providerName <> "Auth"
-      resolveInternalProvider mt = case mt of
-        Nothing                -> return EIDServiceNemIDPersonalKeyCard
-        Just "PersonalKeycard" -> return EIDServiceNemIDPersonalKeyCard
-        Just "EmployeeKeycard" -> return EIDServiceNemIDEmployeeKeyCard
-        Just "EmployeeKeyfile" -> return EIDServiceNemIDEmployeeKeyFile
-        Just t -> fail $ "Unknown internal provider returned from EID service: " <> t
 
 completeEIDServiceAuthTransaction
   :: Kontrakcja m
@@ -438,7 +423,7 @@ dateOfBirthFromDKPersonalNumber personalnumber =
 
 data DKNemIDEIDServiceProviderSignParams = DKNemIDEIDServiceProviderSignParams
   {
-     cdkestsMethod :: DKNemIDMethod
+     cdkestsMethod :: EIDServiceDKNemIDInternalProvider
    , cdkestsSignTitle :: Text
    , cdkestsSignDescription :: Text
    , cdkestsSignText :: Text
@@ -511,11 +496,11 @@ beginSignTransaction conf doc sl = do
       F.value "document_title" $ documenttitle doc
       F.value "document_id" . show $ documentid doc
     resolveDKNemIDSignMethod = \case
-      Nothing             -> return DKNemIDPersonalKeycard
-      Just "dk_nemid_cpr" -> return DKNemIDPersonalKeycard
-      Just "dk_nemid_pid" -> return DKNemIDPersonalKeycard
-      Just "dk_nemid_cvr_keyfile" -> return DKNemIDEmployeeKeyfile
-      Just "dk_nemid_cvr_keycard" -> return DKNemIDEmployeeKeycard
+      Nothing             -> return EIDServiceNemIDPersonalKeyCard
+      Just "dk_nemid_cpr" -> return EIDServiceNemIDPersonalKeyCard
+      Just "dk_nemid_pid" -> return EIDServiceNemIDPersonalKeyCard
+      Just "dk_nemid_cvr_keyfile" -> return EIDServiceNemIDEmployeeKeyFile
+      Just "dk_nemid_cvr_keycard" -> return EIDServiceNemIDEmployeeKeyCard
       Just s              -> do
         logAttention_ $ "No such DK NemID sign method" <> s
         internalError

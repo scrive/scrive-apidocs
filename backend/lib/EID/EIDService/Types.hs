@@ -514,6 +514,19 @@ data EIDServiceDKNemIDInternalProvider
   | EIDServiceNemIDEmployeeKeyCard
   deriving (Eq, Ord, Show)
 
+instance ToJSON EIDServiceDKNemIDInternalProvider where
+  toJSON = \case
+    EIDServiceNemIDPersonalKeyCard -> String "PersonalKeycard"
+    EIDServiceNemIDEmployeeKeyCard -> String "EmployeeKeycard"
+    EIDServiceNemIDEmployeeKeyFile -> String "EmployeeKeyfile"
+
+instance FromJSON EIDServiceDKNemIDInternalProvider where
+  parseJSON = withText "EIDServiceDKNemIDInternalProvider" $ \case
+    "PersonalKeycard" -> return EIDServiceNemIDPersonalKeyCard
+    "EmployeeKeycard" -> return EIDServiceNemIDEmployeeKeyCard
+    "EmployeeKeyfile" -> return EIDServiceNemIDEmployeeKeyFile
+    v                 -> fail $ "Invalid value for dk nemid internal provider: " <> show v
+
 unsafeEIDServiceDKNemIDInternalProviderFromInt16
   :: Int16 -> EIDServiceDKNemIDInternalProvider
 unsafeEIDServiceDKNemIDInternalProviderFromInt16 v = case v of

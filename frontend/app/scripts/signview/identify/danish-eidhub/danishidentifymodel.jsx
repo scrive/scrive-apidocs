@@ -61,6 +61,9 @@ var link = link;
     isIdentify: function () {
       return this.get("step") === "identify";
     },
+    isChooseCVRAuthMethod: function () {
+      return this.get("step") === "choosecvrauthmethod";
+    },
     isProcessing: function () {
       return this.get("step") === "processing";
     },
@@ -69,6 +72,9 @@ var link = link;
     },
     setIdentify: function () {
       this.set({step: "identify"});
+    },
+    chooseCVRAuthMethod: function () {
+      this.set({step: "choosecvrauthmethod"});
     },
     setProcessing: function () {
       this.set({step: "processing"});
@@ -83,6 +89,12 @@ var link = link;
     transactionAccessUrl: function () {
       return this.get("transactionAccessUrl");
     },
+    cvrAuthMethod: function () {
+      return this.get("cvrAuthMethod");
+    },
+    setCvrAuthMethod: function (method) {
+      this.set({cvrAuthMethod: method});
+    },
     nemIDMethod: function () {
       if (this.isCPR()) {
         return "dk_nemid_cpr";
@@ -91,7 +103,7 @@ var link = link;
         return "dk_nemid_pid";
       }
       if (this.isCVR()) {
-        return "dk_nemid_cvr";
+        return this.cvrAuthMethod();
       }
       return "dk_nemid_pid";
     },

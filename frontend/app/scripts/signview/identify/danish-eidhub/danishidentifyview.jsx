@@ -2,6 +2,7 @@ var React = require("react");
 var BackboneMixin = require("../../../common/backbone_mixin");
 var NemIDIdentifyModel = require("./danishidentifymodel");
 var NemIDIdentify = require("./danishidentify");
+var NemIDChooseCVRAuthMethod = require("./danishchoosecvrauthmethod");
 var NemIDProcessing = require("./danishprocessing");
 
   module.exports = React.createClass({
@@ -27,6 +28,13 @@ var NemIDProcessing = require("./danishprocessing");
               model={model}
             />
           }
+          { /* if */ model.isChooseCVRAuthMethod() &&
+            <NemIDChooseCVRAuthMethod
+              ref="choosecvrauthmethod"
+              model={model}
+            />
+          }
+
           { /* else if */ model.isProcessing() &&
             <NemIDProcessing
               ref="processing"

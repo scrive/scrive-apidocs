@@ -9,7 +9,11 @@ var NemIDModel = require("./danishidentifymodel");
       model: React.PropTypes.instanceOf(NemIDModel).isRequired
     },
     handleIdentify: function () {
-      this.props.model.identify();
+      if (this.props.model.isCVR()) {
+        this.props.model.chooseCVRAuthMethod();
+      } else {
+        this.props.model.identify();
+      }
     },
 
     render: function () {
