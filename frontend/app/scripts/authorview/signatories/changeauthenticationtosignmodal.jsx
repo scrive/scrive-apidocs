@@ -149,28 +149,11 @@ var Modal = require("../../common/modal");
           );
         }
       } else if (this.isNewAuthenticationDKNemIDCPR()) {
-        // If DK NemID to view is set, then SSN needs to be valid and not empty
-        if (this.signatory().dkNemIDCPRAuthenticationToView() || this.signatory().dkNemIDPIDAuthenticationToView()) {
-          return !new SSNForDKNemIDValidation().validateData(authvalue);
-          // Else valid or empty
-        } else {
-          return !(
-            new SSNForDKNemIDValidation().validateData(authvalue)
-              || new EmptyValidation().validateData(authvalue)
-          );
-        }
+        // Since we don't allow to enter CPR before signing, it has to be non-empty and valid
+        return !new SSNForDKNemIDValidation().validateData(authvalue);
       } else if (this.isNewAuthenticationDKNemIDCVR()) {
-        // If DK NemID to view is set, then SSN needs to be valid and not empty
-        console.log(this.signatory().authenticationToView(), authvalue);
-        if (this.signatory().authenticationToView() === "dk_nemid_cvr") {
-          return !new CVRForDKNemIDValidation().validateData(authvalue);
-          // Else valid or empty
-        } else {
-          return !(
-            new CVRForDKNemIDValidation().validateData(authvalue)
-              || new EmptyValidation().validateData(authvalue)
-          );
-        }
+        // Since we don't allow to enter CVR before signing, it has to be non-empty and valid
+        return !new CVRForDKNemIDValidation().validateData(authvalue);
       } else if (this.isNewAuthenticationFITupas()) {
         // If FI Tupas to view is set, then SSN needs to be valid and not empty
         if (this.signatory().authenticationToView() === "fi_tupas") {
@@ -192,8 +175,10 @@ var Modal = require("../../common/modal");
       if (this.isNewAuthenticationPINbySMS()) {
         text = localization.docview.changeAuthentication.errorPhone;
       } else if (this.isNewAuthenticationSEBankID() || this.isNewAuthenticationDKNemIDCPR()
-                || this.isNewAuthenticationDKNemIDCVR() || this.isNewAuthenticationFITupas()) {
+                || this.isNewAuthenticationFITupas()) {
         text = localization.docview.changeAuthentication.errorEID;
+      } else if (this.isNewAuthenticationDKNemIDCVR()) {
+        text = localization.docview.changeAuthentication.errorCVR;
       }
       // no NOBankID/IDIN/Onfido here, because there is only empty "" authentication value
 

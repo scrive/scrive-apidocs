@@ -847,6 +847,7 @@ javascriptLocalisation =
               , errorFlashMessage: "$_docviewChangeAuthenticationModalErrorFlashMessage()$"
               , errorPhone: "$_docviewChangeAuthenticationModalErrorPhone()$"
               , errorEID: "$_docviewChangeAuthenticationModalErrorEID()$"
+              , errorCVR: "$_docviewChangeAuthenticationModalErrorCVR()$"
             }
         }
         , verification : {
