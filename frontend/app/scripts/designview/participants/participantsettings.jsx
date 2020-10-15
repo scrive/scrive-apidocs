@@ -163,7 +163,7 @@ module.exports = React.createClass({
     var self = this;
     var sig = this.props.model;
     var allAuthTypes = ["standard", "sms_pin", "se_bankid",
-                        "no_bankid", "dk_nemid_cpr", "dk_nemid_pid",
+                        "no_bankid", "dk_nemid_pid", "dk_nemid_cpr",
                         "dk_nemid_cvr", "fi_tupas", "verimi", "nl_idin"];
     var authTypes = allAuthTypes.slice(0);
 
@@ -224,9 +224,9 @@ module.exports = React.createClass({
   authenticationToViewArchivedOptions: function () {
     var self = this;
     var sig = this.props.model;
-    var allAuthTypes = ["standard", "se_bankid", "no_bankid",
-                        "dk_nemid_cpr", "dk_nemid_pid", "dk_nemid_cvr",
-                        "fi_tupas", "sms_pin", "verimi", "nl_idin"];
+    var allAuthTypes = ["standard", "se_bankid", "no_bankid", "dk_nemid_pid",
+                        "dk_nemid_cpr", "dk_nemid_cvr", "fi_tupas", "sms_pin",
+                        "verimi", "nl_idin"];
     var authTypes = allAuthTypes.slice(0);
 
     var subscription = Subscription.currentSubscription();
@@ -311,7 +311,7 @@ module.exports = React.createClass({
     var self = this;
     var sig = this.props.model;
     var allAuthTypes = !sig.signs() ? ["standard"] : [
-      "standard", "se_bankid", "no_bankid", "dk_nemid_cpr", "dk_nemid_pid",
+      "standard", "se_bankid", "no_bankid", "dk_nemid_pid", "dk_nemid_cpr",
       "dk_nemid_cvr", "nl_idin", "fi_tupas", "onfido_document_check",
       "onfido_document_and_photo_check", "sms_pin", "verimi_qes"
     ];
