@@ -2,7 +2,9 @@
 jobs:
   evidence-package:
     runs-on:
-      - ubuntu-latest
+      - linux
+      - self-hosted
+      - build-runner
     steps:
       - name: Checkout Code
         uses: "actions/checkout@v2"
@@ -53,7 +55,9 @@ jobs:
           path: selenium-test/evidence_package/artifacts
   general:
     runs-on:
-      - ubuntu-latest
+      - linux
+      - self-hosted
+      - build-runner
     steps:
       - name: Checkout Code
         uses: "actions/checkout@v2"
@@ -104,7 +108,9 @@ jobs:
           path: selenium-test/general/artifacts
   language:
     runs-on:
-      - ubuntu-latest
+      - linux
+      - self-hosted
+      - build-runner
     steps:
       - name: Checkout Code
         uses: "actions/checkout@v2"

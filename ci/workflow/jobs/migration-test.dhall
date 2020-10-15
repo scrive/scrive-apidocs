@@ -10,11 +10,7 @@ let shell = "ghc88.backend-shell"
 
 let migration-tests =
     Job.Job ::
-
-      -- Run migration test on cloud runner for now until we have 
-      -- more runner capacity and sufficient disk space.
-      -- { runs-on = default-runner
-      { runs-on = [ "ubuntu-latest" ]
+      { runs-on = default-runner
       , steps =
           [ Step ::
               { name = "Checkout Code"

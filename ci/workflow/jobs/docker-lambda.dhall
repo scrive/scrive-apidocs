@@ -12,7 +12,7 @@ BackendWorkflow.createWorkflow
   { name = "Backend Tests using local pdftools in Docker"
   , ghc-version = GHCVersion.Type.ghc88
   , nix-shell = "backend-shell"
-  , runs-on = [ "ubuntu-latest" ]
+  , runs-on = [ "ubuntu-20.04" ]
   , use-pdftools-lambda = False
   , triggers = Workflow.Triggers ::
       { push = Some Workflow.BranchSpec ::

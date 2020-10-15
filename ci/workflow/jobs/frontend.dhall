@@ -8,11 +8,7 @@ let setupSteps = ../lib/setup-steps.dhall
 let shell = "ghc88.frontend-shell"
 
 let frontendTests = Job.Job ::
-  -- Run frontend test on cloud runner for now
-  -- until we have more runner capacity
-  -- { runs-on = default-runner
-  { runs-on = [ "ubuntu-latest" ]
-
+  { runs-on = [ "ubuntu-20.04" ]
   , steps =
       setupSteps.setup-steps #
       [ setupSteps.nix-shell-step shell

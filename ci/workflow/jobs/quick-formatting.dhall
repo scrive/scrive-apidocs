@@ -10,12 +10,7 @@ in
 FormattingWorkflow.createWorkflow
   FormattingWorkflow.Args ::
   { name = "Quick Formatting Tests"
-
-  -- Run quick formatting test on cloud runner for now
-  -- until we have more runner capacity
-  -- , runs-on = default-runner
-  , runs-on = [ "ubuntu-latest" ]
-
+  , runs-on = [ "ubuntu-20.04" ]
   , quickFormat = True
   , triggers = Workflow.Triggers ::
       { pull_request = Some Workflow.BranchSpec ::
