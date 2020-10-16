@@ -9,6 +9,7 @@ import Lib.Misc.Cmd exposing (perform)
 import Lib.Misc.Http exposing (encodeError)
 import Lib.Types.FlashMessage exposing (FlashMessage(..))
 import Lib.Types.Localization exposing (Localization)
+import Return exposing (..)
 
 
 type alias Params msg model =
@@ -40,29 +41,26 @@ type Msg
     | BackButtonClickedMsg
 
 
-update : Params msg model -> State -> Msg -> (model -> msg) -> ( State, Cmd msg )
+update : Params msg model -> State -> Msg -> (model -> msg) -> Return msg State
 update params state msg exitRejectionMsg =
     case msg of
         RejectButtonClickedMsg ->
             case state of
                 EnterMessage { message } ->
-                    let
-                        postReq =
-                            post
-                                { url = params.rejectUrl
-                                , body = jsonBody <| JE.object [ ( "message", JE.string message ) ]
-                                , expect = expectWhatever <| params.embed << RejectCallbackMsg
-                                }
-                    in
-                    ( state, postReq )
+                    return state <|
+                        post
+                            { url = params.rejectUrl
+                            , body = jsonBody <| JE.object [ ( "message", JE.string message ) ]
+                            , expect = expectWhatever <| params.embed << RejectCallbackMsg
+                            }
 
                 _ ->
-                    ( state, Cmd.none )
+                    singleton state
 
         RejectCallbackMsg res ->
             case res of
                 Ok () ->
-                    ( Complete, Cmd.none )
+                    singleton state
 
                 Err err ->
                     let
@@ -75,28 +73,28 @@ update params state msg exitRejectionMsg =
                             , ( "http_error", encodeError err )
                             ]
                     in
-                    ( state
-                    , Cmd.batch
-                        [ perform <| params.addFlashMessageMsg <| FlashError flashMessage
-                        , perform <| params.errorTraceMsg errorFields
-                        ]
-                    )
+                    return state <|
+                        Cmd.batch
+                            [ perform <| params.addFlashMessageMsg <| FlashError flashMessage
+                            , perform <| params.errorTraceMsg errorFields
+                            ]
 
         UpdateTextareaMsg message ->
-            case state of
-                EnterMessage _ ->
-                    ( EnterMessage { message = message }, Cmd.none )
+            singleton <|
+                case state of
+                    EnterMessage _ ->
+                        EnterMessage { message = message }
 
-                _ ->
-                    ( state, Cmd.none )
+                    _ ->
+                        state
 
         BackButtonClickedMsg ->
             case params.previousProviderModel of
                 Just providerModel ->
-                    ( state, perform <| exitRejectionMsg providerModel )
+                    return state <| perform <| exitRejectionMsg providerModel
 
                 Nothing ->
-                    ( state, Cmd.none )
+                    singleton state
 
 
 viewContent : Params msg model -> State -> Html msg

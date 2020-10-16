@@ -43,6 +43,7 @@ import Json.Encode as JE
 import List as L
 import Maybe as M
 import Result as Result
+import Return exposing (..)
 import Time exposing (Month(..))
 import Time.Date as Date
 import Time.Iso8601 as Time
@@ -81,7 +82,7 @@ tabName =
     "payments"
 
 
-init : (Msg -> msg) -> String -> ( Model, Cmd msg )
+init : (Msg -> msg) -> String -> Return msg Model
 init embed ugid =
     let
         model =
@@ -90,7 +91,7 @@ init embed ugid =
             , ugid = ugid
             }
     in
-    ( model, Cmd.map embed <| getSubscriptionCmd model )
+    return model <| Cmd.map embed <| getSubscriptionCmd model
 
 
 getFormDataFromSubscription : Subscription -> FormData
@@ -108,13 +109,9 @@ getSubscriptionCmd model =
         }
 
 
-setUserGroupID : (Msg -> msg) -> String -> Model -> ( Model, Cmd msg )
-setUserGroupID embed ugid model0 =
-    let
-        model =
-            { model0 | ugid = ugid }
-    in
-    ( model, Cmd.map embed <| getSubscriptionCmd model )
+setUserGroupID : (Msg -> msg) -> String -> Model -> Return msg Model
+setUserGroupID embed ugid model =
+    return { model | ugid = ugid } <| Cmd.map embed <| getSubscriptionCmd model
 
 
 modifySubscription : (Subscription -> Subscription) -> Model -> Model
@@ -263,149 +260,140 @@ validateFreeTokenFields model =
             Err "Validation in incorrect state. This should not happend!"
 
 
-update : (Msg -> msg) -> Globals msg -> Msg -> Model -> ( Model, Cmd msg )
+update : (Msg -> msg) -> Globals msg -> Msg -> Model -> Return msg Model
 update embed globals msg model =
     case msg of
         GotSubscription result ->
-            case result of
-                Ok subscription ->
-                    ( { model
-                        | sSubscription = Success subscription
-                        , sFormData = Just <| getFormDataFromSubscription subscription
-                      }
-                    , Cmd.none
-                    )
+            singleton <|
+                case result of
+                    Ok subscription ->
+                        { model
+                            | sSubscription = Success subscription
+                            , sFormData = Just <| getFormDataFromSubscription subscription
+                        }
 
-                Err _ ->
-                    ( { model | sSubscription = Failure }, Cmd.none )
+                    Err _ ->
+                        { model | sSubscription = Failure }
 
         -- FORM SETTERS
         SetFeatureFlag isAdmin name value ->
-            ( modifySubscription (Subscription.setFF isAdmin name value) model, Cmd.none )
+            singleton <| modifySubscription (Subscription.setFF isAdmin name value) model
 
         SetFeaturesIsInherited value ->
             case statusMap (setFeaturesIsInherited value) model.sSubscription of
                 Success Nothing ->
-                    ( model, globals.flashMessage <| FlashMessage.error "Top level user group cannot inherit" )
+                    return model <| globals.flashMessage <| FlashMessage.error "Top level user group cannot inherit"
 
                 Success (Just subscription) ->
-                    ( { model | sSubscription = Success subscription }, Cmd.none )
+                    singleton { model | sSubscription = Success subscription }
 
                 _ ->
-                    ( model, Cmd.none )
+                    singleton model
 
         SetInvoicingType value ->
-            case ( findEnumValue enumInvoicingType value, model.sSubscription ) of
-                ( Ok invType, Success sub ) ->
-                    ( { model | sSubscription = Success <| setInvoicingType invType sub }
-                    , Cmd.none
-                    )
+            singleton <|
+                case ( findEnumValue enumInvoicingType value, model.sSubscription ) of
+                    ( Ok invType, Success sub ) ->
+                        { model | sSubscription = Success <| setInvoicingType invType sub }
 
-                _ ->
-                    ( model, Cmd.none )
+                    _ ->
+                        model
 
         FreeDocumentTokenInputChange value ->
-            case model.sFormData of
-                Just fd ->
-                    let
-                        incorrectValue =
-                            (M.withDefault 0 <| String.toInt value) < 0
+            singleton <|
+                case model.sFormData of
+                    Just fd ->
+                        let
+                            incorrectValue =
+                                (M.withDefault 0 <| String.toInt value) < 0
 
-                        newValue =
-                            ite incorrectValue "0" value
-                    in
-                    ( { model | sFormData = Just <| { fd | freeDocumentTokensInput = newValue } }
-                    , Cmd.none
-                    )
+                            newValue =
+                                ite incorrectValue "0" value
+                        in
+                        { model | sFormData = Just <| { fd | freeDocumentTokensInput = newValue } }
 
-                _ ->
-                    ( model, Cmd.none )
+                    _ ->
+                        model
 
         FreeDocumentTokenInputValidityInputChange value ->
-            case model.sFormData of
-                Just fd ->
-                    ( { model | sFormData = Just <| { fd | freeDocumentTokensValidityInput = value } }
-                    , Cmd.none
-                    )
+            singleton <|
+                case model.sFormData of
+                    Just fd ->
+                        { model | sFormData = Just <| { fd | freeDocumentTokensValidityInput = value } }
 
-                _ ->
-                    ( model, Cmd.none )
+                    _ ->
+                        model
 
         SetPaymentPlan value ->
-            case model.sSubscription of
-                Success subscription ->
-                    case ( findEnumValue enumPaymentPlan value, value ) of
-                        ( Ok paymentPlan, _ ) ->
-                            let
-                                subscription2 =
-                                    setPaymentPlan (Just paymentPlan) subscription
+            singleton <|
+                case model.sSubscription of
+                    Success subscription ->
+                        case ( findEnumValue enumPaymentPlan value, value ) of
+                            ( Ok paymentPlan, _ ) ->
+                                let
+                                    subscription2 =
+                                        setPaymentPlan (Just paymentPlan) subscription
 
-                                subscription3 =
-                                    if paymentPlan == Free then
-                                        { subscription2
-                                            | features = setFreeFeatures subscription2.features
-                                        }
+                                    subscription3 =
+                                        if paymentPlan == Free then
+                                            { subscription2
+                                                | features = setFreeFeatures subscription2.features
+                                            }
 
-                                    else
-                                        { subscription2
-                                            | features = setPaidFeatures subscription2.features
-                                        }
-                            in
-                            ( { model | sSubscription = Success subscription3 }
-                            , Cmd.none
-                            )
+                                        else
+                                            { subscription2
+                                                | features = setPaidFeatures subscription2.features
+                                            }
+                                in
+                                { model | sSubscription = Success subscription3 }
 
-                        ( _, "inherit" ) ->
-                            ( { model
-                                | sSubscription =
-                                    Success <|
-                                        setPaymentPlan Nothing subscription
-                              }
-                            , Cmd.none
-                            )
+                            ( _, "inherit" ) ->
+                                { model
+                                    | sSubscription =
+                                        Success <|
+                                            setPaymentPlan Nothing subscription
+                                }
 
-                        _ ->
-                            ( model, Cmd.none )
+                            _ ->
+                                model
 
-                _ ->
-                    ( model, Cmd.none )
+                    _ ->
+                        model
 
         SubmitForm ->
             case validateFreeTokenFields model of
                 Err emsg ->
-                    ( model, globals.flashMessage <| FlashMessage.error emsg )
+                    return model <| globals.flashMessage <| FlashMessage.error emsg
 
                 Ok ( tc, tv ) ->
                     fromStatus model.sSubscription
                         |> M.map
                             (\subscription ->
-                                ( model
-                                , Http.post
-                                    { url = "/adminonly/companyadmin/updatesubscription/" ++ model.ugid
-                                    , body =
-                                        formBody globals
-                                            [ ( "subscription"
-                                              , JE.encode 0 <| Subscription.toPostJson <| setFreeDocumentTokenData tc tv subscription
-                                              )
-                                            ]
-                                    , expect = Http.expectString (embed << GotSaveResponse)
-                                    }
-                                )
+                                return model <|
+                                    Http.post
+                                        { url = "/adminonly/companyadmin/updatesubscription/" ++ model.ugid
+                                        , body =
+                                            formBody globals
+                                                [ ( "subscription"
+                                                  , JE.encode 0 <| Subscription.toPostJson <| setFreeDocumentTokenData tc tv subscription
+                                                  )
+                                                ]
+                                        , expect = Http.expectString (embed << GotSaveResponse)
+                                        }
                             )
-                        |> M.withDefault ( model, Cmd.none )
+                        |> M.withDefault (singleton model)
 
         GotSaveResponse response ->
             case response of
                 Err _ ->
-                    ( model, globals.flashMessage <| FlashMessage.error "Request failed." )
+                    return model <| globals.flashMessage <| FlashMessage.error "Request failed."
 
                 Ok _ ->
-                    ( model
-                    , Cmd.batch
-                        [ globals.flashMessage <| FlashMessage.success "Saved"
-                        , globals.setPageUrlFromModel -- reloads UserGroup Details
-                        ]
-                    )
+                    return model <|
+                        Cmd.batch
+                            [ globals.flashMessage <| FlashMessage.success "Saved"
+                            , globals.setPageUrlFromModel -- reloads UserGroup Details
+                            ]
 
 
 view : (Msg -> msg) -> Model -> Html msg

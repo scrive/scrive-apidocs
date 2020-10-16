@@ -28,6 +28,7 @@ import Http
 import Json.Decode as D exposing (Decoder)
 import List as L
 import Maybe as M
+import Return exposing (..)
 import Time exposing (Month(..), Posix, toDay, toMonth, toYear, utc)
 import Utils exposing (..)
 
@@ -74,7 +75,7 @@ tabName =
     "users"
 
 
-init : (Msg -> msg) -> String -> Page -> ( Model, Cmd msg )
+init : (Msg -> msg) -> String -> Page -> Return msg Model
 init embed ugid page =
     let
         ( createUserModal, createUserModalCmd ) =
@@ -87,7 +88,7 @@ init embed ugid page =
             , search = ""
             }
     in
-    ( model, Cmd.map embed <| Cmd.batch [ createUserModalCmd, getUsersCmd ugid model ] )
+    return model <| Cmd.map embed <| Cmd.batch [ createUserModalCmd, getUsersCmd ugid model ]
 
 
 getUsersCmd : String -> Model -> Cmd Msg
@@ -115,76 +116,73 @@ getUsersCmd ugid model =
         }
 
 
-update : (Msg -> msg) -> Globals msg -> Msg -> Model -> ( Model, Cmd msg )
+update : (Msg -> msg) -> Globals msg -> Msg -> Model -> Return msg Model
 update embed globals msg model =
     case msg of
         SetSearch search ->
-            ( { model | search = search }, Cmd.none )
+            singleton { model | search = search }
 
         FormSubmitted ->
             let
                 page =
                     model.page
             in
-            ( { model | page = { page | mSearch = Just model.search } }
-            , -- we do not initiate the search from here, because it will be
-              -- triggered by the Url change
-              globals.setPageUrlFromModel
-            )
+            return { model | page = { page | mSearch = Just model.search } }
+                -- we do not initiate the search from here, because it will be
+                -- triggered by the Url change
+                globals.setPageUrlFromModel
 
         GotUserList result ->
             case result of
                 Ok usersList ->
-                    ( { model | sUserList = Success usersList }, Cmd.none )
+                    singleton { model | sUserList = Success usersList }
 
                 Err _ ->
-                    ( { model | sUserList = Failure }, Cmd.none )
+                    singleton { model | sUserList = Failure }
 
         CreateUserModalMsg createUserModalMsg ->
             let
                 ( createUserModal2, cmd ) =
                     CreateUserModal.update (embed << CreateUserModalMsg) (embed << UserCreatedCallback) globals createUserModalMsg model.createUserModal
             in
-            ( { model | createUserModal = createUserModal2 }, cmd )
+            return { model | createUserModal = createUserModal2 } cmd
 
         UserCreatedCallback userCreated ->
             case userCreated of
                 Just (Ok str) ->
                     -- User created successfully
-                    ( model
-                    , Cmd.batch
-                        [ globals.setPageUrlFromModel
-                        , globals.flashMessage <| FlashMessage.success str
-                        ]
-                    )
+                    return model <|
+                        Cmd.batch
+                            [ globals.setPageUrlFromModel
+                            , globals.flashMessage <| FlashMessage.success str
+                            ]
 
                 Just (Err str) ->
                     -- Failed to create a user
-                    ( model, globals.flashMessage <| FlashMessage.error str )
+                    return model <| globals.flashMessage <| FlashMessage.error str
 
                 Nothing ->
                     -- No attempt was made to create a user
-                    ( model, Cmd.none )
+                    singleton model
 
         CreateUserClicked ->
-            ( { model | createUserModal = CreateUserModal.show model.createUserModal }, Cmd.none )
+            singleton { model | createUserModal = CreateUserModal.show model.createUserModal }
 
         TableRowClicked uid ->
-            ( model, globals.gotoUser uid )
+            return model <| globals.gotoUser uid
 
         TableHeaderClicked column ->
             let
                 page =
                     model.page
             in
-            ( { model | page = { page | mSorting = Just <| toggleSorting column defaultSorting model.page.mSorting } }
-            , -- we do not initiate the search from here, because it will be
-              -- triggered by the Url change
-              globals.setPageUrlFromModel
-            )
+            return { model | page = { page | mSorting = Just <| toggleSorting column defaultSorting model.page.mSorting } }
+                -- we do not initiate the search from here, because it will be
+                -- triggered by the Url change
+                globals.setPageUrlFromModel
 
 
-updatePage : (Msg -> msg) -> String -> Page -> Model -> ( Model, Cmd msg )
+updatePage : (Msg -> msg) -> String -> Page -> Model -> Return msg Model
 updatePage embed ugid page model =
     let
         ( createUserModal, createUserModalCmd ) =
@@ -198,13 +196,12 @@ updatePage embed ugid page model =
                 , sUserList = Loading
             }
     in
-    ( model1
-    , Cmd.map embed <|
-        Cmd.batch
-            [ getUsersCmd ugid model1
-            , createUserModalCmd
-            ]
-    )
+    return model1 <|
+        Cmd.map embed <|
+            Cmd.batch
+                [ getUsersCmd ugid model1
+                , createUserModalCmd
+                ]
 
 
 fromPage : Page -> PageUrl

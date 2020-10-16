@@ -20,6 +20,7 @@ import Html exposing (Html, text)
 import Html.Attributes exposing (class, value)
 import Html.Events exposing (onClick, onInput)
 import Http
+import Return exposing (..)
 import Utils exposing (..)
 
 
@@ -40,7 +41,7 @@ type Msg
     | GotUserGroup (Result Http.Error UserGroup)
 
 
-init : (Msg -> msg) -> User -> ( Model, Cmd msg )
+init : (Msg -> msg) -> User -> Return msg Model
 init embed user =
     let
         model =
@@ -51,63 +52,51 @@ init embed user =
             , sNewUserGroup = Loading
             }
     in
-    ( model, Cmd.map embed <| Cmd.getUserGroup GotUserGroup model.newUserGroupID )
+    return model <| Cmd.map embed <| Cmd.getUserGroup GotUserGroup model.newUserGroupID
 
 
-update : (Msg -> msg) -> Globals msg -> Msg -> Model -> ( Model, Cmd msg )
+update : (Msg -> msg) -> Globals msg -> Msg -> Model -> Return msg Model
 update embed globals msg model =
     case msg of
         CloseModal ->
-            ( { model | modalVisibility = Modal.hidden }, Cmd.none )
+            singleton { model | modalVisibility = Modal.hidden }
 
         SetUserGroupID userGroupID ->
             if isInteger userGroupID then
-                let
-                    model1 =
-                        { model
-                            | newUserGroupID = userGroupID
-                            , sNewUserGroup = Loading
-                        }
-                in
-                ( model1, Cmd.map embed <| Cmd.getUserGroup GotUserGroup model1.newUserGroupID )
+                return { model | newUserGroupID = userGroupID, sNewUserGroup = Loading } <|
+                    Cmd.map embed <|
+                        Cmd.getUserGroup GotUserGroup userGroupID
 
             else
-                ( { model | newUserGroupID = userGroupID }, Cmd.none )
+                singleton { model | newUserGroupID = userGroupID }
 
         GotResponse result ->
             case result of
                 Ok _ ->
-                    ( { model
-                        | response = Just result
-                        , modalVisibility = Modal.hidden
-                      }
-                    , Cmd.batch
-                        [ globals.setPageUrlFromModel -- reloads User Details
-                        , globals.flashMessage <| FlashMessage.success "User was moved"
-                        ]
-                    )
+                    return { model | response = Just result, modalVisibility = Modal.hidden } <|
+                        Cmd.batch
+                            [ globals.setPageUrlFromModel -- reloads User Details
+                            , globals.flashMessage <| FlashMessage.success "User was moved"
+                            ]
 
                 Err _ ->
-                    ( { model | response = Just result }
-                    , Cmd.none
-                    )
+                    singleton { model | response = Just result }
 
         GotUserGroup response ->
             case response of
                 Err _ ->
-                    ( { model | sNewUserGroup = Failure }, Cmd.none )
+                    singleton { model | sNewUserGroup = Failure }
 
                 Ok userGroup ->
-                    ( { model | sNewUserGroup = Success userGroup }, Cmd.none )
+                    singleton { model | sNewUserGroup = Success userGroup }
 
         SubmitForm ->
-            ( { model | response = Nothing }
-            , Http.post
-                { url = "/adminonly/useradmin/move/" ++ model.user.id
-                , body = formBody globals [ ( "companyid", model.newUserGroupID ) ]
-                , expect = Http.expectString (embed << GotResponse)
-                }
-            )
+            return { model | response = Nothing } <|
+                Http.post
+                    { url = "/adminonly/useradmin/move/" ++ model.user.id
+                    , body = formBody globals [ ( "companyid", model.newUserGroupID ) ]
+                    , expect = Http.expectString (embed << GotResponse)
+                    }
 
 
 show : Model -> Model

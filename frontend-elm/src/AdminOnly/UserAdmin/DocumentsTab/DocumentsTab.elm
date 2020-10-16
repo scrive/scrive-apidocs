@@ -40,6 +40,7 @@ import Http
 import List as L
 import Maybe as M
 import Maybe.Extra as M
+import Return exposing (..)
 import Time exposing (Month(..), Posix, toDay, toHour, toMinute, toMonth, toYear, utc)
 import Url.Builder as UB
 import Utils exposing (..)
@@ -100,7 +101,7 @@ defaultSorting =
     Sorting SCMtime SODesc
 
 
-init : (Msg -> msg) -> Config -> Int -> ( Model, Cmd msg )
+init : (Msg -> msg) -> Config -> Int -> Return msg Model
 init embed config paginationPageNum =
     let
         model =
@@ -111,7 +112,7 @@ init embed config paginationPageNum =
             , mPaginationTotal = Nothing
             }
     in
-    ( model, Cmd.map embed <| getDocumentsCmd model )
+    return model <| Cmd.map embed <| getDocumentsCmd model
 
 
 getDocumentsCmd : Model -> Cmd Msg
@@ -170,7 +171,7 @@ getDocumentsCmd model =
         }
 
 
-update : (Msg -> msg) -> Globals msg -> Msg -> Model -> ( Model, Cmd msg )
+update : (Msg -> msg) -> Globals msg -> Msg -> Model -> Return msg Model
 update _ globals msg model =
     let
         page =
@@ -178,42 +179,38 @@ update _ globals msg model =
     in
     case msg of
         SetSearch search ->
-            ( { model | search = search }, Cmd.none )
+            singleton { model | search = search }
 
         FormSubmitted ->
-            ( { model | page = { page | mSearch = stringNonEmpty model.search } }
-            , -- we do not initiate the search from here, because it will be
-              -- triggered by the Url change
-              globals.setPageUrlFromModel
-            )
+            return { model | page = { page | mSearch = stringNonEmpty model.search } }
+                -- we do not initiate the search from here, because it will be
+                -- triggered by the Url change
+                globals.setPageUrlFromModel
 
         GotDocumentList result ->
-            case result of
-                Ok ( total, documentList ) ->
-                    ( { model | sDocumentList = Success documentList, mPaginationTotal = Just total }, Cmd.none )
+            singleton <|
+                case result of
+                    Ok ( total, documentList ) ->
+                        { model | sDocumentList = Success documentList, mPaginationTotal = Just total }
 
-                Err _ ->
-                    ( { model | sDocumentList = Failure, mPaginationTotal = Nothing }, Cmd.none )
+                    Err _ ->
+                        { model | sDocumentList = Failure, mPaginationTotal = Nothing }
 
         TableRowClicked documentID ->
-            ( model
-            , globals.gotoDaveDocument documentID
-            )
+            return model <| globals.gotoDaveDocument documentID
 
         TableHeaderClicked column ->
-            ( { model | page = { page | mSorting = Just <| toggleSorting column defaultSorting model.page.mSorting } }
-            , -- we do not initiate the search from here, because it will be
-              -- triggered by the Url change
-              globals.setPageUrlFromModel
-            )
+            return { model | page = { page | mSorting = Just <| toggleSorting column defaultSorting model.page.mSorting } }
+                -- we do not initiate the search from here, because it will be
+                -- triggered by the Url change
+                globals.setPageUrlFromModel
 
         PaginationMsg pageNum ->
-            ( { model | page = { page | paginationPageNum = pageNum } }
-            , globals.setPageUrlFromModel
-            )
+            return { model | page = { page | paginationPageNum = pageNum } }
+                globals.setPageUrlFromModel
 
 
-updatePage : (Msg -> msg) -> Config -> Page -> Model -> ( Model, Cmd msg )
+updatePage : (Msg -> msg) -> Config -> Page -> Model -> Return msg Model
 updatePage embed config page model =
     let
         model1 =
@@ -223,7 +220,7 @@ updatePage embed config page model =
                 , search = M.withDefault "" page.mSearch
             }
     in
-    ( model1, Cmd.map embed <| getDocumentsCmd model1 )
+    return model1 <| Cmd.map embed <| getDocumentsCmd model1
 
 
 pageFromSearchSortByOrder : Maybe String -> Maybe String -> Maybe String -> Maybe Int -> Page

@@ -20,6 +20,7 @@ import Html.Events exposing (onClick, onInput)
 import Http
 import Http.Detailed
 import Json.Encode as E
+import Return exposing (..)
 import Util.APIError exposing (apiErrorMessage)
 import Utils exposing (..)
 
@@ -38,26 +39,23 @@ type Msg
     | SetNewFolderName String
 
 
-init : Folder -> ( Model, Cmd msg )
+init : Folder -> Return msg Model
 init parentFolder =
-    let
-        model =
-            { modalVisibility = Modal.hidden
-            , parentFolder = parentFolder
-            , newFolderName = ""
-            }
-    in
-    ( model, Cmd.none )
+    singleton
+        { modalVisibility = Modal.hidden
+        , parentFolder = parentFolder
+        , newFolderName = ""
+        }
 
 
-update : (Msg -> msg) -> Globals msg -> Msg -> Cmd msg -> Model -> ( Model, Cmd msg )
+update : (Msg -> msg) -> Globals msg -> Msg -> Cmd msg -> Model -> Return msg Model
 update embed globals msg onSuccessCmd model =
     case msg of
         CloseModal ->
-            ( { model | modalVisibility = Modal.hidden }, Cmd.none )
+            singleton { model | modalVisibility = Modal.hidden }
 
         SetNewFolderName name ->
-            ( { model | newFolderName = name }, Cmd.none )
+            singleton { model | newFolderName = name }
 
         SubmitForm ->
             let
@@ -71,29 +69,24 @@ update embed globals msg onSuccessCmd model =
                       )
                     ]
             in
-            ( model
-            , Http.post
-                { url = "/api/frontend/folders/create"
-                , body = formBody globals reqParams
-                , expect = Http.Detailed.expectString (embed << GotResponse)
-                }
-            )
+            return model <|
+                Http.post
+                    { url = "/api/frontend/folders/create"
+                    , body = formBody globals reqParams
+                    , expect = Http.Detailed.expectString (embed << GotResponse)
+                    }
 
         GotResponse result ->
             case result of
                 Ok _ ->
-                    ( { model | modalVisibility = Modal.hidden }
-                    , Cmd.batch
-                        [ globals.flashMessage <| FlashMessage.success "Folder was added"
-                        , onSuccessCmd
-                        ]
-                    )
+                    return { model | modalVisibility = Modal.hidden } <|
+                        Cmd.batch
+                            [ globals.flashMessage <| FlashMessage.success "Folder was added"
+                            , onSuccessCmd
+                            ]
 
                 Err error ->
-                    ( model
-                    , globals.flashMessage <|
-                        FlashMessage.error (apiErrorMessage error "Error adding the folder")
-                    )
+                    return model <| globals.flashMessage <| FlashMessage.error <| apiErrorMessage error "Error adding the folder"
 
 
 show : Model -> Model

@@ -20,6 +20,7 @@ import Html.Attributes exposing (class, value)
 import Html.Events exposing (onClick, onInput)
 import Http
 import Json.Decode as D
+import Return exposing (..)
 import Utils exposing (..)
 
 
@@ -38,59 +39,56 @@ type Msg
     | SetPassword String
 
 
-init : User -> ( Model, Cmd msg )
+init : User -> Return msg Model
 init user =
-    let
-        model =
-            { modalVisibility = Modal.hidden
-            , response = Nothing
-            , user = user
-            , newPassword = ""
-            }
-    in
-    ( model, Cmd.none )
+    singleton
+        { modalVisibility = Modal.hidden
+        , response = Nothing
+        , user = user
+        , newPassword = ""
+        }
 
 
-update : (Msg -> msg) -> Globals msg -> Msg -> Model -> ( Model, Cmd msg )
+update : (Msg -> msg) -> Globals msg -> Msg -> Model -> Return msg Model
 update embed globals msg model =
     case msg of
         CloseModal ->
-            ( { model | modalVisibility = Modal.hidden }, Cmd.none )
+            singleton { model | modalVisibility = Modal.hidden }
 
         SetPassword password ->
-            ( { model | newPassword = password }, Cmd.none )
+            singleton { model | newPassword = password }
 
         GotResponse result ->
             case result of
                 Ok changed ->
-                    ( { model
-                        | response = Just result
-                        , modalVisibility = Modal.hidden
-                      }
-                    , Cmd.batch
-                        [ globals.setPageUrlFromModel -- reloads User Details
-                        , globals.flashMessage <|
-                            if changed then
-                                FlashMessage.success "Changed"
+                    return
+                        { model
+                            | response = Just result
+                            , modalVisibility = Modal.hidden
+                        }
+                    <|
+                        Cmd.batch
+                            [ globals.setPageUrlFromModel -- reloads User Details
+                            , globals.flashMessage <|
+                                if changed then
+                                    FlashMessage.success "Changed"
 
-                            else
-                                FlashMessage.error "Failed"
-                        ]
-                    )
+                                else
+                                    FlashMessage.error "Failed"
+                            ]
 
                 Err _ ->
-                    ( { model | response = Just result }, Cmd.none )
+                    singleton { model | response = Just result }
 
         SubmitForm ->
-            ( { model | response = Nothing }
-            , Http.post
-                { url = "/adminonly/useradmin/changepassword/" ++ model.user.id
-                , body = formBody globals [ ( "password", model.newPassword ) ]
-                , expect =
-                    Http.expectJson (embed << GotResponse)
-                        (D.field "changed" D.bool)
-                }
-            )
+            return { model | response = Nothing } <|
+                Http.post
+                    { url = "/adminonly/useradmin/changepassword/" ++ model.user.id
+                    , body = formBody globals [ ( "password", model.newPassword ) ]
+                    , expect =
+                        Http.expectJson (embed << GotResponse)
+                            (D.field "changed" D.bool)
+                    }
 
 
 show : Model -> Model

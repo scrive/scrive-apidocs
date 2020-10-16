@@ -20,6 +20,7 @@ import Lib.Components.PreviewTheme exposing (..)
 import Lib.Json.Theme as Theme
 import Lib.Types.Theme as Theme exposing (Theme, ThemeID)
 import List.Extra as List
+import Return exposing (..)
 import Url.Parser as UP exposing ((</>), Parser)
 import Utils exposing (..)
 import Vendor.ColorPickerExtra as ColorPicker
@@ -97,7 +98,7 @@ type Msg
     | CreateThemeCallbackMsg Theme ThemeID
 
 
-init : (Msg -> msg) -> Page -> ( State, Cmd msg )
+init : (Msg -> msg) -> Page -> Return msg State
 init embed page =
     let
         initialState =
@@ -185,13 +186,8 @@ pageFromModel state =
     Just { bdID = state.bdID, editTab = state.editTab }
 
 
-update : (Msg -> msg) -> Globals msg -> Msg -> State -> ( State, Cmd msg )
+update : (Msg -> msg) -> Globals msg -> Msg -> State -> Return msg State
 update embed globals msg state =
-    let
-        pure : State -> ( State, Cmd msg )
-        pure newState =
-            ( newState, Cmd.none )
-    in
     case msg of
         SetAvailableThemesMsg availableThemes ->
             let
@@ -201,7 +197,7 @@ update embed globals msg state =
                 editThemeState =
                     state.editThemeState
             in
-            pure
+            singleton
                 { state
                     | availableThemes = availableThemes
                     , loadingState = { loadingState | domainThemesLoaded = True }
@@ -221,7 +217,7 @@ update embed globals msg state =
                 editBrandedDomainState =
                     state.editBrandedDomainState
             in
-            pure
+            singleton
                 { state
                     | editBrandedDomainState =
                         { editBrandedDomainState | brandedDomainBeingEdited = brandedDomain }
@@ -229,10 +225,10 @@ update embed globals msg state =
                 }
 
         DoSaveBrandedDomainMsg ->
-            ( state, doSaveBrandedDomain embed (formBody globals) state )
+            return state <| doSaveBrandedDomain embed (formBody globals) state
 
         PresentFlashMessage flashMsg ->
-            ( state, globals.flashMessage flashMsg )
+            return state <| globals.flashMessage flashMsg
 
         EditBrandedDomainMsg msg_ ->
             let
@@ -255,22 +251,22 @@ update embed globals msg state =
                     Maybe.withDefault state.previewTabState <|
                         Maybe.map (Tab.customInitialState << Enum.toString enumThemeKind) mPreviewThemeKind
             in
-            ( { state
-                | editBrandedDomainState = newEditBrandedDomainState
-                , previewTabState = newPreviewTabState
-              }
-            , cmd
-            )
+            return
+                { state
+                    | editBrandedDomainState = newEditBrandedDomainState
+                    , previewTabState = newPreviewTabState
+                }
+                cmd
 
         SetEditTabStateMsg editTabState ->
             if editTabState == Tab.customInitialState "goback" then
-                ( state, globals.gotoBrandedDomainsTab )
+                return state globals.gotoBrandedDomainsTab
 
             else
-                pure { state | editTabState = editTabState }
+                singleton { state | editTabState = editTabState }
 
         SetPreviewTabStateMsg previewTabState ->
-            pure { state | previewTabState = previewTabState }
+            singleton { state | previewTabState = previewTabState }
 
         EditThemeMsg msg_ ->
             let
@@ -280,16 +276,13 @@ update embed globals msg state =
                 ( newEditThemeState, cmd ) =
                     EditTheme.update (embed << EditThemeMsg) msg_ editThemeReadonly state.editThemeState
             in
-            ( { state | editThemeState = newEditThemeState }, cmd )
+            return { state | editThemeState = newEditThemeState } cmd
 
         DoSaveThemeMsg ->
             doSaveTheme embed (formBody globals) state
 
         SaveThemeMsg theme ->
             let
-                cmd =
-                    globals.flashMessage <| FlashMessage.success "Theme saved."
-
                 newState =
                     { state
                         | availableThemes =
@@ -304,16 +297,13 @@ update embed globals msg state =
                                 state.availableThemes
                     }
             in
-            ( newState, cmd )
+            return newState <| globals.flashMessage <| FlashMessage.success "Theme saved."
 
         DoDeleteThemeMsg ->
             doDeleteTheme embed (formBody globals) state
 
         DeleteThemeCallbackMsg id ->
             let
-                cmd =
-                    globals.flashMessage <| FlashMessage.success "Theme deleted."
-
                 newAvailableThemes =
                     List.filter (\theme -> theme.id /= id) state.availableThemes
 
@@ -333,7 +323,7 @@ update embed globals msg state =
                         , editThemeState = { editThemeState | themeBeingEdited = newThemeBeingEdited }
                     }
             in
-            ( newState, cmd )
+            return newState <| globals.flashMessage <| FlashMessage.success "Theme deleted."
 
         DoCreateThemeMsg blueprint ->
             doCreateTheme embed (formBody globals) blueprint state
@@ -358,7 +348,7 @@ update embed globals msg state =
             doSaveTheme embed (formBody globals) newState
 
 
-doSaveTheme : (Msg -> msg) -> (List ( String, String ) -> Http.Body) -> State -> ( State, Cmd msg )
+doSaveTheme : (Msg -> msg) -> (List ( String, String ) -> Http.Body) -> State -> Return msg State
 doSaveTheme embed formBody state =
     let
         theme =
@@ -386,10 +376,10 @@ doSaveTheme embed formBody state =
                 , expect = Http.expectWhatever callback
                 }
     in
-    ( state, cmd )
+    return state cmd
 
 
-doDeleteTheme : (Msg -> msg) -> (List ( String, String ) -> Http.Body) -> State -> ( State, Cmd msg )
+doDeleteTheme : (Msg -> msg) -> (List ( String, String ) -> Http.Body) -> State -> Return msg State
 doDeleteTheme embed formBody state =
     let
         callback : Result Http.Error () -> msg
@@ -419,10 +409,10 @@ doDeleteTheme embed formBody state =
                 , expect = Http.expectWhatever callback
                 }
     in
-    ( state, cmd )
+    return state cmd
 
 
-doCreateTheme : (Msg -> msg) -> (List ( String, String ) -> Http.Body) -> Theme -> State -> ( State, Cmd msg )
+doCreateTheme : (Msg -> msg) -> (List ( String, String ) -> Http.Body) -> Theme -> State -> Return msg State
 doCreateTheme embed formBody blueprint state =
     let
         callback : Result Http.Error Theme -> msg
@@ -445,13 +435,13 @@ doCreateTheme embed formBody blueprint state =
                 , expect = Http.expectJson callback Theme.themeDecoder
                 }
     in
-    ( state, cmd )
+    return state cmd
 
 
-updatePage : (Msg -> msg) -> Page -> State -> ( State, Cmd msg )
+updatePage : (Msg -> msg) -> Page -> State -> Return msg State
 updatePage embed page state =
     if page.bdID == state.bdID then
-        ( { state | editTab = page.editTab }, Cmd.none )
+        singleton { state | editTab = page.editTab }
 
     else
         init embed page

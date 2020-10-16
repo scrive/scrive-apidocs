@@ -25,6 +25,7 @@ import Either exposing (Either(..))
 import Html exposing (Html, text)
 import Html.Attributes exposing (href)
 import Maybe as M
+import Return exposing (..)
 import Url.Parser as UP exposing ((</>), (<?>), Parser)
 import Url.Parser.Query as UPQ
 import Utils exposing (..)
@@ -69,7 +70,7 @@ type Msg
     | BrandedDomainMsg BrandedDomain.Msg
 
 
-init : (Msg -> msg) -> Globals msg -> Page -> ( Model, Cmd msg )
+init : (Msg -> msg) -> Globals msg -> Page -> Return msg Model
 init embed globals page =
     let
         model =
@@ -230,13 +231,11 @@ pageFromModel model =
             model.mBrandedDomain |> M.andThen BrandedDomain.pageFromModel |> M.map BrandedDomain
 
 
-update : (Msg -> msg) -> Globals msg -> Msg -> Model -> ( Model, Cmd msg )
+update : (Msg -> msg) -> Globals msg -> Msg -> Model -> Return msg Model
 update embed globals msg model =
     case msg of
         TabMsg state ->
-            ( { model | tabState = state }
-            , Cmd.none
-            )
+            singleton { model | tabState = state }
 
         UserAdminTabMsg tabMsg ->
             let
@@ -246,7 +245,7 @@ update embed globals msg model =
                 ( newUserAdminTab, cmd ) =
                     maybeUpdate updateUserAdminTab model.mUserAdminTab
             in
-            ( { model | mUserAdminTab = newUserAdminTab }, cmd )
+            return { model | mUserAdminTab = newUserAdminTab } cmd
 
         UserGroupAdminTabMsg tabMsg ->
             let
@@ -256,7 +255,7 @@ update embed globals msg model =
                 ( newUserGroupAdminTab, cmd ) =
                     maybeUpdate updateUserGroupAdminTab model.mUserGroupAdminTab
             in
-            ( { model | mUserGroupAdminTab = newUserGroupAdminTab }, cmd )
+            return { model | mUserGroupAdminTab = newUserGroupAdminTab } cmd
 
         DocumentsTabMsg tabMsg ->
             let
@@ -266,7 +265,7 @@ update embed globals msg model =
                 ( newDocumentsTab, cmd ) =
                     maybeUpdate updateDocumentsTab model.mDocumentsTab
             in
-            ( { model | mDocumentsTab = newDocumentsTab }, cmd )
+            return { model | mDocumentsTab = newDocumentsTab } cmd
 
         BrandedDomainsTabMsg tabMsg ->
             let
@@ -276,7 +275,7 @@ update embed globals msg model =
                 ( newBrandedDomainsTab, cmd ) =
                     maybeUpdate updateBrandedDomainsTab model.mBrandedDomainsTab
             in
-            ( { model | mBrandedDomainsTab = newBrandedDomainsTab }, cmd )
+            return { model | mBrandedDomainsTab = newBrandedDomainsTab } cmd
 
         UserAdminMsg subMsg ->
             let
@@ -286,7 +285,7 @@ update embed globals msg model =
                 ( newUserAdmin, cmd ) =
                     maybeUpdate updateUserAdmin model.mUserAdmin
             in
-            ( { model | mUserAdmin = newUserAdmin }, cmd )
+            return { model | mUserAdmin = newUserAdmin } cmd
 
         UserGroupAdminMsg subMsg ->
             let
@@ -296,7 +295,7 @@ update embed globals msg model =
                 ( newUserGroupAdmin, cmd ) =
                     maybeUpdate updateUserGroupAdmin model.mUserGroupAdmin
             in
-            ( { model | mUserGroupAdmin = newUserGroupAdmin }, cmd )
+            return { model | mUserGroupAdmin = newUserGroupAdmin } cmd
 
         BrandedDomainMsg subMsg ->
             let
@@ -306,14 +305,14 @@ update embed globals msg model =
                 ( newBrandedDomain, cmd ) =
                     maybeUpdate updateBrandedDomain model.mBrandedDomain
             in
-            ( { model | mBrandedDomain = newBrandedDomain }, cmd )
+            return { model | mBrandedDomain = newBrandedDomain } cmd
 
 
-updatePage : (Msg -> msg) -> Globals msg -> Page -> Model -> ( Model, Cmd msg )
+updatePage : (Msg -> msg) -> Globals msg -> Page -> Model -> Return msg Model
 updatePage embed globals page model =
     case page of
         Home Default ->
-            ( model, globals.gotoUserAdminTab )
+            return model globals.gotoUserAdminTab
 
         Home (UserAdminTab tabPage) ->
             let
@@ -323,13 +322,13 @@ updatePage embed globals page model =
                         |> M.withDefault
                             (UserAdminTab.init (embed << UserAdminTabMsg) tabPage)
             in
-            ( { model
-                | page = page
-                , tabState = Tab.customInitialState UserAdminTab.tabName
-                , mUserAdminTab = Just tab
-              }
-            , tabCmd
-            )
+            return
+                { model
+                    | page = page
+                    , tabState = Tab.customInitialState UserAdminTab.tabName
+                    , mUserAdminTab = Just tab
+                }
+                tabCmd
 
         Home (UserGroupAdminTab tabPage) ->
             let
@@ -339,13 +338,13 @@ updatePage embed globals page model =
                         |> M.withDefault
                             (UserGroupAdminTab.init (embed << UserGroupAdminTabMsg) tabPage)
             in
-            ( { model
-                | page = page
-                , tabState = Tab.customInitialState UserGroupAdminTab.tabName
-                , mUserGroupAdminTab = Just tab
-              }
-            , tabCmd
-            )
+            return
+                { model
+                    | page = page
+                    , tabState = Tab.customInitialState UserGroupAdminTab.tabName
+                    , mUserGroupAdminTab = Just tab
+                }
+                tabCmd
 
         Home (DocumentsTab tabPage) ->
             let
@@ -355,29 +354,29 @@ updatePage embed globals page model =
                         |> M.withDefault
                             (DocumentsTab.init (embed << DocumentsTabMsg) ConfigForAllDocuments tabPage.paginationPageNum)
             in
-            ( { model
-                | page = page
-                , tabState = Tab.customInitialState DocumentsTab.tabName
-                , mDocumentsTab = Just tab
-              }
-            , tabCmd
-            )
+            return
+                { model
+                    | page = page
+                    , tabState = Tab.customInitialState DocumentsTab.tabName
+                    , mDocumentsTab = Just tab
+                }
+                tabCmd
 
         Home BrandedDomainsTab ->
             let
                 ( tab, tabCmd ) =
                     model.mBrandedDomainsTab
-                        |> M.map (\bd -> ( bd, Cmd.none ))
+                        |> M.map singleton
                         |> M.withDefault
                             (BrandedDomainsTab.init (embed << BrandedDomainsTabMsg))
             in
-            ( { model
-                | page = page
-                , tabState = Tab.customInitialState BrandedDomainsTab.tabName
-                , mBrandedDomainsTab = Just tab
-              }
-            , tabCmd
-            )
+            return
+                { model
+                    | page = page
+                    , tabState = Tab.customInitialState BrandedDomainsTab.tabName
+                    , mBrandedDomainsTab = Just tab
+                }
+                tabCmd
 
         UserAdmin subPage ->
             let
@@ -387,12 +386,12 @@ updatePage embed globals page model =
                         |> M.withDefault
                             (UserAdmin.init (embed << UserAdminMsg) subPage)
             in
-            ( { model
-                | page = page
-                , mUserAdmin = Just sub
-              }
-            , subCmd
-            )
+            return
+                { model
+                    | page = page
+                    , mUserAdmin = Just sub
+                }
+                subCmd
 
         UserGroupAdmin subPage ->
             let
@@ -402,12 +401,12 @@ updatePage embed globals page model =
                         |> M.withDefault
                             (UserGroupAdmin.init (embed << UserGroupAdminMsg) globals subPage)
             in
-            ( { model
-                | page = page
-                , mUserGroupAdmin = Just sub
-              }
-            , subCmd
-            )
+            return
+                { model
+                    | page = page
+                    , mUserGroupAdmin = Just sub
+                }
+                subCmd
 
         BrandedDomain subPage ->
             let
@@ -417,12 +416,12 @@ updatePage embed globals page model =
                         |> M.withDefault
                             (BrandedDomain.init (embed << BrandedDomainMsg) subPage)
             in
-            ( { model
-                | page = page
-                , mBrandedDomain = Just sub
-              }
-            , subCmd
-            )
+            return
+                { model
+                    | page = page
+                    , mBrandedDomain = Just sub
+                }
+                subCmd
 
 
 view : (Msg -> msg) -> Model -> Html msg

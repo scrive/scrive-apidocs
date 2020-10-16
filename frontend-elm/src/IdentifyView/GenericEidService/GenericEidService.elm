@@ -17,6 +17,7 @@ import Lib.Types.FlashMessage exposing (FlashMessage(..))
 import Lib.Types.ID exposing (ID, showId)
 import Lib.Types.Localization exposing (Localization)
 import Lib.Types.SignatoryLink exposing (SignatoryLink(..))
+import Return exposing (..)
 import Url
 
 
@@ -166,7 +167,7 @@ type Msg
     | EidServiceStartCallbackMsg (Result Error String)
 
 
-update : Params msg -> State -> Msg -> ( State, Cmd msg )
+update : Params msg -> State -> Msg -> Return msg State
 update params _ msg =
     case msg of
         IdentifyButtonClickedMsg ->
@@ -191,7 +192,7 @@ update params _ msg =
                             else
                                 Cmd.none
                     in
-                    ( Processing { accessUrl = url }, cmd )
+                    return (Processing { accessUrl = url }) cmd
 
                 Err err ->
                     let
@@ -204,12 +205,11 @@ update params _ msg =
                             , ( "http_error", encodeError err )
                             ]
                     in
-                    ( Idle
-                    , Cmd.batch
-                        [ perform <| params.addFlashMessageMsg <| FlashError flashMessage
-                        , perform <| params.errorTraceMsg errorFields
-                        ]
-                    )
+                    return Idle <|
+                        Cmd.batch
+                            [ perform <| params.addFlashMessageMsg <| FlashError flashMessage
+                            , perform <| params.errorTraceMsg errorFields
+                            ]
 
 
 

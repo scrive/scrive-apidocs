@@ -28,6 +28,7 @@ import Http
 import List as L
 import Maybe as M
 import Maybe.Extra as M
+import Return exposing (..)
 import Utils exposing (..)
 
 
@@ -69,7 +70,7 @@ tabName =
     "folders"
 
 
-init : (Msg -> msg) -> String -> ( Model, Cmd msg )
+init : (Msg -> msg) -> String -> Return msg Model
 init embed ugid =
     let
         model =
@@ -86,7 +87,7 @@ init embed ugid =
             , mRenameModal = Nothing
             }
     in
-    ( model, Cmd.map embed <| Cmd.getUserGroup GotUserGroup ugid )
+    return model <| Cmd.map embed <| Cmd.getUserGroup GotUserGroup ugid
 
 
 getFolderTreeCmd : String -> Cmd Msg
@@ -113,57 +114,55 @@ getUserForActiveFolderCmd uid =
         }
 
 
-setUserGroupID : (Msg -> msg) -> String -> Model -> ( Model, Cmd msg )
-setUserGroupID embed ugid model0 =
+setUserGroupID : (Msg -> msg) -> String -> Model -> Return msg Model
+setUserGroupID embed ugid model =
     let
         cmd =
             -- Prevent reloading the user group (and its home folder) when navigating between tabs.
             -- The user may have activated another folder so we want to persist that.
-            ite (model0.ugid == ugid)
+            ite (model.ugid == ugid)
                 Cmd.none
                 (Cmd.map embed <| Cmd.getUserGroup GotUserGroup ugid)
-
-        model =
-            { model0 | ugid = ugid }
     in
-    ( model, cmd )
+    return { model | ugid = ugid } cmd
 
 
-update : (Msg -> msg) -> Globals msg -> Msg -> Model -> ( Model, Cmd msg )
+update : (Msg -> msg) -> Globals msg -> Msg -> Model -> Return msg Model
 update embed globals msg model =
     case msg of
         GotUserGroup result ->
             case result of
                 Ok ug ->
-                    ( { model | mUserGroup = Just ug }
-                    , case ug.homeFolderID of
-                        Just homeFolderID ->
-                            Cmd.map embed <| getFolderTreeCmd homeFolderID
+                    return { model | mUserGroup = Just ug } <|
+                        case ug.homeFolderID of
+                            Just homeFolderID ->
+                                Cmd.map embed <| getFolderTreeCmd homeFolderID
 
-                        Nothing ->
-                            globals.flashMessage <|
-                                FlashMessage.error <|
-                                    "Unable to display folders: this user group does not have a home folder."
-                    )
+                            Nothing ->
+                                globals.flashMessage <|
+                                    FlashMessage.error <|
+                                        "Unable to display folders: this user group does not have a home folder."
 
                 Err _ ->
-                    ( { model | mUserGroup = Nothing, sFolderTree = Failure }, Cmd.none )
+                    singleton { model | mUserGroup = Nothing, sFolderTree = Failure }
 
         GotUserGroupForActiveFolder result ->
-            case result of
-                Ok ug ->
-                    ( { model | mUserGroupForActiveFolder = Just ug }, Cmd.none )
+            singleton <|
+                case result of
+                    Ok ug ->
+                        { model | mUserGroupForActiveFolder = Just ug }
 
-                Err _ ->
-                    ( { model | mUserGroupForActiveFolder = Nothing }, Cmd.none )
+                    Err _ ->
+                        { model | mUserGroupForActiveFolder = Nothing }
 
         GotUserForActiveFolder result ->
-            case result of
-                Ok user ->
-                    ( { model | mUserForActiveFolder = Just user }, Cmd.none )
+            singleton <|
+                case result of
+                    Ok user ->
+                        { model | mUserForActiveFolder = Just user }
 
-                Err _ ->
-                    ( { model | mUserForActiveFolder = Nothing }, Cmd.none )
+                    Err _ ->
+                        { model | mUserForActiveFolder = Nothing }
 
         -- The folder tree is loaded using the following sequence:
         --
@@ -180,7 +179,7 @@ update embed globals msg model =
                     case getFolder folderTree |> .parentID of
                         -- Folder is not root, load the parent folder
                         Just parentID ->
-                            ( model, Cmd.map embed <| getFolderTreeCmd parentID )
+                            return model <| Cmd.map embed <| getFolderTreeCmd parentID
 
                         -- We have the root folder, initialise
                         Nothing ->
@@ -219,29 +218,30 @@ update embed globals msg model =
                                 ( renameModal, renameModalCmd ) =
                                     RenameModal.init activeFolder
                             in
-                            ( { model
-                                | sFolderTree = Success folderTree
-                                , mActiveFolder = Just activeFolder
-                                , mUserGroupForActiveFolder = mUserGroupForActiveFolder
-                                , mUserForActiveFolder = Nothing
-                                , mAddModal = Just addModal
-                                , mDeleteModal = Just deleteModal
-                                , mMakeRootModal = Just makeRootModal
-                                , mMoveModal = Just moveModal
-                                , mRenameModal = Just renameModal
-                              }
-                            , Cmd.batch
-                                [ addModalCmd
-                                , deleteModalCmd
-                                , makeRootModalCmd
-                                , moveModalCmd
-                                , renameModalCmd
-                                , userForActiveFolderCmd
-                                ]
-                            )
+                            return
+                                { model
+                                    | sFolderTree = Success folderTree
+                                    , mActiveFolder = Just activeFolder
+                                    , mUserGroupForActiveFolder = mUserGroupForActiveFolder
+                                    , mUserForActiveFolder = Nothing
+                                    , mAddModal = Just addModal
+                                    , mDeleteModal = Just deleteModal
+                                    , mMakeRootModal = Just makeRootModal
+                                    , mMoveModal = Just moveModal
+                                    , mRenameModal = Just renameModal
+                                }
+                            <|
+                                Cmd.batch
+                                    [ addModalCmd
+                                    , deleteModalCmd
+                                    , makeRootModalCmd
+                                    , moveModalCmd
+                                    , renameModalCmd
+                                    , userForActiveFolderCmd
+                                    ]
 
                 Err _ ->
-                    ( { model | sFolderTree = Failure, mActiveFolder = Nothing }, Cmd.none )
+                    singleton { model | sFolderTree = Failure, mActiveFolder = Nothing }
 
         FolderClicked folder ->
             let
@@ -261,27 +261,29 @@ update embed globals msg model =
                         Nothing ->
                             Cmd.none
             in
-            ( { model
-                | mActiveFolder = Just folder
-                , mUserForActiveFolder = Nothing
-                , mUserGroupForActiveFolder = Nothing
-              }
-            , Cmd.batch [ userCmd, userGroupCmd ]
-            )
+            return
+                { model
+                    | mActiveFolder = Just folder
+                    , mUserForActiveFolder = Nothing
+                    , mUserGroupForActiveFolder = Nothing
+                }
+            <|
+                Cmd.batch [ userCmd, userGroupCmd ]
 
         -- ----------------   Add folder   ----------------
         --
         AddClicked ->
-            case ( model.mAddModal, model.mActiveFolder ) of
-                ( Just addModal, Just activeFolder ) ->
-                    let
-                        newAddModal =
-                            AddModal.show { addModal | parentFolder = activeFolder }
-                    in
-                    ( { model | mAddModal = Just newAddModal }, Cmd.none )
+            singleton <|
+                case ( model.mAddModal, model.mActiveFolder ) of
+                    ( Just addModal, Just activeFolder ) ->
+                        let
+                            newAddModal =
+                                AddModal.show { addModal | parentFolder = activeFolder }
+                        in
+                        { model | mAddModal = Just newAddModal }
 
-                _ ->
-                    ( model, Cmd.none )
+                    _ ->
+                        model
 
         AddModalMsg modalMsg ->
             let
@@ -294,21 +296,22 @@ update embed globals msg model =
                 ( newAddModal, cmd ) =
                     maybeUpdate updateAddModal model.mAddModal
             in
-            ( { model | mAddModal = newAddModal }, cmd )
+            return { model | mAddModal = newAddModal } cmd
 
         -- ----------------   Delete folder   ----------------
         --
         DeleteClicked ->
-            case ( model.mDeleteModal, model.mActiveFolder ) of
-                ( Just deleteModal, Just activeFolder ) ->
-                    let
-                        newDeleteModal =
-                            DeleteModal.show { deleteModal | folder = activeFolder }
-                    in
-                    ( { model | mDeleteModal = Just newDeleteModal }, Cmd.none )
+            singleton <|
+                case ( model.mDeleteModal, model.mActiveFolder ) of
+                    ( Just deleteModal, Just activeFolder ) ->
+                        let
+                            newDeleteModal =
+                                DeleteModal.show { deleteModal | folder = activeFolder }
+                        in
+                        { model | mDeleteModal = Just newDeleteModal }
 
-                _ ->
-                    ( model, Cmd.none )
+                    _ ->
+                        model
 
         DeleteModalMsg modalMsg ->
             let
@@ -321,21 +324,22 @@ update embed globals msg model =
                 ( newDeleteModal, cmd ) =
                     maybeUpdate updateDeleteModal model.mDeleteModal
             in
-            ( { model | mDeleteModal = newDeleteModal }, cmd )
+            return { model | mDeleteModal = newDeleteModal } cmd
 
         -- ----------------   Make folder root   ----------------
         --
         MakeRootClicked ->
-            case ( model.mMakeRootModal, model.mActiveFolder ) of
-                ( Just makeRootModal, Just activeFolder ) ->
-                    let
-                        newMakeRootModal =
-                            MakeRootModal.show { makeRootModal | folder = activeFolder }
-                    in
-                    ( { model | mMakeRootModal = Just newMakeRootModal }, Cmd.none )
+            singleton <|
+                case ( model.mMakeRootModal, model.mActiveFolder ) of
+                    ( Just makeRootModal, Just activeFolder ) ->
+                        let
+                            newMakeRootModal =
+                                MakeRootModal.show { makeRootModal | folder = activeFolder }
+                        in
+                        { model | mMakeRootModal = Just newMakeRootModal }
 
-                _ ->
-                    ( model, Cmd.none )
+                    _ ->
+                        model
 
         MakeRootModalMsg modalMsg ->
             let
@@ -348,7 +352,7 @@ update embed globals msg model =
                 ( newMakeRootModal, cmd ) =
                     maybeUpdate updateMakeRootModal model.mMakeRootModal
             in
-            ( { model | mMakeRootModal = newMakeRootModal }, cmd )
+            return { model | mMakeRootModal = newMakeRootModal } cmd
 
         -- ----------------   Move folder   ----------------
         --
@@ -369,10 +373,10 @@ update embed globals msg model =
                                     , newParentID = M.withDefault "" mParentID
                                 }
                     in
-                    ( { model | mMoveModal = Just newMoveModal }, cmd )
+                    return { model | mMoveModal = Just newMoveModal } cmd
 
                 _ ->
-                    ( model, Cmd.none )
+                    singleton model
 
         MoveModalMsg modalMsg ->
             let
@@ -385,25 +389,26 @@ update embed globals msg model =
                 ( newMoveModal, cmd ) =
                     maybeUpdate updateMoveModal model.mMoveModal
             in
-            ( { model | mMoveModal = newMoveModal }, cmd )
+            return { model | mMoveModal = newMoveModal } cmd
 
         -- ----------------   Rename folder   ----------------
         --
         RenameClicked ->
-            case ( model.mRenameModal, model.mActiveFolder ) of
-                ( Just renameModal, Just activeFolder ) ->
-                    let
-                        newRenameModal =
-                            RenameModal.show
-                                { renameModal
-                                    | folder = activeFolder
-                                    , newFolderName = activeFolder.name
-                                }
-                    in
-                    ( { model | mRenameModal = Just newRenameModal }, Cmd.none )
+            singleton <|
+                case ( model.mRenameModal, model.mActiveFolder ) of
+                    ( Just renameModal, Just activeFolder ) ->
+                        let
+                            newRenameModal =
+                                RenameModal.show
+                                    { renameModal
+                                        | folder = activeFolder
+                                        , newFolderName = activeFolder.name
+                                    }
+                        in
+                        { model | mRenameModal = Just newRenameModal }
 
-                _ ->
-                    ( model, Cmd.none )
+                    _ ->
+                        model
 
         RenameModalMsg modalMsg ->
             let
@@ -416,7 +421,7 @@ update embed globals msg model =
                 ( newRenameModal, cmd ) =
                     maybeUpdate updateRenameModal model.mRenameModal
             in
-            ( { model | mRenameModal = newRenameModal }, cmd )
+            return { model | mRenameModal = newRenameModal } cmd
 
 
 view : (Msg -> msg) -> Model -> Html msg

@@ -20,16 +20,16 @@ module Vendor.Popover exposing
         = PopoverMsg Popover.State
 
     -- Initialize the popover state
-    initialState : ( Model, Cmd Msg )
+    initialState : Return Msg Model
     initialState =
-        ( { popoverState = Popover.initialState }, Cmd.none )
+        singleton { popoverState = Popover.initialState }
 
     -- Step the popover state forward in your update function
-    update : Msg -> Model -> ( Model, Cmd Msg )
+    update : Msg -> Model -> Return Msg Model
     update msg model =
         case msg of
             PopoverMsg state ->
-                ( { model | popoverState = state }, Cmd.none )
+                singleton { model | popoverState = state }
 
     -- Compose a popover in your view (or a view helper function)
     view : Model -> Html Msg

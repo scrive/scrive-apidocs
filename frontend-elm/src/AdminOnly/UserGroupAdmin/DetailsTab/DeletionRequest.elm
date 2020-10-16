@@ -14,6 +14,7 @@ import Html.Events exposing (onClick)
 import Http exposing (Error(..))
 import Json.Decode as JD
 import Maybe.Extra as Maybe
+import Return exposing (..)
 import Task
 import Time
 import Utils exposing (formBody, monthToInt, perform)
@@ -69,47 +70,45 @@ type
     | SignOffDeletionCallbackMsg (Result Http.Error DeletionRequest)
 
 
-init : Params msg -> ( State, Cmd msg )
+init : Params msg -> Return msg State
 init params =
     let
         decodeUserId =
             JD.field "id" JD.string |> JD.map (\userId -> { userId = userId })
-
-        cmd =
-            Http.get
-                { url = "/api/v2/getprofile/"
-                , expect =
-                    Http.expectJson (params.embed << GetProfileCallbackMsg) decodeUserId
-                }
     in
-    ( Loading, cmd )
+    return Loading <|
+        Http.get
+            { url = "/api/v2/getprofile/"
+            , expect = Http.expectJson (params.embed << GetProfileCallbackMsg) decodeUserId
+            }
 
 
-update : Params msg -> Msg -> State -> ( State, Cmd msg )
+update : Params msg -> Msg -> State -> Return msg State
 update params msg state =
     case state of
         Loading ->
-            case msg of
-                GetProfileCallbackMsg res ->
-                    case res of
-                        Ok { userId } ->
-                            ( Loaded { userId = userId, modalState = Idle }, Cmd.none )
+            singleton <|
+                case msg of
+                    GetProfileCallbackMsg res ->
+                        case res of
+                            Ok { userId } ->
+                                Loaded { userId = userId, modalState = Idle }
 
-                        Err _ ->
-                            ( state, Cmd.none )
+                            Err _ ->
+                                state
 
-                _ ->
-                    ( state, Cmd.none )
+                    _ ->
+                        state
 
         Loaded { userId, modalState } ->
             let
                 ( newModalState, cmd ) =
                     updateModal params msg modalState
             in
-            ( Loaded { userId = userId, modalState = newModalState }, cmd )
+            return (Loaded { userId = userId, modalState = newModalState }) cmd
 
 
-updateModal : Params msg -> Msg -> ModalState -> ( ModalState, Cmd msg )
+updateModal : Params msg -> Msg -> ModalState -> Return msg ModalState
 updateModal params msg state =
     case msg of
         AbortModalMsg ->
@@ -119,15 +118,16 @@ updateModal params msg state =
             requestDeletionClicked params state
 
         ShowRequestDeletionModalMsg date ->
-            ( RequestDeletionModal date, Cmd.none )
+            singleton <| RequestDeletionModal date
 
         UpdateDeletionDateMsg date ->
-            case state of
-                RequestDeletionModal _ ->
-                    ( RequestDeletionModal { date = date }, Cmd.none )
+            singleton <|
+                case state of
+                    RequestDeletionModal _ ->
+                        RequestDeletionModal { date = date }
 
-                _ ->
-                    ( state, Cmd.none )
+                    _ ->
+                        state
 
         ConfirmRequestDeletionMsg { date } ->
             confirmRequestDeletion params { date = date }
@@ -151,7 +151,7 @@ updateModal params msg state =
             signOffDeletionCallback params state res
 
         GetProfileCallbackMsg _ ->
-            ( state, Cmd.none )
+            singleton state
 
 
 viewModal : State -> Maybe (Html Msg)
@@ -217,9 +217,9 @@ viewButtons embed { deletionStatus } state =
 -- AbortModalMsg
 
 
-abortModal : ModalState -> ( ModalState, Cmd msg )
+abortModal : ModalState -> Return msg ModalState
 abortModal _ =
-    ( Idle, Cmd.none )
+    singleton Idle
 
 
 
@@ -240,7 +240,7 @@ viewRequestDeletionButton =
 -- RequestDeletionClickedMsg
 
 
-requestDeletionClicked : Params msg -> ModalState -> ( ModalState, Cmd msg )
+requestDeletionClicked : Params msg -> ModalState -> Return msg ModalState
 requestDeletionClicked { embed } state =
     let
         posixToDate posix =
@@ -252,7 +252,7 @@ requestDeletionClicked { embed } state =
                     ++ String.padLeft 2 '0' (String.fromInt <| Time.toDay Time.utc posix)
             }
     in
-    ( state, Task.perform (embed << ShowRequestDeletionModalMsg << posixToDate) Time.now )
+    return state <| Task.perform (embed << ShowRequestDeletionModalMsg << posixToDate) Time.now
 
 
 viewRequestDeletionModal : { date : String } -> Html Msg
@@ -288,50 +288,40 @@ viewRequestDeletionModal { date } =
 -- ConfirmRequestDeletionMsg
 
 
-confirmRequestDeletion : Params msg -> { date : String } -> ( ModalState, Cmd msg )
+confirmRequestDeletion : Params msg -> { date : String } -> Return msg ModalState
 confirmRequestDeletion params { date } =
-    let
-        cmd =
-            Http.post
-                { url = "/adminonly/companyadmin/requestdeletion/" ++ params.userGroupId
-                , body = formBody params [ ( "deletion_date", date ) ]
-                , expect =
-                    Http.expectJson (params.embed << RequestDeletionCallbackMsg) (JD.nullable DeletionRequest.decoder)
-                }
-    in
-    ( Idle, cmd )
+    return Idle <|
+        Http.post
+            { url = "/adminonly/companyadmin/requestdeletion/" ++ params.userGroupId
+            , body = formBody params [ ( "deletion_date", date ) ]
+            , expect =
+                Http.expectJson (params.embed << RequestDeletionCallbackMsg) (JD.nullable DeletionRequest.decoder)
+            }
 
 
-requestDeletionCallback : Params msg -> ModalState -> Result Http.Error (Maybe DeletionRequest) -> ( ModalState, Cmd msg )
+requestDeletionCallback : Params msg -> ModalState -> Result Http.Error (Maybe DeletionRequest) -> Return msg ModalState
 requestDeletionCallback { showFlashMessage, updateDeletionRequest } state res =
-    case res of
-        Ok (Just deletionRequest) ->
-            let
-                cmd1 =
-                    showFlashMessage <| FlashMessage.success "Deletion requested."
+    return state <|
+        case res of
+            Ok (Just deletionRequest) ->
+                Cmd.batch
+                    [ showFlashMessage <| FlashMessage.success "Deletion requested."
+                    , updateDeletionRequest <| Just deletionRequest
+                    ]
 
-                cmd2 =
-                    updateDeletionRequest <| Just deletionRequest
-            in
-            ( state, Cmd.batch [ cmd1, cmd2 ] )
-
-        Ok Nothing ->
-            let
-                cmd =
-                    showFlashMessage <|
+            Ok Nothing ->
+                Cmd.batch
+                    [ showFlashMessage <|
                         FlashMessage.error
                             "Failed to request deletion of non-leaf user group. Only user groups without child user groups can be deleted."
-            in
-            ( state, cmd )
+                    ]
 
-        Err _ ->
-            let
-                cmd =
-                    showFlashMessage <|
+            Err _ ->
+                Cmd.batch
+                    [ showFlashMessage <|
                         FlashMessage.error
                             "Failed to request deletion. Only full Scrive admins (not sales admins) can request the deletion of user groups!"
-            in
-            ( state, cmd )
+                    ]
 
 
 
@@ -352,41 +342,33 @@ viewCancelDeletionButton =
 -- CancelDeletionClickedMsg. No modal?
 
 
-cancelDeletionClicked : Params msg -> ( ModalState, Cmd msg )
+cancelDeletionClicked : Params msg -> Return msg ModalState
 cancelDeletionClicked params =
-    let
-        cmd =
-            Http.post
-                { url = "/adminonly/companyadmin/canceldeletion/" ++ params.userGroupId
-                , body = formBody params []
-                , expect =
-                    Http.expectWhatever (params.embed << CancelDeletionCallbackMsg)
-                }
-    in
-    ( Idle, cmd )
+    return Idle <|
+        Http.post
+            { url = "/adminonly/companyadmin/canceldeletion/" ++ params.userGroupId
+            , body = formBody params []
+            , expect =
+                Http.expectWhatever (params.embed << CancelDeletionCallbackMsg)
+            }
 
 
-cancelDeletionCallback : Params msg -> ModalState -> Result Http.Error () -> ( ModalState, Cmd msg )
+cancelDeletionCallback : Params msg -> ModalState -> Result Http.Error () -> Return msg ModalState
 cancelDeletionCallback { showFlashMessage, updateDeletionRequest } state res =
-    case res of
-        Ok () ->
-            let
-                cmd1 =
-                    showFlashMessage <| FlashMessage.success "Deletion cancelled."
+    return state <|
+        case res of
+            Ok () ->
+                Cmd.batch
+                    [ showFlashMessage <| FlashMessage.success "Deletion cancelled."
+                    , updateDeletionRequest Nothing
+                    ]
 
-                cmd2 =
-                    updateDeletionRequest Nothing
-            in
-            ( state, Cmd.batch [ cmd1, cmd2 ] )
-
-        Err _ ->
-            let
-                cmd =
-                    showFlashMessage <|
+            Err _ ->
+                Cmd.batch
+                    [ showFlashMessage <|
                         FlashMessage.error
                             "Failed to cancel deletion. Only full Scrive admins (not sales admins) can cancel the deletion of a user group!"
-            in
-            ( state, cmd )
+                    ]
 
 
 
@@ -407,9 +389,9 @@ viewSignOffDeletionButton =
 -- SignOffDeletionClickedMsg
 
 
-signOffDeletionClicked : ModalState -> ( ModalState, Cmd msg )
+signOffDeletionClicked : ModalState -> Return msg ModalState
 signOffDeletionClicked _ =
-    ( SignOffDeletionModal, Cmd.none )
+    singleton SignOffDeletionModal
 
 
 viewSignOffDeletionModal : Html Msg
@@ -438,38 +420,30 @@ viewSignOffDeletionModal =
         |> Modal.view Modal.shown
 
 
-confirmSignOffDeletion : Params msg -> ( ModalState, Cmd msg )
+confirmSignOffDeletion : Params msg -> Return msg ModalState
 confirmSignOffDeletion params =
-    let
-        cmd =
-            Http.post
-                { url = "/adminonly/companyadmin/signoffdeletion/" ++ params.userGroupId
-                , body = formBody params []
-                , expect =
-                    Http.expectJson (params.embed << SignOffDeletionCallbackMsg) DeletionRequest.decoder
-                }
-    in
-    ( Idle, cmd )
+    return Idle <|
+        Http.post
+            { url = "/adminonly/companyadmin/signoffdeletion/" ++ params.userGroupId
+            , body = formBody params []
+            , expect =
+                Http.expectJson (params.embed << SignOffDeletionCallbackMsg) DeletionRequest.decoder
+            }
 
 
-signOffDeletionCallback : Params msg -> ModalState -> Result Http.Error DeletionRequest -> ( ModalState, Cmd msg )
+signOffDeletionCallback : Params msg -> ModalState -> Result Http.Error DeletionRequest -> Return msg ModalState
 signOffDeletionCallback { showFlashMessage, updateDeletionRequest } state res =
-    case res of
-        Ok deletionRequest ->
-            let
-                cmd1 =
-                    showFlashMessage <| FlashMessage.success "Deletion signed off. The user group will be deleted."
+    return state <|
+        case res of
+            Ok deletionRequest ->
+                Cmd.batch
+                    [ showFlashMessage <| FlashMessage.success "Deletion signed off. The user group will be deleted."
+                    , updateDeletionRequest <| Just deletionRequest
+                    ]
 
-                cmd2 =
-                    updateDeletionRequest <| Just deletionRequest
-            in
-            ( state, Cmd.batch [ cmd1, cmd2 ] )
-
-        Err _ ->
-            let
-                cmd =
-                    showFlashMessage <|
+            Err _ ->
+                Cmd.batch
+                    [ showFlashMessage <|
                         FlashMessage.error
                             "Failed to sign off on deletion. Only full Scrive admins (not sales admins) can sign off on user group deletion requests!"
-            in
-            ( state, cmd )
+                    ]

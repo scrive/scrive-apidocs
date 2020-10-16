@@ -15,8 +15,8 @@ import Html exposing (Html, div, img, text)
 import Html.Attributes exposing (class, selected, src, style, type_, value)
 import Html.Events exposing (onBlur, onClick, onInput)
 import Lib.Types.Theme exposing (Theme, ThemeID)
+import Return exposing (..)
 import Task
-import Utils exposing (noCmd)
 import Vendor.ColorPickerExtra as ColorPicker
 import Vendor.Popover as Popover
 
@@ -65,12 +65,12 @@ type Msg
     | OnColorTextCommittedMsg ColorIdentifier
 
 
-update : (Msg -> msg) -> Msg -> EditBrandedDomainState -> ( EditBrandedDomainState, Cmd msg )
+update : (Msg -> msg) -> Msg -> EditBrandedDomainState -> Return msg EditBrandedDomainState
 update embed msg =
     let
-        modifyBrandedDomain : (BrandedDomain -> BrandedDomain) -> EditBrandedDomainState -> ( EditBrandedDomainState, Cmd msg )
+        modifyBrandedDomain : (BrandedDomain -> BrandedDomain) -> EditBrandedDomainState -> Return msg EditBrandedDomainState
         modifyBrandedDomain f state =
-            noCmd <|
+            singleton
                 { state
                     | brandedDomainBeingEdited =
                         f state.brandedDomainBeingEdited
@@ -79,7 +79,7 @@ update embed msg =
         updateColorIfValidInput colorIdentifier colorText =
             case ColorPicker.hex2Color colorText of
                 Nothing ->
-                    noCmd
+                    singleton
 
                 Just color ->
                     modifyBrandedDomain <| setColor colorIdentifier color
@@ -123,7 +123,7 @@ update embed msg =
                 >> updateColorIfValidInput colorIdentifier colorText
 
         OnColorTextCommittedMsg colorIdentifier ->
-            commitPartialColor colorIdentifier >> noCmd
+            commitPartialColor colorIdentifier >> singleton
 
 
 
@@ -185,7 +185,7 @@ viewThemeSelector { embed, availableThemes } kind state =
 -- implements UpdateColorPickerMsg
 
 
-updateColorPicker : ColorIdentifier -> ColorPicker.Msg -> EditBrandedDomainState -> ( EditBrandedDomainState, Cmd msg )
+updateColorPicker : ColorIdentifier -> ColorPicker.Msg -> EditBrandedDomainState -> Return msg EditBrandedDomainState
 updateColorPicker colorIdentifier msg state =
     let
         brandedDomain =
@@ -205,7 +205,7 @@ updateColorPicker colorIdentifier msg state =
         newColors =
             Enum.insert colorIdentifier newColor brandedDomain.colors
     in
-    noCmd <|
+    singleton
         { state
             | colorPickers = newColorPickers
             , brandedDomainBeingEdited = { brandedDomain | colors = newColors }
@@ -216,13 +216,13 @@ updateColorPicker colorIdentifier msg state =
 -- implements SetPopoverMsg
 
 
-setPopover : ColorIdentifier -> Popover.State -> EditBrandedDomainState -> ( EditBrandedDomainState, Cmd msg )
+setPopover : ColorIdentifier -> Popover.State -> EditBrandedDomainState -> Return msg EditBrandedDomainState
 setPopover colorIdentifier popover state =
     let
         newPopovers =
             Enum.insert colorIdentifier popover state.popovers
     in
-    noCmd <| { state | popovers = newPopovers }
+    singleton { state | popovers = newPopovers }
 
 
 
@@ -335,28 +335,28 @@ setColor ident color state =
 -- implements OpenFaviconFileSelectMsg
 
 
-openFaviconFileSelect : (Msg -> msg) -> state -> ( state, Cmd msg )
+openFaviconFileSelect : (Msg -> msg) -> state -> Return msg state
 openFaviconFileSelect embed state =
     let
         callback : File -> msg
         callback file =
             embed <| LoadFaviconFileMsg file
     in
-    ( state, FileSelect.file [ "image/png", "image/jpg", "image/jpeg" ] callback )
+    return state <| FileSelect.file [ "image/png", "image/jpg", "image/jpeg" ] callback
 
 
 
 -- implements LoadFaviconFileMsg
 
 
-loadFaviconFile : (Msg -> msg) -> File -> state -> ( state, Cmd msg )
+loadFaviconFile : (Msg -> msg) -> File -> state -> Return msg state
 loadFaviconFile embed file state =
     let
         callback : String -> msg
         callback contents =
             embed <| SetFaviconMsg contents
     in
-    ( state, Task.perform callback <| File.toUrl file )
+    return state <| Task.perform callback <| File.toUrl file
 
 
 

@@ -8,6 +8,7 @@ import Html.Attributes exposing (class, style)
 import Html.Events exposing (onClick)
 import Lib.Types.FlashMessage exposing (FlashMessage(..))
 import Process
+import Return exposing (..)
 import Task
 import Utils exposing (..)
 
@@ -56,7 +57,7 @@ type Msg
     | RemoveFlashMessageMsg AlertID
 
 
-update : Params msg -> Msg -> State -> ( State, Cmd msg )
+update : Params msg -> Msg -> State -> Return msg State
 update { embed } msg state =
     case msg of
         -- | Schedule for fade-out in 10 seconds.
@@ -79,7 +80,7 @@ update { embed } msg state =
                 cmd =
                     Process.sleep 10000 |> Task.perform (\_ -> embed <| StartFadeoutMsg id)
             in
-            ( newState, cmd )
+            return newState cmd
 
         -- | Set state to `TransitionToInvisible` and schedule removal in 250ms.
         StartFadeoutMsg id ->
@@ -98,13 +99,13 @@ update { embed } msg state =
                 cmd =
                     Process.sleep 250 |> Task.perform (\_ -> embed <| RemoveFlashMessageMsg id)
             in
-            ( { state | alerts = newAlerts }, cmd )
+            return { state | alerts = newAlerts } cmd
 
         RemoveFlashMessageMsg id_ ->
-            ( { state | alerts = List.filter (\{ id } -> id_ /= id) state.alerts }, Cmd.none )
+            singleton { state | alerts = List.filter (\{ id } -> id_ /= id) state.alerts }
 
 
-addFlashMessage : Params msg -> FlashMessage -> State -> ( State, Cmd msg )
+addFlashMessage : Params msg -> FlashMessage -> State -> Return msg State
 addFlashMessage params =
     update params << AddFlashMessageMsg
 

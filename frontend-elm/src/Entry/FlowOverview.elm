@@ -13,6 +13,7 @@ import Json.Decode as JD exposing (Value)
 import Lib.Components.FlashMessage as FlashMessage
 import Lib.Types.FlashMessage exposing (FlashMessage(..))
 import Maybe as M
+import Return exposing (..)
 
 
 main : Program Value Model Msg
@@ -25,7 +26,7 @@ main =
         }
 
 
-init : Value -> ( Model, Cmd Msg )
+init : Value -> Return Msg Model
 init flagsValue =
     let
         ( state, cmd ) =
@@ -46,12 +47,12 @@ init flagsValue =
                             ( AppOk { flags = flags, innerModel = innerModel }, getInstanceViewCmd )
 
                         Nothing ->
-                            ( Failure "Missing xtoken cookie", Cmd.none )
+                            singleton <| Failure "Missing xtoken cookie"
 
                 Err err ->
-                    ( Failure (JD.errorToString err), Cmd.none )
+                    singleton <| Failure <| JD.errorToString err
     in
-    ( { state = state, flashMessages = FlashMessage.initialState }, cmd )
+    return { state = state, flashMessages = FlashMessage.initialState } cmd
 
 
 subscriptions : Model -> Sub Msg

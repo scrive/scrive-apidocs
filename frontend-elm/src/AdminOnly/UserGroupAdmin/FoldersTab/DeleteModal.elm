@@ -16,6 +16,7 @@ import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
 import Http
 import Http.Detailed
+import Return exposing (..)
 import Util.APIError exposing (apiErrorMessage)
 import Utils exposing (..)
 
@@ -32,47 +33,39 @@ type Msg
     | GotResponse (Result (Http.Detailed.Error String) ( Http.Metadata, String ))
 
 
-init : Folder -> ( Model, Cmd msg )
+init : Folder -> Return msg Model
 init folder =
-    let
-        model =
-            { modalVisibility = Modal.hidden
-            , folder = folder
-            }
-    in
-    ( model, Cmd.none )
+    singleton
+        { modalVisibility = Modal.hidden
+        , folder = folder
+        }
 
 
-update : (Msg -> msg) -> Globals msg -> Msg -> Cmd msg -> Model -> ( Model, Cmd msg )
+update : (Msg -> msg) -> Globals msg -> Msg -> Cmd msg -> Model -> Return msg Model
 update embed globals msg onSuccessCmd model =
     case msg of
         CloseModal ->
-            ( { model | modalVisibility = Modal.hidden }, Cmd.none )
+            singleton { model | modalVisibility = Modal.hidden }
 
         SubmitForm ->
-            ( model
-            , Http.post
-                { url = "/api/frontend/folders/" ++ model.folder.id ++ "/delete"
-                , body = formBody globals []
-                , expect = Http.Detailed.expectString (embed << GotResponse)
-                }
-            )
+            return model <|
+                Http.post
+                    { url = "/api/frontend/folders/" ++ model.folder.id ++ "/delete"
+                    , body = formBody globals []
+                    , expect = Http.Detailed.expectString (embed << GotResponse)
+                    }
 
         GotResponse result ->
             case result of
                 Ok _ ->
-                    ( { model | modalVisibility = Modal.hidden }
-                    , Cmd.batch
-                        [ globals.flashMessage <| FlashMessage.success "Folder was deleted"
-                        , onSuccessCmd
-                        ]
-                    )
+                    return { model | modalVisibility = Modal.hidden } <|
+                        Cmd.batch
+                            [ globals.flashMessage <| FlashMessage.success "Folder was deleted"
+                            , onSuccessCmd
+                            ]
 
                 Err error ->
-                    ( model
-                    , globals.flashMessage <|
-                        FlashMessage.error (apiErrorMessage error "Error deleting the folder")
-                    )
+                    return model <| globals.flashMessage <| FlashMessage.error (apiErrorMessage error "Error deleting the folder")
 
 
 show : Model -> Model

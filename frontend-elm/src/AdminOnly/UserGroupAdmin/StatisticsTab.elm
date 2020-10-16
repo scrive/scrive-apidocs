@@ -24,6 +24,7 @@ import Http
 import Json.Decode as JD exposing (Decoder)
 import List as L
 import Maybe as M
+import Return exposing (..)
 import Url.Builder as UB
 import Utils exposing (..)
 
@@ -109,7 +110,7 @@ tabShareableLinkName =
     "stats-shareable-link"
 
 
-init : (Msg -> msg) -> Page -> Config -> ( Model, Cmd msg )
+init : (Msg -> msg) -> Page -> Config -> Return msg Model
 init embed page config =
     let
         model =
@@ -187,7 +188,7 @@ fromPage isShareableLink =
     }
 
 
-updatePage : (Msg -> msg) -> Page -> Config -> Model -> ( Model, Cmd msg )
+updatePage : (Msg -> msg) -> Page -> Config -> Model -> Return msg Model
 updatePage embed page config model0 =
     let
         model =
@@ -197,10 +198,10 @@ updatePage embed page config model0 =
                 , tabState = Tab.customInitialState <| ite page tabShareableLinkName tabName
             }
     in
-    ( model, Cmd.map embed <| Cmd.batch [ getStatsCmd Days model, getStatsCmd Months model ] )
+    return model <| Cmd.map embed <| Cmd.batch [ getStatsCmd Days model, getStatsCmd Months model ]
 
 
-update : (Msg -> msg) -> Globals msg -> Msg -> Model -> ( Model, Cmd msg )
+update : (Msg -> msg) -> Globals msg -> Msg -> Model -> Return msg Model
 update _ globals msg model =
     case msg of
         TabMsg state ->
@@ -211,9 +212,7 @@ update _ globals msg model =
                         , page = state == Tab.customInitialState tabShareableLinkName
                     }
             in
-            ( model1
-            , globals.setPageUrlFromModel
-            )
+            return model1 globals.setPageUrlFromModel
 
         GotStats daysOrMonths result ->
             let
@@ -225,14 +224,13 @@ update _ globals msg model =
                         Err _ ->
                             Failure
             in
-            ( case daysOrMonths of
-                Days ->
-                    { model | sDaysStats = sStats }
+            singleton <|
+                case daysOrMonths of
+                    Days ->
+                        { model | sDaysStats = sStats }
 
-                Months ->
-                    { model | sMonthsStats = sStats }
-            , Cmd.none
-            )
+                    Months ->
+                        { model | sMonthsStats = sStats }
 
         GotSLStats daysOrMonths result ->
             let
@@ -244,30 +242,28 @@ update _ globals msg model =
                         Err _ ->
                             Failure
             in
-            ( case daysOrMonths of
-                Days ->
-                    { model | sSLDaysStats = sStats }
+            singleton <|
+                case daysOrMonths of
+                    Days ->
+                        { model | sSLDaysStats = sStats }
 
-                Months ->
-                    { model | sSLMonthsStats = sStats }
-            , Cmd.none
-            )
+                    Months ->
+                        { model | sSLMonthsStats = sStats }
 
         StatsRowClicked daysOrMonths isShareableLink date ->
-            ( case ( daysOrMonths, isShareableLink ) of
-                ( Days, False ) ->
-                    { model | sDaysStats = statusMap (toggleDateRow date) model.sDaysStats }
+            singleton <|
+                case ( daysOrMonths, isShareableLink ) of
+                    ( Days, False ) ->
+                        { model | sDaysStats = statusMap (toggleDateRow date) model.sDaysStats }
 
-                ( Days, True ) ->
-                    { model | sSLDaysStats = statusMap (toggleDateRow date) model.sSLDaysStats }
+                    ( Days, True ) ->
+                        { model | sSLDaysStats = statusMap (toggleDateRow date) model.sSLDaysStats }
 
-                ( Months, False ) ->
-                    { model | sMonthsStats = statusMap (toggleDateRow date) model.sMonthsStats }
+                    ( Months, False ) ->
+                        { model | sMonthsStats = statusMap (toggleDateRow date) model.sMonthsStats }
 
-                ( Months, True ) ->
-                    { model | sSLMonthsStats = statusMap (toggleDateRow date) model.sSLMonthsStats }
-            , Cmd.none
-            )
+                    ( Months, True ) ->
+                        { model | sSLMonthsStats = statusMap (toggleDateRow date) model.sSLMonthsStats }
 
 
 toggleDateRow : String -> Stats rowData -> Stats rowData

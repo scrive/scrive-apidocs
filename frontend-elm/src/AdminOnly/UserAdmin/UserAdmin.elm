@@ -19,6 +19,7 @@ import Bootstrap.Utilities.Spacing as Spacing
 import Dict
 import Html exposing (Html, text)
 import Maybe as M
+import Return exposing (..)
 import Url.Parser as UP exposing ((</>), (<?>), Parser)
 import Url.Parser.Query as UPQ
 import Utils exposing (..)
@@ -57,7 +58,7 @@ type Msg
     | DocumentsTabMsg DocumentsTab.Msg
 
 
-init : (Msg -> msg) -> Page -> ( Model, Cmd msg )
+init : (Msg -> msg) -> Page -> Return msg Model
 init embed page =
     let
         model =
@@ -136,17 +137,16 @@ pageFromModel model =
                 |> M.map (Home uid << DocumentsTab)
 
 
-update : (Msg -> msg) -> Globals msg -> Msg -> Model -> ( Model, Cmd msg )
+update : (Msg -> msg) -> Globals msg -> Msg -> Model -> Return msg Model
 update embed globals msg model =
     case msg of
         TabMsg state ->
-            ( { model | tabState = state }
-            , if state == Tab.customInitialState "goback" then
-                globals.gotoUserAdminTab
+            return { model | tabState = state } <|
+                if state == Tab.customInitialState "goback" then
+                    globals.gotoUserAdminTab
 
-              else
-                Cmd.none
-            )
+                else
+                    Cmd.none
 
         DetailsTabMsg tabMsg ->
             let
@@ -156,7 +156,7 @@ update embed globals msg model =
                 ( newDetailsTab, cmd ) =
                     maybeUpdate updateDetailsTab model.mDetailsTab
             in
-            ( { model | mDetailsTab = newDetailsTab }, cmd )
+            return { model | mDetailsTab = newDetailsTab } cmd
 
         StatisticsTabMsg tabMsg ->
             let
@@ -166,7 +166,7 @@ update embed globals msg model =
                 ( newStatisticsTab, cmd ) =
                     maybeUpdate updateStatisticsTab model.mStatisticsTab
             in
-            ( { model | mStatisticsTab = newStatisticsTab }, cmd )
+            return { model | mStatisticsTab = newStatisticsTab } cmd
 
         DocumentsTabMsg tabMsg ->
             let
@@ -176,10 +176,10 @@ update embed globals msg model =
                 ( newDocumentsTab, cmd ) =
                     maybeUpdate updateDocumentsTab model.mDocumentsTab
             in
-            ( { model | mDocumentsTab = newDocumentsTab }, cmd )
+            return { model | mDocumentsTab = newDocumentsTab } cmd
 
 
-updatePage : (Msg -> msg) -> Page -> Model -> ( Model, Cmd msg )
+updatePage : (Msg -> msg) -> Page -> Model -> Return msg Model
 updatePage embed page model =
     case page of
         Home _ DetailsTab ->
@@ -196,13 +196,13 @@ updatePage embed page model =
                         |> M.withDefault
                             (DetailsTab.init (embed << DetailsTabMsg) (userID page))
             in
-            ( { model
-                | tabState = Tab.customInitialState DetailsTab.tabName
-                , page = page
-                , mDetailsTab = Just tab
-              }
-            , tabCmd
-            )
+            return
+                { model
+                    | tabState = Tab.customInitialState DetailsTab.tabName
+                    , page = page
+                    , mDetailsTab = Just tab
+                }
+                tabCmd
 
         Home _ (StatisticsTab tabPage) ->
             let
@@ -215,13 +215,13 @@ updatePage embed page model =
                                 (StatisticsTab.ConfigForUser <| userID page)
                             )
             in
-            ( { model
-                | mStatisticsTab = Just tab
-                , page = page
-                , tabState = Tab.customInitialState StatisticsTab.tabName
-              }
-            , tabCmd
-            )
+            return
+                { model
+                    | mStatisticsTab = Just tab
+                    , page = page
+                    , tabState = Tab.customInitialState StatisticsTab.tabName
+                }
+                tabCmd
 
         Home _ (DocumentsTab tabPage) ->
             let
@@ -231,13 +231,13 @@ updatePage embed page model =
                         |> M.withDefault
                             (DocumentsTab.init (embed << DocumentsTabMsg) (ConfigForUser <| userID page) tabPage.paginationPageNum)
             in
-            ( { model
-                | mDocumentsTab = Just tab
-                , page = page
-                , tabState = Tab.customInitialState DocumentsTab.tabName
-              }
-            , tabCmd
-            )
+            return
+                { model
+                    | mDocumentsTab = Just tab
+                    , page = page
+                    , tabState = Tab.customInitialState DocumentsTab.tabName
+                }
+                tabCmd
 
 
 view : (Msg -> msg) -> Model -> Html msg

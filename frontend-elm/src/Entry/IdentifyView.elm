@@ -19,6 +19,7 @@ import Lib.Json.ID exposing (idDecoder)
 import Lib.Json.Localization exposing (localisationDecoder)
 import Lib.Types.FlashMessage exposing (FlashMessage(..))
 import Lib.Types.ID exposing (showId)
+import Return exposing (..)
 import Utils exposing (perform)
 
 
@@ -48,7 +49,7 @@ decodeFlags =
         |> JDP.required "maxFailuresExceeded" JD.bool
 
 
-init : JD.Value -> ( Model, Cmd Msg )
+init : JD.Value -> Return Msg Model
 init value =
     case JD.decodeValue decodeFlags value of
         Ok flags ->
@@ -105,11 +106,11 @@ init value =
                         ( newModel2, cmd2 ) =
                             update (ErrorTraceMsg fields) newModel
                     in
-                    ( newModel2, Cmd.batch [ cmd, cmd2 ] )
+                    return newModel2 <| Cmd.batch [ cmd, cmd2 ]
             in
             case rInnerModel of
                 Ok innerModel ->
-                    ( { model | state = IdentifyView { flags = flags, innerModel = innerModel } }, Cmd.none )
+                    singleton { model | state = IdentifyView { flags = flags, innerModel = innerModel } }
 
                 Err errMsg ->
                     let
@@ -129,11 +130,8 @@ init value =
                     { flashMessages = FlashMessage.initialState
                     , state = Error { errorView = Html.text <| JD.errorToString err }
                     }
-
-                cmd =
-                    perform <| AddFlashMessageMsg (FlashError "Failed to decode flags")
             in
-            ( model, cmd )
+            return model <| perform <| AddFlashMessageMsg <| FlashError "Failed to decode flags"
 
 
 main : Program JD.Value Model Msg

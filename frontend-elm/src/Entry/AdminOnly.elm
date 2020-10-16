@@ -19,6 +19,7 @@ import Json.Decode as JD exposing (Decoder, Value)
 import Json.Decode.Pipeline as JDP
 import List as L
 import Maybe as M
+import Return exposing (..)
 import Url exposing (Url)
 import Url.Builder as UB
 import Url.Parser as UP exposing ((</>))
@@ -78,7 +79,7 @@ type Msg
     | OnLoggedOut (Result Http.Error ())
 
 
-init : Value -> Url -> Navigation.Key -> ( Model, Cmd Msg )
+init : Value -> Url -> Navigation.Key -> Return Msg Model
 init flagsValue url0 navKey =
     let
         ( navbarState, navbarCmd ) =
@@ -205,15 +206,14 @@ init flagsValue url0 navKey =
                         |> (\( ao, aoCmd ) -> ( Just ao, aoCmd ))
 
                 NotFound ->
-                    ( Nothing, Cmd.none )
+                    singleton Nothing
     in
-    ( { model | mAdminOnly = mAdminOnly, page = page }
-    , Cmd.batch
-        [ navbarCmd
-        , flashCmd
-        , adminOnlyCmd
-        ]
-    )
+    return { model | mAdminOnly = mAdminOnly, page = page } <|
+        Cmd.batch
+            [ navbarCmd
+            , flashCmd
+            , adminOnlyCmd
+            ]
 
 
 decodeFlags : Decoder Flags
@@ -223,11 +223,11 @@ decodeFlags =
         |> JDP.required "cdnBaseUrl" JD.string
 
 
-urlUpdate : Url -> Model -> ( Model, Cmd Msg )
+urlUpdate : Url -> Model -> Return Msg Model
 urlUpdate url model =
     case decode url of
         Nothing ->
-            ( { model | page = NotFound }, Cmd.none )
+            singleton { model | page = NotFound }
 
         Just page ->
             let
@@ -252,12 +252,10 @@ urlUpdate url model =
                                         adminOnlyPage
                                         adminOnly0
                     in
-                    ( { model | mAdminOnly = Just adminOnly, url = newUrl }
-                    , adminOnlyCmd
-                    )
+                    return { model | mAdminOnly = Just adminOnly, url = newUrl } adminOnlyCmd
 
                 _ ->
-                    ( model, Cmd.none )
+                    singleton model
 
 
 decode : Url -> Maybe Page
@@ -314,7 +312,7 @@ replacePageUrl url pageUrl =
     { url | query = query, path = path, fragment = pageUrl.fragment }
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model -> Return Msg Model
 update msg model =
     case msg of
         ClickedLink req ->
@@ -326,23 +324,19 @@ update msg model =
                                 newUrl =
                                     replacePageUrl url <| fromPage page
                             in
-                            ( { model | url = newUrl }
-                            , Navigation.pushUrl model.navKey <| Url.toString <| newUrl
-                            )
+                            return { model | url = newUrl } <| Navigation.pushUrl model.navKey <| Url.toString <| newUrl
 
                         Nothing ->
-                            ( model, Navigation.load <| Url.toString url )
+                            return model <| Navigation.load <| Url.toString url
 
                 Browser.External href ->
-                    ( model, Navigation.load href )
+                    return model <| Navigation.load href
 
         UrlChanged url ->
             urlUpdate url model
 
         NavbarMsg state ->
-            ( { model | navbarState = state }
-            , Cmd.none
-            )
+            singleton { model | navbarState = state }
 
         AdminOnlyMsg adminOnlyMsg ->
             let
@@ -352,19 +346,17 @@ update msg model =
                 ( newAdminOnly, cmd ) =
                     maybeUpdate updateAdminOnly model.mAdminOnly
             in
-            ( { model | mAdminOnly = newAdminOnly }, cmd )
+            return { model | mAdminOnly = newAdminOnly } cmd
 
         AddFlashMessage flash ->
-            ( { model | flashMessage = FlashMessage.addFlashMessage flash model.flashMessage }
-            , Cmd.none
-            )
+            singleton { model | flashMessage = FlashMessage.addFlashMessage flash model.flashMessage }
 
         FlashMessageMsg flashMessageMsg ->
             let
                 ( flashModel, flashCmd ) =
                     FlashMessage.update flashMessageMsg model.flashMessage
             in
-            ( { model | flashMessage = flashModel }, flashCmd )
+            return { model | flashMessage = flashModel } flashCmd
 
         SetPageUrl pageUrl ->
             let
@@ -375,35 +367,29 @@ update msg model =
                     L.head pageUrl.path == Just "adminonly"
             in
             if urlIsInternal then
-                ( model, Navigation.pushUrl model.navKey newUrl )
+                return model <| Navigation.pushUrl model.navKey newUrl
 
             else
-                ( model, Navigation.load newUrl )
+                return model <| Navigation.load newUrl
 
         SetPageUrlFromModel ->
             let
                 newUrl =
                     Url.toString <| replacePageUrl model.url <| fromPage <| pageFromModel model
             in
-            ( model, Navigation.pushUrl model.navKey newUrl )
+            return model <| Navigation.pushUrl model.navKey newUrl
 
         Logout ->
-            ( model, logoutCmd )
+            return model logoutCmd
 
         OnLoggedOut res ->
-            case res of
-                Ok () ->
-                    ( model, Navigation.load "/" )
+            return model <|
+                case res of
+                    Ok () ->
+                        Navigation.load "/"
 
-                Err err ->
-                    let
-                        cmd =
-                            model.globals.flashMessage <|
-                                FlashMessage.error <|
-                                    "Error logging out: "
-                                        ++ httpErrorToString err
-                    in
-                    ( model, cmd )
+                    Err err ->
+                        model.globals.flashMessage <| FlashMessage.error <| "Error logging out: " ++ httpErrorToString err
 
 
 pageFromModel : Model -> Page

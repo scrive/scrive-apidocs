@@ -16,6 +16,7 @@ import Lib.Types.ID exposing (ID, showId)
 import Lib.Types.Localization exposing (Localization)
 import Lib.Types.SignatoryLink exposing (SignatoryLink(..))
 import Platform.Cmd as Cmd
+import Return exposing (..)
 
 
 type alias Params msg =
@@ -47,7 +48,7 @@ type Msg
     | SMSPinIdentifyToViewCallbackMsg (Result Error ())
 
 
-update : Params msg -> State -> Msg -> ( State, Cmd msg )
+update : Params msg -> State -> Msg -> Return msg State
 update params state msg =
     case msg of
         IdentifyButtonClickedMsg ->
@@ -64,7 +65,7 @@ update params state msg =
         SendSMSPinToViewCallbackMsg res ->
             case res of
                 Ok () ->
-                    ( state, Cmd.none )
+                    singleton state
 
                 Err err ->
                     let
@@ -77,41 +78,38 @@ update params state msg =
                             , ( "http_error", encodeError err )
                             ]
                     in
-                    ( Idle
-                    , Cmd.batch
-                        [ perform <| params.addFlashMessageMsg <| FlashError flashMessage
-                        , perform <| params.errorTraceMsg errorFields
-                        ]
-                    )
+                    return Idle <|
+                        Cmd.batch
+                            [ perform <| params.addFlashMessageMsg <| FlashError flashMessage
+                            , perform <| params.errorTraceMsg errorFields
+                            ]
 
         UpdatePinFieldMsg pin ->
-            case state of
-                EnterPin _ ->
-                    ( EnterPin { pin = pin }, Cmd.none )
+            singleton <|
+                case state of
+                    EnterPin _ ->
+                        EnterPin { pin = pin }
 
-                _ ->
-                    ( state, Cmd.none )
+                    _ ->
+                        state
 
         ConfirmPinButtonClickedMsg ->
             case state of
                 EnterPin { pin } ->
-                    let
-                        postReq =
-                            post
-                                { url = params.verifyUrl
-                                , body = formBody params [ ( "sms_pin", pin ) ]
-                                , expect = expectWhatever <| params.embed << SMSPinIdentifyToViewCallbackMsg
-                                }
-                    in
-                    ( state, postReq )
+                    return state <|
+                        post
+                            { url = params.verifyUrl
+                            , body = formBody params [ ( "sms_pin", pin ) ]
+                            , expect = expectWhatever <| params.embed << SMSPinIdentifyToViewCallbackMsg
+                            }
 
                 _ ->
-                    ( state, Cmd.none )
+                    singleton state
 
         SMSPinIdentifyToViewCallbackMsg res ->
             case res of
                 Ok () ->
-                    ( state, reload )
+                    return state reload
 
                 -- reloading the page will show the document
                 Err err ->
@@ -122,7 +120,7 @@ update params state msg =
                                 flashMessage =
                                     params.localization.identifyWithPin.invalidPin
                             in
-                            ( state, perform <| params.addFlashMessageMsg <| FlashError flashMessage )
+                            return state <| perform <| params.addFlashMessageMsg <| FlashError flashMessage
 
                         _ ->
                             -- An unexpected error has occurred. Show 'invalid pin' message to make the user try again.
@@ -136,12 +134,11 @@ update params state msg =
                                     , ( "http_error", encodeError err )
                                     ]
                             in
-                            ( EnterPin { pin = "" }
-                            , Cmd.batch
-                                [ perform <| params.addFlashMessageMsg <| FlashError flashMessage
-                                , perform <| params.errorTraceMsg errorFields
-                                ]
-                            )
+                            return (EnterPin { pin = "" }) <|
+                                Cmd.batch
+                                    [ perform <| params.addFlashMessageMsg <| FlashError flashMessage
+                                    , perform <| params.errorTraceMsg errorFields
+                                    ]
 
 
 viewContent : Params msg -> State -> Html msg -> Html msg
