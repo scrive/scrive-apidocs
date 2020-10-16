@@ -78,6 +78,7 @@ _build/
 db-docs/
 .ssh/
 ghc-pkg.list
+git-crypt.key
 *.log
 
 # Frontend stuff

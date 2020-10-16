@@ -1,4 +1,5 @@
-#!/usr/bin/bash -e
+#!/usr/bin/env bash
+set -e
 
 SCRIPT_NAME="$(basename -s .sh "$(readlink -f "$0")")"
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
