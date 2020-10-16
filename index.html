@@ -744,6 +744,10 @@ This is the only officially supported encoding for our API.
 </tr>
 </thead><tbody>
 <tr>
+<td>2020-10-15</td>
+<td>Adding dk_nemid_pid, dk_nemid_cpr and dk_nemid_cvr as authentication to sign/view/view archived</td>
+</tr>
+<tr>
 <td>2020-10-01</td>
 <td>Fixed changelog.</td>
 </tr>
@@ -3382,7 +3386,8 @@ Will not change.</p>
 This value can change before document is made ready for signing, and should
 not be used to identify signatories while document is a draft.</p>
 </td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
-<tr><td><p><code>authentication_type</code><br/><em>required</em></p></td><td><p>The type of authentication-to-view method to set for the signatory.</p>
+<tr><td><p><code>authentication_type</code><br/><em>required</em></p></td><td><p>The type of authentication-to-view method to set for the signatory.
+<code>dk_nemid</code> is legacy equivalent of <code>dk_nemid_cpr</code>.</p>
 </td><td><p>string</p></td><td>formData</td></tr>
 <tr><td><p><code>personal_number</code><br/><em>optional</em></p></td><td><p>If the <code>authentication_type</code> requires a personal number, and the
 signatory doesn’t have one set already, then it must be provided and
@@ -3444,7 +3449,8 @@ Will not change.</p>
 This value can change before document is made ready for signing, and should
 not be used to identify signatories while document is a draft.</p>
 </td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
-<tr><td><p><code>authentication_type</code><br/><em>required</em></p></td><td><p>The type of authentication-to-sign method to set for the signatory.</p>
+<tr><td><p><code>authentication_type</code><br/><em>required</em></p></td><td><p>The type of authentication-to-sign method to set for the signatory.
+<code>dk_nemid</code> is legacy equivalent of <code>dk_nemid_cpr</code>.</p>
 </td><td><p>string</p></td><td>formData</td></tr>
 <tr><td><p><code>personal_number</code><br/><em>optional</em></p></td><td><p>If provided, it must be valid for the chosen authentication-to-sign
 method.</p>
@@ -7837,7 +7843,8 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 
 <div class="json-schema">
 
-<p>This setting forces signatories to authenticate using the supplied identification method to view the document before signing.</p>
+<p>This setting forces signatories to authenticate using the supplied identification method to view the document before signing.
+<code>dk_nemid</code> is legacy equivalent of <code>dk_nemid_cpr</code>.</p>
 
 
 <p>Default: <code>"standard"</code></p>
@@ -7851,6 +7858,9 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 <li><code>se_bankid</code></li>
 <li><code>no_bankid</code></li>
 <li><code>dk_nemid</code></li>
+<li><code>dk_nemid_pid</code></li>
+<li><code>dk_nemid_cpr</code></li>
+<li><code>dk_nemid_cvr</code></li>
 <li><code>fi_tupas</code></li>
 <li><code>verimi</code></li>
 <li><code>nl_idin</code></li>
@@ -7863,7 +7873,8 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 
 <div class="json-schema">
 
-<p>This setting forces signatories to authenticate using the supplied identification method to view the document once it has been signed and resides in the e-archive.</p>
+<p>This setting forces signatories to authenticate using the supplied identification method to view the document once it has been signed and resides in the e-archive.
+<code>dk_nemid</code> is legacy equivalent of <code>dk_nemid_cpr</code>.</p>
 
 
 <p>Default: <code>"standard"</code></p>
@@ -7877,6 +7888,9 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 <li><code>se_bankid</code></li>
 <li><code>no_bankid</code></li>
 <li><code>dk_nemid</code></li>
+<li><code>dk_nemid_pid</code></li>
+<li><code>dk_nemid_cpr</code></li>
+<li><code>dk_nemid_cvr</code></li>
 <li><code>fi_tupas</code></li>
 <li><code>verimi</code></li>
 <li><code>nl_idin</code></li>
@@ -7889,6 +7903,10 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 
 <div class="json-schema">
 
+<p>This setting forces user to authenticate to sign.
+<code>dk_nemid</code> is legacy equivalent of <code>dk_nemid_cpr</code>.</p>
+
+
 <p>Default: <code>"standard"</code></p>
 
 <p>This element must be one of the following enum values:</p>
@@ -7900,6 +7918,9 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 <li><code>se_bankid</code></li>
 <li><code>no_bankid</code></li>
 <li><code>dk_nemid</code></li>
+<li><code>dk_nemid_pid</code></li>
+<li><code>dk_nemid_cpr</code></li>
+<li><code>dk_nemid_cvr</code></li>
 <li><code>fi_tupas</code></li>
 <li><code>onfido_document_check</code></li>
 <li><code>onfido_document_and_photo_check</code></li>
@@ -11867,7 +11888,8 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 
 <div class="json-schema">
 
-<p>This setting forces signatories to authenticate using the supplied identification method to view the document before signing.</p>
+<p>This setting forces signatories to authenticate using the supplied identification method to view the document before signing.
+<code>dk_nemid</code> is legacy equivalent of <code>dk_nemid_cpr</code>.</p>
 
 
 <p>Default: <code>"standard"</code></p>
@@ -11881,6 +11903,9 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 <li><code>se_bankid</code></li>
 <li><code>no_bankid</code></li>
 <li><code>dk_nemid</code></li>
+<li><code>dk_nemid_pid</code></li>
+<li><code>dk_nemid_cpr</code></li>
+<li><code>dk_nemid_cvr</code></li>
 <li><code>fi_tupas</code></li>
 <li><code>verimi</code></li>
 <li><code>nl_idin</code></li>
@@ -11893,7 +11918,8 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 
 <div class="json-schema">
 
-<p>This setting forces signatories to authenticate using the supplied identification method to view the document once it has been signed and resides in the e-archive.</p>
+<p>This setting forces signatories to authenticate using the supplied identification method to view the document once it has been signed and resides in the e-archive.
+<code>dk_nemid</code> is legacy equivalent of <code>dk_nemid_cpr</code>.</p>
 
 
 <p>Default: <code>"standard"</code></p>
@@ -11907,6 +11933,9 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 <li><code>se_bankid</code></li>
 <li><code>no_bankid</code></li>
 <li><code>dk_nemid</code></li>
+<li><code>dk_nemid_pid</code></li>
+<li><code>dk_nemid_cpr</code></li>
+<li><code>dk_nemid_cvr</code></li>
 <li><code>fi_tupas</code></li>
 <li><code>verimi</code></li>
 <li><code>nl_idin</code></li>
@@ -11919,6 +11948,10 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 
 <div class="json-schema">
 
+<p>This setting forces user to authenticate to sign.
+<code>dk_nemid</code> is legacy equivalent of <code>dk_nemid_cpr</code>.</p>
+
+
 <p>Default: <code>"standard"</code></p>
 
 <p>This element must be one of the following enum values:</p>
@@ -11930,6 +11963,9 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 <li><code>se_bankid</code></li>
 <li><code>no_bankid</code></li>
 <li><code>dk_nemid</code></li>
+<li><code>dk_nemid_pid</code></li>
+<li><code>dk_nemid_cpr</code></li>
+<li><code>dk_nemid_cvr</code></li>
 <li><code>fi_tupas</code></li>
 <li><code>onfido_document_check</code></li>
 <li><code>onfido_document_and_photo_check</code></li>
@@ -14931,7 +14967,8 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 
 <div class="json-schema">
 
-<p>This setting forces signatories to authenticate using the supplied identification method to view the document before signing.</p>
+<p>This setting forces signatories to authenticate using the supplied identification method to view the document before signing.
+<code>dk_nemid</code> is legacy equivalent of <code>dk_nemid_cpr</code>.</p>
 
 
 <p>Default: <code>"standard"</code></p>
@@ -14945,6 +14982,9 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 <li><code>se_bankid</code></li>
 <li><code>no_bankid</code></li>
 <li><code>dk_nemid</code></li>
+<li><code>dk_nemid_pid</code></li>
+<li><code>dk_nemid_cpr</code></li>
+<li><code>dk_nemid_cvr</code></li>
 <li><code>fi_tupas</code></li>
 <li><code>verimi</code></li>
 <li><code>nl_idin</code></li>
@@ -14957,7 +14997,8 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 
 <div class="json-schema">
 
-<p>This setting forces signatories to authenticate using the supplied identification method to view the document once it has been signed and resides in the e-archive.</p>
+<p>This setting forces signatories to authenticate using the supplied identification method to view the document once it has been signed and resides in the e-archive.
+<code>dk_nemid</code> is legacy equivalent of <code>dk_nemid_cpr</code>.</p>
 
 
 <p>Default: <code>"standard"</code></p>
@@ -14971,6 +15012,9 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 <li><code>se_bankid</code></li>
 <li><code>no_bankid</code></li>
 <li><code>dk_nemid</code></li>
+<li><code>dk_nemid_pid</code></li>
+<li><code>dk_nemid_cpr</code></li>
+<li><code>dk_nemid_cvr</code></li>
 <li><code>fi_tupas</code></li>
 <li><code>verimi</code></li>
 <li><code>nl_idin</code></li>
@@ -14983,6 +15027,10 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 
 <div class="json-schema">
 
+<p>This setting forces user to authenticate to sign.
+<code>dk_nemid</code> is legacy equivalent of <code>dk_nemid_cpr</code>.</p>
+
+
 <p>Default: <code>"standard"</code></p>
 
 <p>This element must be one of the following enum values:</p>
@@ -14994,6 +15042,9 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 <li><code>se_bankid</code></li>
 <li><code>no_bankid</code></li>
 <li><code>dk_nemid</code></li>
+<li><code>dk_nemid_pid</code></li>
+<li><code>dk_nemid_cpr</code></li>
+<li><code>dk_nemid_cvr</code></li>
 <li><code>fi_tupas</code></li>
 <li><code>onfido_document_check</code></li>
 <li><code>onfido_document_and_photo_check</code></li>
