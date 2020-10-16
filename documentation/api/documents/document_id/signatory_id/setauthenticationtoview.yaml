@@ -29,11 +29,15 @@ post:
         - se_bankid
         - no_bankid
         - dk_nemid
+        - dk_nemid_pid
+        - dk_nemid_cpr
+        - dk_nemid_cvr
         - fi_tupas
         - verimi
       required: true
       description: |
         The type of authentication-to-view method to set for the signatory.
+        `dk_nemid` is legacy equivalent of `dk_nemid_cpr`.
     - name: personal_number
       in: formData
       type: string

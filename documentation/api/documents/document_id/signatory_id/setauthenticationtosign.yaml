@@ -30,12 +30,16 @@ post:
         - se_bankid
         - no_bankid
         - dk_nemid
+        - dk_nemid_pid
+        - dk_nemid_cpr
+        - dk_nemid_cvr
         - fi_tupas
         - onfido_document_check
         - onfido_document_and_photo_check
       required: true
       description: |
         The type of authentication-to-sign method to set for the signatory.
+        `dk_nemid` is legacy equivalent of `dk_nemid_cpr`.
     - name: personal_number
       in: formData
       type: string
