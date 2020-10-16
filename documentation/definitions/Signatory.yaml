@@ -141,11 +141,15 @@ properties:
       - se_bankid
       - no_bankid
       - dk_nemid
+      - dk_nemid_pid
+      - dk_nemid_cpr
+      - dk_nemid_cvr
       - fi_tupas
       - verimi
       - nl_idin
     description: |
      This setting forces signatories to authenticate using the supplied identification method to view the document before signing.
+     `dk_nemid` is legacy equivalent of `dk_nemid_cpr`.
   authentication_method_to_view_archived:
     type: string
     default: standard
@@ -155,11 +159,15 @@ properties:
       - se_bankid
       - no_bankid
       - dk_nemid
+      - dk_nemid_pid
+      - dk_nemid_cpr
+      - dk_nemid_cvr
       - fi_tupas
       - verimi
       - nl_idin
     description: |
      This setting forces signatories to authenticate using the supplied identification method to view the document once it has been signed and resides in the e-archive.
+     `dk_nemid` is legacy equivalent of `dk_nemid_cpr`.
   authentication_method_to_sign:
     type: string
     default: standard
@@ -169,9 +177,15 @@ properties:
       - se_bankid
       - no_bankid
       - dk_nemid
+      - dk_nemid_pid
+      - dk_nemid_cpr
+      - dk_nemid_cvr
       - fi_tupas
       - onfido_document_check
       - onfido_document_and_photo_check
+    description: |
+     This setting forces user to authenticate to sign.
+     `dk_nemid` is legacy equivalent of `dk_nemid_cpr`.
   confirmation_delivery_method:
     type: string
     default: email

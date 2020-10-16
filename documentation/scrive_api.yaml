@@ -44,6 +44,7 @@ info:
 
     | Date        | Details of changes                                         |
     | ----------- | ---------------------------------------------------------- |
+    | 2020-10-15  | Adding dk_nemid_pid, dk_nemid_cpr and dk_nemid_cvr as authentication to sign/view/view archived     |
     | 2020-10-01  | Fixed changelog.       |
     | 2020-09-02  | Added two missing ip-addresses to list of endpoints.       |
     | 2020-06-29  | Added documentation for custom SMS messages. |
