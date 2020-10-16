@@ -104,7 +104,7 @@
 "_forwardToOtherPersonApproving":"Om du inte är rätt person att godkänna så kan du vidarebefordra det här dokumentet till en annan part och låta denna godkänna istället för dig.",
 "_forwardTypeYourMessageHere":"Skriv ditt meddelande här",
 "_invalidPhone":"Fel format. Korrekt format är +46701234567",
-"_invalidPin":"",
+"_invalidPin":"Fel PIN eller för många misslyckade försök under en timme.",
 "_lastname":"Efternamn",
 "_legalparagraphBody":"Detta e-postmeddelande innehåller konfidentiell information och får inte vidarebefordras. Avslöjande, kopiering, distribution  eller annan behandling av informationen i meddelandet är förbjuden och kan vara olagligt. Om du felaktigt mottagit detta meddelande ber vi dig omedelbart informera avsändaren samt att därefter radera meddelandet.",
 "_mailClosedCustomTextHeader":"Meddelande från <strong>$creatorname$</strong>",
