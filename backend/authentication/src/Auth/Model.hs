@@ -40,35 +40,19 @@ authenticateToken (OAuthAuthorization token secret atoken asecret) = do
     )
   fetchMaybe identity
 
--- TODO use UserId and UserGroupId types, once they are available in some ID component
 authenticateSession
   :: (MonadDB m, MonadThrow m, MonadTime m)
-  => AuthCookies
+  => (SessionCookieInfo, Maybe XToken)
   -> Text
-  -> m (Maybe (Int64, Int64, Int64))
-authenticateSession (AuthCookies SessionCookieInfo {..} xtoken) domain = do
-  now <- currentTime
-  runQuery_ $ rawSQL
-    (  "SELECT u.id, ug.id, u.home_folder_id "
-    <> "FROM sessions s "
-    <> "JOIN users u           ON s.user_id         = u.id "
-    <> "JOIN user_groups ug    ON u.user_group_id   = ug.id "
-    <> "WHERE s.id = $1 AND s.token = $2 AND s.csrf_token = $3 AND s.domain = $4 AND s.expires >= $5"
-    <> "LIMIT 1"
-    )
-    (cookieSessionID, cookieSessionToken, xtoken, domain, now)
-  fetchMaybe identity
-
-getSessionIDByCookies
-  :: (MonadDB m, MonadThrow m, MonadTime m) => AuthCookies -> Text -> m (Maybe SessionID)
-getSessionIDByCookies (AuthCookies SessionCookieInfo {..} xtoken) domain = do
+  -> m (Maybe SessionID)
+authenticateSession (SessionCookieInfo {..}, mXToken) domain = do
   now <- currentTime
   runQuery_ . sqlSelect "sessions" $ do
     sqlResult "id"
-    sqlWhereEq "id"         cookieSessionID
-    sqlWhereEq "token"      cookieSessionToken
-    sqlWhereEq "csrf_token" xtoken
-    sqlWhereEq "domain"     domain
+    sqlWhereEq "id"    cookieSessionID
+    sqlWhereEq "token" cookieSessionToken
+    whenJust mXToken $ sqlWhereEq "csrf_token"
+    sqlWhereEq "domain" domain
     sqlWhere $ "expires >=" <?> now
   fetchMaybe runIdentity
 
@@ -76,7 +60,7 @@ insertNewSession
   :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadTime m)
   => Text
   -> Maybe Int64
-  -> m AuthCookies
+  -> m (SessionCookieInfo, XToken)
 insertNewSession domain mUserId = do
   sessionToken :: MagicHash <- random
   xToken :: MagicHash <- random
@@ -90,11 +74,10 @@ insertNewSession domain mUserId = do
     sqlSet "csrf_token"  xToken
     sqlSet "domain"      domain
     sqlSet "expires"     expires
-  fetchOne fetchAuthCookies
+  fetchOne fetchCookieInfoAndXToken
   where
     timeoutSecs  = defaultSessionTimeoutSecs :: Int64
     secondsAfter = addUTCTime . fromIntegral
+    fetchCookieInfoAndXToken (sessionID, sessionToken, xToken) =
+      (SessionCookieInfo sessionID sessionToken, xToken)
 
-fetchAuthCookies :: (SessionID, MagicHash, MagicHash) -> AuthCookies
-fetchAuthCookies (sessionID, sessionToken, xToken) =
-  AuthCookies (SessionCookieInfo sessionID sessionToken) xToken

@@ -23,6 +23,7 @@ module Flow.Model
     , selectSignatoryIdsByInstanceUser
     , selectSignatoryInfo
     , selectUserNameFromKV
+    , selectUserIdsBySessionId
     , updateAggregatorState
     , insertUserAuthenticationConfigurations
     , selectUserAuthenticationConfigurations
@@ -41,6 +42,7 @@ import Database.PostgreSQL.PQTypes.SQL.Builder
 import qualified Data.Aeson as Aeson
 import qualified Data.Map as Map
 
+import Auth.Session.SessionID
 import Doc.DocumentID (DocumentID)
 import Doc.SignatoryLinkID (SignatoryLinkID)
 import Flow.Aggregator
@@ -50,7 +52,9 @@ import Flow.Message
 import Flow.Model.Types
 import Flow.Model.Types.FlowUserId
 import Flow.Names
+import Folder.FolderID (FolderID)
 import User.UserID (UserID)
+import UserGroup.Types (UserGroupID)
 
 sqlMaybeSet :: (MonadState v m, SqlSet v, Show a, ToSQL a) => SQL -> Maybe a -> m ()
 sqlMaybeSet sql = maybe (pure ()) (sqlSet sql)
@@ -387,6 +391,18 @@ selectUserNameFromKV instanceId signatoryLinkId = do
     sqlWhereEq "instance_id"  instanceId
     sqlWhereEq "signatory_id" signatoryLinkId
   fetchMaybe runIdentity
+
+selectUserIdsBySessionId
+  :: (MonadDB m, MonadThrow m) => SessionID -> m (Maybe (UserID, UserGroupID, FolderID))
+selectUserIdsBySessionId sessionId = do
+  runQuery_ . sqlSelect "sessions s" $ do
+    sqlJoinOn "users u"        "s.user_id = u.id"
+    sqlJoinOn "user_groups ug" "u.user_group_id = ug.id"
+    sqlResult "u.id"
+    sqlResult "ug.id"
+    sqlResult "u.home_folder_id"
+    sqlWhereEq "s.id" sessionId
+  fetchMaybe identity
 
 selectSignatoryIdsByInstanceUser
   :: (MonadDB m, MonadThrow m) => InstanceId -> UserName -> m [SignatoryLinkID]

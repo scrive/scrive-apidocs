@@ -6,6 +6,7 @@ import FlowOverview.Model as Model exposing (Model, Msg(..), State(..))
 import Http
 import Json.Encode as JE
 import Lib.Components.FlashMessage as FlashMessage exposing (addFlashMessage)
+import Lib.Flow exposing (flowPost)
 import Lib.Misc.Cmd exposing (perform)
 import Lib.Misc.Http exposing (encodeError)
 import Lib.Types.FlashMessage exposing (FlashMessage(..))
@@ -141,10 +142,11 @@ update msg model =
                     case innerModel.mRejection of
                         Just (Model.Rejection { message }) ->
                             return model <|
-                                Http.post
+                                flowPost
                                     { url = flags.flowApiUrl ++ "/instances/" ++ flags.flowInstanceId ++ "/reject"
                                     , body = Http.jsonBody <| JE.object [ ( "message", JE.string message ) ]
                                     , expect = Http.expectWhatever RejectCallback
+                                    , xtoken = flags.xtoken
                                     }
 
                         _ ->

@@ -32,6 +32,12 @@ Flow uses the same authentication mechanisms as the Document API. In this guide,
 
 Note that when using OAuth Flow requires a token with privilege `FULL_ACCESS`.
 
+_Side note:_
+
+Flow also supports cookie based authentication. However it is intended mainly for use in Scrive's internal systems and we strongly suggest you use OAuth instead.
+
+If you have to use cookies, please note that Flow uses the same cookies as the Document API. However, Flow requires that a CSRF token (or _xtoken_) be provided in an `X-Scrive-XToken` HTTP header rather than in a form field. This header is required for all POST, PUT, PATCH and DELETE requests and you can obtain a value for it from the `xtoken` cookie.
+
 ### Obtaining the Credentials
 
 To run the examples in this guide you will need an account in the Scrive `dev` environment at [https://dev.scrive.com](https://dev.scrive.com).

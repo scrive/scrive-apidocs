@@ -4,8 +4,8 @@ import Control.Monad.IO.Class
 import Control.Monad.Reader.Class
 import Data.Aeson
 import Network.HTTP.Client
-  ( ManagerSettings, defaultManagerSettings, managerModifyRequest, newManager
-  , redirectCount, requestHeaders
+  ( ManagerSettings, defaultManagerSettings, managerModifyRequest, method
+  , newManager, redirectCount, requestHeaders
   )
 import Network.HTTP.Types.Header (hHost, hSetCookie)
 import Servant.Client
@@ -14,6 +14,7 @@ import qualified Data.Foldable as Foldable
 import qualified Data.Map as Map
 import qualified Data.Text.Encoding as T
 
+import Auth.Session
 import DB
 import Doc.Types.Document
 import Doc.Types.DocumentStatus
@@ -21,7 +22,8 @@ import Doc.Types.SignatoryLink
 import Flow.Client
 import Flow.Model.Types
 import Flow.Process
-import Flow.Routes.Api
+import Flow.Routes.Api hiding (method)
+import Flow.Server.Cookies
 import OAuth.Model
 import TestEnvSt.Internal
 import TestingUtil hiding (assertRight)
@@ -77,7 +79,9 @@ requestWithEnv :: MonadIO m => ClientEnv -> ClientM a -> m (Either ClientError a
 requestWithEnv env req = liftIO $ runClientM req env
 
 managerSettings :: ManagerSettings
-managerSettings = defaultManagerSettings { managerModifyRequest = setHostHeader }
+managerSettings = defaultManagerSettings
+  { managerModifyRequest = setHostHeader >=> setXTokenHeader
+  }
   where
     setHostHeader req =
       let headers = requestHeaders req
@@ -85,6 +89,15 @@ managerSettings = defaultManagerSettings { managerModifyRequest = setHostHeader 
       in  case lookup "host" headers of
             Nothing -> pure $ req { requestHeaders = (hHost, host) : headers }
             Just _  -> pure req
+    setXTokenHeader req =
+      let headers  = requestHeaders req
+          mCookies = parseCookies <$> lookup "cookie" headers
+          mXToken  = mCookies >>= readCookie cookieNameXToken
+      in  case (lookup headerNameXToken headers, mXToken :: Maybe XToken) of
+            (Nothing, Just xtoken) | method req /= "GET" ->
+              let xTokenHeader = (headerNameXToken, (T.encodeUtf8 . showt) xtoken)
+              in  pure $ req { requestHeaders = xTokenHeader : headers }
+            _ -> pure req
 
 managerSettingsNoRedirects :: ManagerSettings
 managerSettingsNoRedirects = managerSettings
@@ -111,6 +124,14 @@ responseSetCookieHeaders response =
 
 toCookies :: [SetCookie] -> Cookies
 toCookies = map (\sc -> (setCookieName sc, setCookieValue sc))
+
+-- Security note: We read the xtoken from cookies in client/test code only.
+-- Do not use this function in server code that checks authentication.
+readAuthCookies :: Cookies -> Maybe (SessionCookieInfo, XToken)
+readAuthCookies cookies = do
+  sessionCookie <- readCookie cookieNameSessionID cookies
+  xtoken        <- readCookie cookieNameXToken cookies
+  pure (sessionCookie, xtoken)
 
 createInstance
   :: ApiClient

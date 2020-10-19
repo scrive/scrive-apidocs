@@ -29,7 +29,6 @@ import Flow.Core.Type.Url
 import Flow.Names
 import Flow.OrphanTestInstances ()
 import Flow.Routes.Api
-import Flow.Server.Cookies
 import Flow.TestUtil
 import Session.Model
 import Session.Types
@@ -39,7 +38,7 @@ import TestKontra
 mkEnvForUser :: TestEnv ClientEnv
 mkEnvForUser = do
   TestEnvSt {..} <- ask
-  mgr            <- liftIO $ newManager defaultManagerSettings
+  mgr            <- liftIO $ newManager managerSettings
   url            <- parseBaseUrl "localhost"
   cookieJar      <- liftIO . newTVarIO $ createCookieJar []
   pure . setCookieJar cookieJar . mkClientEnv mgr $ url { baseUrlPort = flowPort }
@@ -55,13 +54,10 @@ authenticateContext ClientEnv {..} context = do
     >>= fmap (fmap toTransformCookie . destroyCookieJar)
     .   liftIO
     .   readTVarIO
-  AuthCookies {..} <- assertJust' "authentication cookies are not set"
+  (SessionCookieInfo {..}, _) <- assertJust' "authentication cookies are not set"
     $ readAuthCookies cookies
-  session <-
-    getSession (cookieSessionID authCookieSession)
-               (cookieSessionToken authCookieSession)
-               ("localhost:" <> showt flowPort)
-      >>= assertJust' "can't create kontrakcja session"
+  session <- getSession cookieSessionID cookieSessionToken flowTestCookieDomain
+    >>= assertJust' "can't create kontrakcja session"
   muser    <- getUserFromSession session
   mpaduser <- getPadUserFromSession session
 

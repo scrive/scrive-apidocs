@@ -263,6 +263,7 @@
             (hsPkgs."hpqtypes" or (errorHandler.buildDepError "hpqtypes"))
             (hsPkgs."hpqtypes-extras" or (errorHandler.buildDepError "hpqtypes-extras"))
             (hsPkgs."http-api-data" or (errorHandler.buildDepError "http-api-data"))
+            (hsPkgs."http-types" or (errorHandler.buildDepError "http-types"))
             (hsPkgs."monad-time" or (errorHandler.buildDepError "monad-time"))
             (hsPkgs."text" or (errorHandler.buildDepError "text"))
             (hsPkgs."text-show" or (errorHandler.buildDepError "text-show"))

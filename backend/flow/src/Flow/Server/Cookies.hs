@@ -12,7 +12,7 @@ import Auth.Session
 import Auth.Session.Constant
 import Flow.Routes.Types (Host)
 
-newtype Cookies' = Cookies' Cookies -- type Cookies = [(BS.ByteString, BS.ByteString)]
+newtype Cookies' = Cookies' { fromCookies' :: Cookies }
   deriving Show
 
 instance FromHttpApiData Cookies' where
@@ -22,12 +22,6 @@ instance FromHttpApiData Cookies' where
 instance ToHttpApiData Cookies' where
   toUrlPiece (Cookies' c) =
     T.decodeUtf8 . BSL.toStrict . toLazyByteString $ renderCookies c
-
-readAuthCookies :: Cookies -> Maybe AuthCookies
-readAuthCookies cookies = do
-  sessionCookie <- readCookie cookieNameSessionID cookies
-  xtoken        <- readCookie cookieNameXToken cookies
-  pure $ AuthCookies sessionCookie xtoken
 
 readCookie :: Read a => Text -> Cookies -> Maybe a
 readCookie name cookies = do -- Maybe
@@ -63,12 +57,12 @@ addAuthCookieHeaders
      , AddHeader "Set-Cookie" SetCookie orig2 orig1
      )
   => Bool
-  -> AuthCookies
+  -> (SessionCookieInfo, XToken)
   -> orig2
   -> c
-addAuthCookieHeaders secure AuthCookies {..} =
-  addHeader (setCookieSessionID options authCookieSession)
-    . addHeader (setCookieXToken options authCookieXToken)
+addAuthCookieHeaders secure (sessionCookieInfo, xtoken) =
+  addHeader (setCookieSessionID options sessionCookieInfo)
+    . addHeader (setCookieXToken options xtoken)
   where options = setCookieOptions secure
 
 cookieDomain :: Maybe Host -> Text

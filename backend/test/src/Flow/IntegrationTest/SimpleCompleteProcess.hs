@@ -1,7 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 module Flow.IntegrationTest.SimpleCompleteProcess where
 
-import Control.Monad.Reader.Class
 import Happstack.Server hiding (Cookie(..), Request(..), resp)
 import Optics hiding (mapping)
 import Text.RawString.QQ
@@ -24,7 +23,6 @@ import Flow.OrphanTestInstances ()
 import Flow.Process.Internal
 import Flow.Routes.Api
 import Flow.TestUtil
-import TestEnvSt.Internal (flowPort)
 import TestingUtil hiding (assertLeft, assertRight)
 import TestKontra
 import User.Lang
@@ -51,9 +49,8 @@ stages:
 
 testCompleteFlowProcess :: TestEnv ()
 testCompleteFlowProcess = do
-  TestEnvSt { flowPort } <- ask
   -- Prepare flow process author.
-  user                   <- instantiateRandomUser
+  user <- instantiateRandomUser
   let authorEmail = getEmail user
 
   -- Prepare flow authentication sessions.
@@ -160,8 +157,8 @@ testCompleteFlowProcess = do
       (  Just
       .  InstanceUserAction Sign did authorSigLinkId
       .  Url
-      $  "http://localhost:"
-      <> showt flowPort
+      $  "http://"
+      <> flowTestCookieDomain
       <> "/s/"
       <> showt did
       <> "/"
@@ -173,8 +170,8 @@ testCompleteFlowProcess = do
       (  Just
       .  InstanceUserAction Sign did signatorySigLinkId
       .  Url
-      $  "http://localhost:"
-      <> showt flowPort
+      $  "http://"
+      <> flowTestCookieDomain
       <> "/s/"
       <> showt did
       <> "/"

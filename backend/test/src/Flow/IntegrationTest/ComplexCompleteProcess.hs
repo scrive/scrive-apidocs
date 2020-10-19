@@ -8,7 +8,6 @@ import Servant.Client
 import Text.RawString.QQ
 import qualified Data.Map as Map
 
-import Auth.Session
 import Context
 import DB hiding (JSON)
 import Doc.API.V2.Calls.SignatoryCalls
@@ -37,7 +36,6 @@ import TestKontra
 import User.Lang
 import Util.Actor
 import Util.HasSomeUserInfo
-import qualified Auth.Model as AuthModel
 
 processCompleteFlow :: Process
 processCompleteFlow = Process [r|
@@ -65,8 +63,7 @@ testComplexFlowProcess = do
   let authorEmail = getEmail user
 
   -- Prepare flow authentication sessions.
-  oauth            <- getToken (user ^. #id)
-  AuthCookies {..} <- AuthModel.insertNewSession "localhost" Nothing
+  oauth <- getToken (user ^. #id)
 
   let ApiClient {..}            = mkApiClient (Left oauth)
   let ParticipantApiClient {..} = mkParticipantApiClient (Nothing, Nothing)
@@ -151,8 +148,8 @@ testComplexFlowProcess = do
       (  Just
       .  InstanceUserAction Sign doc1id signatorySigLinkId
       .  Url
-      $  "http://localhost:"
-      <> showt flowPort
+      $  "http://"
+      <> flowTestCookieDomain
       <> "/s/"
       <> showt doc1id
       <> "/"
@@ -183,8 +180,8 @@ testComplexFlowProcess = do
       (  Just
       .  InstanceUserAction Sign doc1id authorSigLinkId
       .  Url
-      $  "http://localhost:"
-      <> showt flowPort
+      $  "http://"
+      <> flowTestCookieDomain
       <> "/s/"
       <> showt doc1id
       <> "/"

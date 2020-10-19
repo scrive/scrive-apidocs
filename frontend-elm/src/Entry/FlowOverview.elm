@@ -32,22 +32,17 @@ init flagsValue =
         ( state, cmd ) =
             case JD.decodeValue decodeFlags flagsValue of
                 Ok flags ->
-                    case Dict.get "xtoken" flags.cookies of
-                        Just _ ->
-                            let
-                                innerModel =
-                                    { mInstance = Nothing, mDocuments = Nothing, mRejection = Nothing }
+                    let
+                        innerModel =
+                            { mInstance = Nothing, mDocuments = Nothing, mRejection = Nothing }
 
-                                getInstanceViewCmd =
-                                    Http.get
-                                        { url = flags.flowApiUrl ++ "/instances/" ++ flags.flowInstanceId ++ "/view"
-                                        , expect = Http.expectJson GetInstanceViewReceived instanceViewDecoder
-                                        }
-                            in
-                            ( AppOk { flags = flags, innerModel = innerModel }, getInstanceViewCmd )
-
-                        Nothing ->
-                            singleton <| Failure "Missing xtoken cookie"
+                        getInstanceViewCmd =
+                            Http.get
+                                { url = flags.flowApiUrl ++ "/instances/" ++ flags.flowInstanceId ++ "/view"
+                                , expect = Http.expectJson GetInstanceViewReceived instanceViewDecoder
+                                }
+                    in
+                    ( AppOk { flags = flags, innerModel = innerModel }, getInstanceViewCmd )
 
                 Err err ->
                     singleton <| Failure <| JD.errorToString err

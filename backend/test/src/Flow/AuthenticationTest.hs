@@ -19,7 +19,6 @@ import Flow.Model.Types.FlowUserId
 import Flow.OrphanTestInstances ()
 import Flow.Process.Internal
 import Flow.Routes.Api
-import Flow.Server.Cookies
 import Flow.TestUtil
 import TestEnvSt.Internal
 import TestingUtil hiding (assertLeft, assertRight)
@@ -40,14 +39,15 @@ tests env = testGroup
 
 testCookieAuthAccount :: TestEnv ()
 testCookieAuthAccount = do
-  user             <- instantiateRandomUser
-  validAuthCookies <- AuthModel.insertNewSession flowTestCookieDomain
-                                                 (Just . unUserID $ user ^. #id)
+  user <- instantiateRandomUser
+  (SessionCookieInfo {..}, xtoken) <- AuthModel.insertNewSession
+    flowTestCookieDomain
+    (Just . unUserID $ user ^. #id)
   commit
 
-  let validSesID    = cookieSessionID . authCookieSession $ validAuthCookies
-      validSesToken = cookieSessionToken . authCookieSession $ validAuthCookies
-      validXToken   = authCookieXToken validAuthCookies
+  let validSesID    = cookieSessionID
+      validSesToken = cookieSessionToken
+      validXToken   = xtoken
 
       validCreateTemplate =
         createTemplate
@@ -172,11 +172,11 @@ testInvitationLinkLogin = do
   -- If the link login is successful we should get auth cookies
   let cookies      = toCookies $ responseSetCookieHeaders response
       mAuthCookies = readAuthCookies cookies
-  AuthCookies {..} <- assertJustAndExtract mAuthCookies
+  (sessionCookieInfo, xtoken) <- assertJustAndExtract mAuthCookies
 
   -- Use these cookies to access the instance overview page
   let instanceOverviewAuth =
-        instanceOverview $ mkPageClient (Just authCookieSession, Just authCookieXToken)
+        instanceOverview $ mkPageClient (Just sessionCookieInfo, Just xtoken)
   void $ assertRight
     "instanceOverview with auth cookies should succeed"
     (request . instanceOverviewAuth instanceId "signatory" $ Just flowTestCookieDomain)

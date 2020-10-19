@@ -84,7 +84,7 @@ instanceOverviewMagicHash instanceId userName hash mCookies mHost isSecure = do
     . fromMaybeM (throwAuthenticationErrorHTML bd InvalidInstanceAccessTokenError)
     $ Model.verifyInstanceAccessToken instanceId userName hash
 
-  mSessionId <- getMSessionID mCookies mHost
+  mSessionId <- getMSessionID
 
   -- If we don't have an existing Kontrakcja session - start a new one
   -- and add sessionId and xtoken cookies to the response.
@@ -92,10 +92,10 @@ instanceOverviewMagicHash instanceId userName hash mCookies mHost isSecure = do
   (sessionId, maybeAddCookieHeaders) <- case mSessionId of
     Just sessionId -> pure (sessionId, noHeader . noHeader)
     Nothing        -> do
-      newAuthCookies <- AuthModel.insertNewSession (cookieDomain mHost) Nothing
+      (newSessionCookieInfo, newXToken) <- AuthModel.insertNewSession (cookieDomain mHost) Nothing
       pure
-        ( cookieSessionID (authCookieSession newAuthCookies)
-        , addAuthCookieHeaders (isSecure == Secure) newAuthCookies
+        ( cookieSessionID newSessionCookieInfo
+        , addAuthCookieHeaders (isSecure == Secure) (newSessionCookieInfo, newXToken)
         )
 
   -- TODO: Move this to instanceOverview after auth to view check.
@@ -110,6 +110,11 @@ instanceOverviewMagicHash instanceId userName hash mCookies mHost isSecure = do
 
   pure . addHeader redirectUrl $ maybeAddCookieHeaders NoContent
   where
+    getMSessionID = do
+      let mSessionCookie = (fromCookies' <$> mCookies) >>= readCookie cookieNameSessionID
+      case mSessionCookie of
+        Just sessionCookie -> AuthModel.authenticateSession (sessionCookie, Nothing) (cookieDomain mHost)
+        Nothing       -> pure Nothing
     redirectUrl = mkInstanceOverviewUrl instanceId userName
     addDocumentSession bd sid slid = do
       doc <- dbQuery $ GetDocumentBySignatoryLinkID slid -- Throws SomeDBExtraException
@@ -230,19 +235,6 @@ participantNeedsToIdentifyToView (authenticationKind, authenticationConfig) inst
     authProviderMatchesAuth SmsOtp     _ = False
     authProviderMatchesAuth (Onfido _) EIDServiceOnfidoAuthentication_{} = True
     authProviderMatchesAuth (Onfido _) _ = False
-
-getMSessionID
-  :: (MonadDB m, MonadThrow m, MonadTime m)
-  => Maybe Cookies'
-  -> Maybe Host
-  -> m (Maybe SessionID)
-getMSessionID mCookies mHost = do
-  let mAuthCookies = do
-        Cookies' cookies <- mCookies
-        readAuthCookies cookies
-  case mAuthCookies of
-    Just authCookies -> AuthModel.getSessionIDByCookies authCookies (cookieDomain mHost)
-    Nothing          -> pure Nothing
 
 mkIdentifyViewAppConfig
   :: (MonadDB m, MonadThrow m)

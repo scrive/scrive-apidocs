@@ -21,6 +21,8 @@ def print_request(msg, **kwargs):
         print("json:", json.dumps(kwargs["json"], indent=2))
     if kwargs.get("data"):
         print("data:", kwargs["data"])
+    if kwargs.get("headers"):
+        print("headers:", kwargs["headers"])
     print()
 
 
@@ -32,8 +34,19 @@ def handle_response(url, resp):
     print_response(url, resp)
 
 
+# Add an xtoken header if we are not using OAuth
+def maybe_add_xtoken_header(session, headers):
+    if headers == None:
+      headers = {}
+    xtokenCookie = session.cookies.get('xtoken')
+    if xtokenCookie != None and headers.get("Authorization") == None:
+      headers["X-Scrive-XToken"] = xtokenCookie
+    return headers
+
+
 def post(session, url, data=None, json=None, **kwargs):
-    print_request(f"POST {url}", data=data, json=json)
+    kwargs["headers"] = maybe_add_xtoken_header(session, kwargs.get("headers"))
+    print_request(f"POST {url}", data=data, json=json, **kwargs)
     resp = session.post(url, data=data, json=json, **kwargs)
     handle_response(url, resp)
     return resp

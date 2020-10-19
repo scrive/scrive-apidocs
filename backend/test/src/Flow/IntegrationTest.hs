@@ -126,9 +126,9 @@ stages:
 
 testZeroToInstance :: TestEnv ()
 testZeroToInstance = do
-  user             <- instantiateRandomUser
-  oauth            <- getToken (user ^. #id)
-  AuthCookies {..} <- AuthModel.insertNewSession flowTestCookieDomain Nothing
+  user  <- instantiateRandomUser
+  oauth <- getToken (user ^. #id)
+  (sessionCookieInfo, xtoken) <- AuthModel.insertNewSession flowTestCookieDomain Nothing
 
   let ac@ApiClient {..} = mkApiClient (Left oauth)
 
@@ -161,8 +161,8 @@ testZeroToInstance = do
 
   -- View instance as "signatory"
   let ParticipantApiClient {..} =
-        mkParticipantApiClient (Just authCookieSession, Just authCookieXToken)
-  Model.upsertInstanceSession (cookieSessionID authCookieSession) iid "signatory"
+        mkParticipantApiClient (Just sessionCookieInfo, Just xtoken)
+  Model.upsertInstanceSession (cookieSessionID sessionCookieInfo) iid "signatory"
   commit
   instanceView <- assertRight "view instance response" . request $ getInstanceView
     iid

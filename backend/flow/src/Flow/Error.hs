@@ -47,20 +47,25 @@ instance ToJSON FlowError where
 data AuthError
   = OAuthHeaderParseFailureError
   | InvalidTokenError
-  | AuthCookiesParseError
-  | InvalidAuthCookiesError
+  | SessionCookieMissingError
+  | XTokenMissingError
+  | SessionCookieOrXTokenInvalidError
   | AccessControlError
   | RejectForbiddenError
   | InvalidInstanceAccessTokenError
 
 instance Show AuthError where
   show = \case
-    OAuthHeaderParseFailureError    -> "Cannot parse OAuth header"
-    InvalidTokenError               -> "The provided OAuth token is not valid"
-    AuthCookiesParseError           -> "Cannot parse the authentication cookies"
-    InvalidAuthCookiesError         -> "The provided authentication cookies are invalid"
+    OAuthHeaderParseFailureError -> "Cannot parse OAuth header"
+    InvalidTokenError            -> "The provided OAuth token is not valid"
+    SessionCookieMissingError    -> "Session cookie is missing"
+    XTokenMissingError
+      -> "XToken is missing. This request should contain an X-Scrive-XToken header.\
+         \ You can set it to the value from the \"xtoken\" cookie."
+    SessionCookieOrXTokenInvalidError ->
+      "The provided session cookie and/or xtoken header are invalid"
     AccessControlError -> "You do not have permission to perform the requested action"
-    RejectForbiddenError            -> "You are not allowed to reject the flow instance"
+    RejectForbiddenError -> "You are not allowed to reject the flow instance"
     InvalidInstanceAccessTokenError -> "This invitation link is invalid"
 
 makeJSONError :: FlowError -> ServerError

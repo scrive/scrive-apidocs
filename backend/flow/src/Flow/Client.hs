@@ -1,6 +1,5 @@
 module Flow.Client where
 
-import Data.Text as T
 import Servant.API
 import Servant.Client
 import Servant.Client.Core.Auth
@@ -24,8 +23,9 @@ import Flow.Server.Cookies
 -- the correct set of auth credentials is. However, we need to be able to generate
 -- invalid authentication for testing. Maybe it would be better to define a separate
 -- type instance just for the AuthenticationTest.hs
-type OAuthOrCookies = Either OAuthAuthorization (Maybe SessionCookieInfo, Maybe XToken)
-type instance AuthClientData (AuthProtect "account") = OAuthOrCookies
+type OAuthOrSessionAuthData
+  = Either OAuthAuthorization (Maybe SessionCookieInfo, Maybe XToken)
+type instance AuthClientData (AuthProtect "account") = OAuthOrSessionAuthData
 
 -- brittany-disable-next-binding
 -- See: https://github.com/lspitzner/brittany/issues/89
@@ -67,7 +67,7 @@ data PageClient = PageClient
   }
 
 -- brittany-disable-next-binding
-mkApiClient :: OAuthOrCookies -> ApiClient
+mkApiClient :: OAuthOrSessionAuthData -> ApiClient
 mkApiClient authData = ApiClient { .. }
   where
     accountEndpoints :<|> _ :<|> noAuthEndpoints = client apiProxy
@@ -81,7 +81,7 @@ mkApiClient authData = ApiClient { .. }
       :<|>
         (getInstance
         :<|> listInstances)
-      = accountEndpoints (mkAuthenticatedRequest authData addOAuthOrCookies)
+      = accountEndpoints (mkAuthenticatedRequest authData addOAuthOrSessionAuthHeaders)
     validateTemplate :<|> version = noAuthEndpoints
 
 -- brittany-disable-next-binding
@@ -91,7 +91,7 @@ mkParticipantApiClient authData = ParticipantApiClient { .. }
     _ :<|> instanceUserEndpoints :<|> _ = client apiProxy
 
     getInstanceView :<|> rejectInstance
-      = instanceUserEndpoints (mkAuthenticatedRequest authData addAuthCookies)
+      = instanceUserEndpoints (mkAuthenticatedRequest authData addSessionAuthHeaders)
 
 mkPageClient :: (Maybe SessionCookieInfo, Maybe XToken) -> PageClient
 mkPageClient authData = PageClient { .. }
@@ -99,14 +99,14 @@ mkPageClient authData = PageClient { .. }
     instanceUserEndpoints :<|> noAuthEndpoints = client pagesProxy
 
     instanceOverview =
-      instanceUserEndpoints (mkAuthenticatedRequest authData addAuthCookies)
+      instanceUserEndpoints (mkAuthenticatedRequest authData addSessionAuthHeaders)
 
     instanceOverviewMagicHash = noAuthEndpoints
 
-addOAuthOrCookies :: OAuthOrCookies -> Client.Request -> Client.Request
-addOAuthOrCookies authData = case authData of
-  Left  oauth       -> addOAuthAuthorization oauth
-  Right authCookies -> addAuthCookies authCookies
+addOAuthOrSessionAuthHeaders :: OAuthOrSessionAuthData -> Client.Request -> Client.Request
+addOAuthOrSessionAuthHeaders authData = either addOAuthAuthorization
+                                               addSessionAuthHeaders
+                                               authData
   where
     addOAuthAuthorization :: OAuthAuthorization -> Client.Request -> Client.Request
     addOAuthAuthorization OAuthAuthorization {..} = Client.addHeader "authorization"
@@ -126,13 +126,18 @@ addOAuthOrCookies authData = case authData of
             <> show oaAccessSecret
             <> "\""
 
-addAuthCookies
+addSessionAuthHeaders
   :: (Maybe SessionCookieInfo, Maybe XToken) -> Client.Request -> Client.Request
-addAuthCookies (mSessionCookieInfo, mXToken) = Client.addHeader "cookie" cookiesText
+addSessionAuthHeaders (mSessionCookieInfo, mXToken) =
+  maybeAddSessionCookie . maybeAddXTokenHeader
   where
-    cookiesText = T.intercalate "; " $ catMaybes
-      [ renderCookie cookieNameSessionID <$> mSessionCookieInfo
-      , renderCookie cookieNameXToken <$> mXToken
-      ]
+    maybeAddXTokenHeader req =
+      maybe req (\xtoken -> Client.addHeader headerNameXToken xtoken req) mXToken
+    maybeAddSessionCookie req = maybe
+      req
+      (\sessionCookie ->
+        Client.addHeader "cookie" (renderCookie cookieNameSessionID sessionCookie) req
+      )
+      mSessionCookieInfo
     -- Kontrakcja quotes its auth cookie values and we want to be compatible
     renderCookie name val = name <> "=\"" <> showt val <> "\""

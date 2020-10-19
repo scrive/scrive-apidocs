@@ -1558,6 +1558,7 @@ Library authentication
                     , hpqtypes
                     , hpqtypes-extras
                     , http-api-data
+                    , http-types
                     , monad-time
                     , text
                     , text-show

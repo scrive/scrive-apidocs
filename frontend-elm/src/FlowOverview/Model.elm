@@ -12,10 +12,10 @@ import Lib.Types.FlashMessage exposing (FlashMessage(..))
 
 
 type alias Flags =
-    { cookies : Dict String String
-    , kontraApiUrl : String
+    { kontraApiUrl : String
     , flowApiUrl : String
     , flowInstanceId : String
+    , xtoken : String
     }
 
 

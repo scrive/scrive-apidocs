@@ -3,8 +3,9 @@ module IdentifyView.Rejection.Rejection exposing (..)
 import Html exposing (Html, a, b, div, input, p, text, textarea)
 import Html.Attributes exposing (autocomplete, class, placeholder, style, value)
 import Html.Events exposing (onClick, onInput)
-import Http exposing (Error, expectWhatever, jsonBody, post)
+import Http exposing (Error, expectWhatever, jsonBody)
 import Json.Encode as JE
+import Lib.Flow exposing (flowPost)
 import Lib.Misc.Cmd exposing (perform)
 import Lib.Misc.Http exposing (encodeError)
 import Lib.Types.FlashMessage exposing (FlashMessage(..))
@@ -48,10 +49,11 @@ update params state msg exitRejectionMsg =
             case state of
                 EnterMessage { message } ->
                     return state <|
-                        post
+                        flowPost
                             { url = params.rejectUrl
                             , body = jsonBody <| JE.object [ ( "message", JE.string message ) ]
                             , expect = expectWhatever <| params.embed << RejectCallbackMsg
+                            , xtoken = params.xtoken
                             }
 
                 _ ->
@@ -60,7 +62,7 @@ update params state msg exitRejectionMsg =
         RejectCallbackMsg res ->
             case res of
                 Ok () ->
-                    singleton state
+                    singleton Complete
 
                 Err err ->
                     let

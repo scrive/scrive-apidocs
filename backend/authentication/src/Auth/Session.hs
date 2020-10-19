@@ -2,16 +2,12 @@ module Auth.Session where
 
 import Control.Arrow
 import Happstack.Server
+import Network.HTTP.Types.Header
 import TextShow (fromText)
 import qualified Data.Text as T
 
 import Auth.MagicHash
 import Auth.Session.SessionID
-
-data AuthCookies = AuthCookies
-  { authCookieSession :: SessionCookieInfo
-  , authCookieXToken :: XToken
-  } deriving Show
 
 type XToken = MagicHash
 
@@ -39,9 +35,14 @@ instance Read SessionCookieInfo where
 instance FromReqURI SessionCookieInfo where
   fromReqURI = maybeRead . T.pack
 
+-- This cookie is used only for sending an xtoken to the client,
+-- do not use it for validating the xtoken received from the client.
 cookieNameXToken :: T.Text
 cookieNameXToken = "xtoken"
 
 cookieNameSessionID :: T.Text
 cookieNameSessionID = "sessionId"
 
+-- Used for validating the client's xtoken.
+headerNameXToken :: HeaderName
+headerNameXToken = "X-Scrive-XToken"

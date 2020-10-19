@@ -10,6 +10,7 @@ import Control.Monad.Reader
 import Control.Monad.Trans.Maybe
 import Data.Aeson
 import Data.ByteString (ByteString)
+import Data.Int
 import Data.Text.Encoding
 import Database.PostgreSQL.PQTypes hiding (JSON(..))
 import Log.Class
@@ -17,6 +18,7 @@ import Network.Wai
 import Servant
 import Servant.Server.Experimental.Auth
 import Web.Cookie (parseCookies)
+import qualified Data.Text as T
 
 import AccessControl.Model (GetRolesIncludingInherited(..))
 import Auth.Model
@@ -31,10 +33,11 @@ import Flow.Server.Cookies
 import Flow.Server.Types
 import Flow.Server.Utils
 import Folder.Model (FolderGet(..))
-import Folder.Types (unsafeFolderID)
+import Folder.Types (FolderID, unsafeFolderID)
 import User.Model
-import UserGroup.Internal (unsafeUserGroupID)
 import UserGroup.Model (UserGroupGet(..))
+import UserGroup.Types (UserGroupID, unsafeUserGroupID)
+import qualified Flow.Model as Model
 import qualified Flow.Model.InstanceSession as Model
 
 -- "Account" users, i.e. users who have a Scrive account can authenticate
@@ -56,31 +59,31 @@ authHandlerAccount runLogger flowConfiguration = mkAuthHandler handler
               case lookup "authorization" $ requestHeaders req of
                 -- OAuth
                 Just oauthHeader -> do
-                  oauthTokens <- either (throwAuthError OAuthHeaderParseFailureError) pure
-                    $ parseOAuthAuthorization oauthHeader
+                  oauthTokens <-
+                    either (throwAuthError OAuthHeaderParseFailureError . Just . String)
+                           pure
+                      $ parseOAuthAuthorization oauthHeader
                   logInfo_ ("Authenticating Account using OAuth: " <> showt oauthTokens)
-                  maybeIds <- authenticateToken oauthTokens
-                  maybe (throwAuthError InvalidTokenError (show InvalidTokenError))
+                  maybeIds <- fmap unsafeToIds <$> authenticateToken oauthTokens
+                  maybe (throwAuthError InvalidTokenError Nothing) pure maybeIds
+                -- Session
+                Nothing -> do
+                  authData <- either (`throwAuthError` Nothing)
+                                     pure
+                                     (getSessionAuthData req)
+                  logInfo_ ("Authenticating Account using a session: " <> showt authData)
+                  maybeIds <- runMaybeT $ do
+                    sessionId <- MaybeT
+                      $ authenticateSession authData (cookieDomain $ mHost req)
+                    MaybeT $ Model.selectUserIdsBySessionId sessionId
+                  maybe (throwAuthError SessionCookieOrXTokenInvalidError Nothing)
                         pure
                         maybeIds
-                -- Session cookies
-                Nothing -> do
-                  authCookies <- maybe
-                    (throwAuthError AuthCookiesParseError (show AuthCookiesParseError))
-                    pure
-                    (getAuthCookies req)
-                  logInfo_ ("Authenticating Account using cookies: " <> showt authCookies)
-                  maybeIds <- authenticateSession authCookies (cookieDomain $ mHost req)
-                  maybe
-                    (throwAuthError InvalidAuthCookiesError (show InvalidAuthCookiesError)
-                    )
-                    pure
-                    maybeIds
 
             -- TODO: fromJust is verboten - Handle the Nothing case with an error
-            user   <- fmap fromJust . dbQuery . GetUserByID $ unsafeUserID userId
-            ug <- fmap fromJust . dbQuery . UserGroupGet $ unsafeUserGroupID userGroupId
-            folder <- fmap fromJust . dbQuery . FolderGet $ unsafeFolderID folderId
+            user   <- fmap fromJust . dbQuery . GetUserByID $ userId
+            ug     <- fmap fromJust . dbQuery . UserGroupGet $ userGroupId
+            folder <- fmap fromJust . dbQuery . FolderGet $ folderId
             roles  <- dbQuery $ GetRolesIncludingInherited user ug
 
             pure $ Account { user, userGroup = ug, folder, roles, baseUrl }
@@ -88,9 +91,13 @@ authHandlerAccount runLogger flowConfiguration = mkAuthHandler handler
     parseOAuthAuthorization :: ByteString -> Either Text OAuthAuthorization
     parseOAuthAuthorization = parseParams . splitAuthorization . decodeUtf8
 
+    unsafeToIds :: (Int64, Int64, Int64) -> (UserID, UserGroupID, FolderID)
+    unsafeToIds (uid, ugid, fid) =
+      (unsafeUserID uid, unsafeUserGroupID ugid, unsafeFolderID fid)
+
     -- For convenience
-    throwAuthError errorName e = do
-      throwAuthErrorJSON Nothing errorName e
+    throwAuthError errorName mLogData = do
+      throwAuthErrorJSON Nothing errorName mLogData
 
 -- "Instance" users, i.e. users who don't have an account but participate
 -- in a flow process can only authenticate using session cookies.
@@ -119,16 +126,14 @@ instanceUserHandler runLogger flowConfiguration errorThrower req =
         bd              <- dbQuery $ GetBrandedDomainByURL baseUrl
 
         instanceSession <- do
-          authCookies <- maybe
-            (errorThrower (Just bd) AuthCookiesParseError AuthCookiesParseError)
-            pure
-            (getAuthCookies req)
-          logInfo_ ("Authenticating InstanceUser using cookies: " <> showt authCookies)
+          authData <- either (\err -> errorThrower (Just bd) err Nothing)
+                             pure
+                             (getSessionAuthData req)
+          logInfo_ ("Authenticating InstanceUser using a session: " <> showt authData)
           mInstanceSession <- runMaybeT $ do
-            sessionId <- MaybeT
-              $ getSessionIDByCookies authCookies (cookieDomain $ mHost req)
+            sessionId <- MaybeT $ authenticateSession authData (cookieDomain $ mHost req)
             MaybeT $ Model.selectInstanceSession sessionId
-          maybe (errorThrower (Just bd) InvalidAuthCookiesError InvalidAuthCookiesError)
+          maybe (errorThrower (Just bd) SessionCookieOrXTokenInvalidError Nothing)
                 pure
                 mInstanceSession
         pure $ InstanceUser (instanceSession ^. #userName)
@@ -136,36 +141,48 @@ instanceUserHandler runLogger flowConfiguration errorThrower req =
                             (instanceSession ^. #sessionId)
 
 type ErrorThrower
-  =  forall a b m
+  =  forall b m
    . ( MonadLog m
      , MonadError ServerError m
      , MonadReader FlowContext m
      , MonadDB m
      , MonadThrow m
-     , TextShow a
      )
   => Maybe BrandedDomain
   -> AuthError
-  -> a
+  -> Maybe Value
   -> m b
-
 throwAuthErrorJSON :: ErrorThrower
-throwAuthErrorJSON _ errorName e = do
+throwAuthErrorJSON _ errorName mLogData = do
   logAttention "throwAuthErrorJSON"
-    $ object ["errorName" .= showt errorName, "e" .= showt e]
+    $ object ["errorName" .= showt errorName, "details" .= mLogData]
   throwAuthenticationError errorName
 
 throwAuthErrorHTML :: ErrorThrower
-throwAuthErrorHTML mBrandedDomain errorName e = do
+throwAuthErrorHTML mBrandedDomain errorName mLogData = do
   logAttention "throwAuthErrorHTML"
-    $ object ["errorName" .= showt errorName, "e" .= showt e]
+    $ object ["errorName" .= showt errorName, "details" .= mLogData]
   bd <- maybe (dbQuery GetMainBrandedDomain) pure mBrandedDomain
   throwAuthenticationErrorHTML bd errorName
 
 mHost :: Request -> Maybe Host
 mHost = fmap decodeUtf8 . requestHeaderHost
 
-getAuthCookies :: Request -> Maybe AuthCookies
-getAuthCookies req = do
-  cookies <- parseCookies <$> lookup "cookie" (requestHeaders req)
-  readAuthCookies cookies
+-- Maybe XToken in the return type is Just when an xtoken is required for
+-- the requested http method and it has been provided in the request.
+getSessionAuthData :: Request -> Either AuthError (SessionCookieInfo, Maybe XToken)
+getSessionAuthData req =
+  let headers        = requestHeaders req
+      mCookies       = parseCookies <$> lookup "cookie" headers
+      mSessionCookie = mCookies >>= readCookie cookieNameSessionID
+      mXToken        = do
+        headerVal <- lookup headerNameXToken headers
+        maybeRead . unQuote . decodeUtf8 $ headerVal
+      unQuote = T.dropWhile (== '"') . T.dropWhileEnd (== '"')
+  in  case (requestMethod req, mSessionCookie, mXToken) of
+      -- GET requests are "safe" in terms of CSRF and require only a session cookie
+      -- Non-GET (state changing) requests additionally require an xtoken
+        ("GET", Just sessionCookie, _          ) -> Right (sessionCookie, Nothing)
+        (_    , Nothing           , _          ) -> Left SessionCookieMissingError
+        (_    , Just sessionCookie, Just xtoken) -> Right (sessionCookie, Just xtoken)
+        (_    , Just _            , Nothing    ) -> Left XTokenMissingError

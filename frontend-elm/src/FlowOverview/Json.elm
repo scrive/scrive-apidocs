@@ -9,10 +9,10 @@ import Json.Decode.Pipeline as JDP
 decodeFlags : Decoder Flags
 decodeFlags =
     JD.succeed Flags
-        |> JDP.required "cookie" (JD.string |> JD.andThen Cookie.decoder)
         |> JDP.required "kontraApiUrl" JD.string
         |> JDP.required "flowApiUrl" JD.string
         |> JDP.required "flowInstanceId" JD.string
+        |> JDP.required "xtoken" JD.string
 
 
 instanceViewDecoder : Decoder GetInstanceView

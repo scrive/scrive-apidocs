@@ -24,7 +24,6 @@ import Text.RawString.QQ
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Map as Map
 
-import Auth.Session
 import Callback.Consumer
 import DB
 import Doc.API.V2.Calls.SignatoryCalls
@@ -49,7 +48,6 @@ import TestingUtil hiding (assertLeft, assertRight)
 import TestKontra
 import User.Lang
 import Util.HasSomeUserInfo
-import qualified Auth.Model as AuthModel
 
 tests :: TestEnvSt -> Test
 tests env = testGroup "Flow callbacks"
@@ -80,8 +78,7 @@ testSingleCallback = do
     let authorEmail = getEmail user
 
     -- Prepare flow authentication sessions.
-    oauth            <- getToken (user ^. #id)
-    AuthCookies {..} <- AuthModel.insertNewSession "localhost" Nothing
+    oauth <- getToken (user ^. #id)
 
     let ApiClient {..}            = mkApiClient (Left oauth)
     let ParticipantApiClient {..} = mkParticipantApiClient (Nothing, Nothing)
