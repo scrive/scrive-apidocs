@@ -146,8 +146,11 @@ getUnreadSMSEvents = do
     sqlResult "e.event"
     sqlResult "s.msisdn"
     sqlResult . mkSQL $ T.concat
-      [ "ARRAY_AGG((kifs.sms_type, kifs.document_id, kifs.signatory_link_id)::"
-      , unRawSQL $ ctName ctKontraForSMSAggregate
+      [ "ARRAY_REMOVE"
+      , "( ARRAY_AGG("
+      <> castKontraInfo "(kifs.sms_type, kifs.document_id, kifs.signatory_link_id)"
+      <> ")"
+      , ", " <> castKontraInfo "'(,,)'"
       , ")"
       ]
     sqlJoinOn "sms_events e" "s.id = e.sms_id"
@@ -158,3 +161,4 @@ getUnreadSMSEvents = do
     sqlGroupBy "s.id"
     sqlGroupBy "e.id"
   fetchMany fetchEvent
+  where castKontraInfo = (<> ("::" <> unRawSQL (ctName ctKontraForSMSAggregate)))

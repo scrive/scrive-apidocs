@@ -127,8 +127,11 @@ getUnreadMailEvents service_test = do
     sqlResult "e.mail_id"
     sqlResult "e.event"
     sqlResult . mkSQL $ T.concat
-      [ "ARRAY_AGG((kifm.mail_type, kifm.document_id, kifm.signatory_link_id)::"
-      , unRawSQL $ ctName ctKontraForMailAggregate
+      [ "ARRAY_REMOVE"
+      , "( ARRAY_AGG("
+      <> castKontraInfo "(kifm.mail_type, kifm.document_id, kifm.signatory_link_id)"
+      <> ")"
+      , ", " <> castKontraInfo "'(,,)'"
       , ")"
       ]
     sqlJoinOn "mail_events e" "m.id = e.mail_id"
@@ -140,3 +143,4 @@ getUnreadMailEvents service_test = do
     sqlGroupBy "m.id"
     sqlGroupBy "e.id"
   fetchMany fetchEvent
+  where castKontraInfo = (<> ("::" <> unRawSQL (ctName ctKontraForMailAggregate)))
