@@ -245,7 +245,7 @@ initDatabaseEntries appConf = do
               }
         dbUpdate
           . UserGroupUpdate
-          . set #invoicing (Invoice EnterprisePlan)
+          . set #invoicing (Invoice PaidPlan)
           . set #features  (Just adminFeatures)
           $ ug
       Just _ -> return () -- user exist, do not add it

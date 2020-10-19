@@ -218,7 +218,7 @@ testCreateGroupsUsingApi env = execWriter $ do
     req      <- mkCreateRequest Nothing (Just $ parentUg ^. #id) Nothing
     assertRaisesApiErrorType RequestFailed $ callCreate req ctx
 
-  forM_ [EnterprisePlan, TeamPlan, OnePlan, TrialPlan, FreePlan] $ \paymentPlan ->
+  forM_ [PaidPlan, TrialPlan, FreePlan] $ \paymentPlan ->
     testThat' ("Creating child user group fails with " <> show paymentPlan) $ do
       ctx           <- mkAdminContex
       (parentUg, _) <- instantiateRandomPaidUserGroup
@@ -240,7 +240,7 @@ testCreateGroupsUsingApi env = execWriter $ do
         , mkPair "user_group_child_id" . showt <$> mChildId
         ]
 
-    withPaidPlans = forM_ [EnterprisePlan, TeamPlan, OnePlan, TrialPlan]
+    withPaidPlans = forM_ [PaidPlan, TrialPlan]
 
     mkPair name = (name, ) . inText
 

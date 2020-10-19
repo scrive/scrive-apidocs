@@ -476,10 +476,8 @@ invoicingDecoder =
 
 type PaymentPlan
     = Free
-    | One
-    | Team
-    | Enterprise
     | Trial
+    | Paid
 
 
 paymentPlanDecoder : Decoder PaymentPlan
@@ -502,17 +500,11 @@ encodePaymentPlan paymentPlan =
         Free ->
             "free"
 
-        One ->
-            "one"
-
-        Team ->
-            "team"
-
-        Enterprise ->
-            "enterprise"
-
         Trial ->
             "trial"
+
+        Paid ->
+            "paid"
 
 
 fromPaymentPlan : PaymentPlan -> String
@@ -521,22 +513,16 @@ fromPaymentPlan paymentPlan =
         Free ->
             "Free"
 
-        One ->
-            "One"
-
-        Team ->
-            "Team"
-
-        Enterprise ->
-            "Enterprise"
-
         Trial ->
             "Trial"
+
+        Paid ->
+            "Paid"
 
 
 enumPaymentPlan : Enum PaymentPlan
 enumPaymentPlan =
-    makeEnum [ Free, One, Team, Enterprise, Trial ] encodePaymentPlan fromPaymentPlan
+    makeEnum [ Free, Trial, Paid ] encodePaymentPlan fromPaymentPlan
 
 
 type Invoicing

@@ -264,7 +264,7 @@ instance Arbitrary PadAppMode where
   arbitrary = elements [ListView, PinCode]
 
 instance Arbitrary PaymentPlan where
-  arbitrary = elements [FreePlan, OnePlan, TeamPlan, EnterprisePlan, TrialPlan]
+  arbitrary = elements [FreePlan, PaidPlan, TrialPlan]
 
 instance Arbitrary DigitalSignatureMethod where
   arbitrary = elements documentAllDigitalSignatureMethods
@@ -1022,7 +1022,7 @@ instantiateRandomPaidUserGroup
   :: (MonadFail m, CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
   => m (UserGroupRoot, UserGroup)
 instantiateRandomPaidUserGroup = do
-  paymentPlan <- rand 27 $ elements [EnterprisePlan, TeamPlan, OnePlan, TrialPlan]
+  paymentPlan <- rand 27 $ elements [PaidPlan, TrialPlan]
   rootUg      <-
     ( instantiateUserGroup
       $ randomUserGroupTemplate { isBillable = True, invoicing = Invoice paymentPlan }

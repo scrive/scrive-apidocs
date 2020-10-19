@@ -78,14 +78,8 @@ var Subscription = Backbone.Model.extend({
   hasFreePlan: function () {
      return this.effectivepaymentplan() == "free";
   },
-  hasOnePlan: function () {
-     return this.effectivepaymentplan() == "one";
-  },
-  hasTeamPlan: function () {
-     return this.effectivepaymentplan() == "team";
-  },
-  hasEnterprisePlan: function () {
-     return this.effectivepaymentplan() == "enterprise";
+  hasPaidPlan: function () {
+     return this.effectivepaymentplan() == "paid";
   },
   hasTrialPlan: function () {
      return this.effectivepaymentplan() == "trial";

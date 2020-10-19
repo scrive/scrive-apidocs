@@ -1,4 +1,5 @@
-module UserGroup.Migrations where
+module UserGroup.Migrations
+where
 
 import Data.Int
 import Database.PostgreSQL.PQTypes.Checks
@@ -1360,4 +1361,20 @@ userGroupAddBillableFlag = Migration
                      ]
   }
   where tableName = "user_groups"
+
+userGroupInvoicingsMergePaidPaymentTypes :: MonadDB m => Migration m
+userGroupInvoicingsMergePaidPaymentTypes = Migration
+  { mgrTableName = rawSQL tableName ()
+  , mgrFrom      = 1
+  , mgrAction    = StandardMigration $ mapM_
+                     runQuery_
+                     [ sqlUpdate (mkSQL tableName) $ do
+                       sqlSet "payment_plan" (2 :: Int32)
+                       sqlWhereIn "payment_plan" ([1, 2, 3] :: [Int32])
+                     , sqlUpdate (mkSQL tableName) $ do
+                       sqlSet "payment_plan" (1 :: Int32)
+                       sqlWhereEq "payment_plan" (4 :: Int32)
+                     ]
+  }
+  where tableName = "user_group_invoicings" :: Text
 

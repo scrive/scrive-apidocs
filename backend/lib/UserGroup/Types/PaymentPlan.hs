@@ -8,13 +8,12 @@ import Data.Unjson
 import qualified Data.Aeson as A
 
 import DB
+import Doc.API.V2.JSON.Utils
 
 data PaymentPlan =
     FreePlan
-  | OnePlan
-  | TeamPlan
-  | EnterprisePlan
   | TrialPlan
+  | PaidPlan
   deriving (Eq, Ord, Show, Enum)
 
 instance PQFormat PaymentPlan where
@@ -28,37 +27,20 @@ instance FromSQL PaymentPlan where
       -- Note:
       -- If changing this, please also update `pure_sql/invoice_stat.sql`
       0 -> return FreePlan
-      1 -> return OnePlan
-      2 -> return TeamPlan
-      3 -> return EnterprisePlan
-      4 -> return TrialPlan
-      _ -> throwM RangeError { reRange = [(0, 4)], reValue = n }
+      1 -> return TrialPlan
+      2 -> return PaidPlan
+      _ -> throwM RangeError { reRange = [(0, 2)], reValue = n }
 
 instance ToSQL PaymentPlan where
   type PQDest PaymentPlan = PQDest Int16
-  toSQL FreePlan       = toSQL (0 :: Int16)
-  toSQL OnePlan        = toSQL (1 :: Int16)
-  toSQL TeamPlan       = toSQL (2 :: Int16)
-  toSQL EnterprisePlan = toSQL (3 :: Int16)
-  toSQL TrialPlan      = toSQL (4 :: Int16)
+  toSQL FreePlan  = toSQL (0 :: Int16)
+  toSQL TrialPlan = toSQL (1 :: Int16)
+  toSQL PaidPlan  = toSQL (2 :: Int16)
 
 instance Unjson PaymentPlan where
-  unjsonDef = SimpleUnjsonDef "Payment plan" consume produce
-    where
-      consume :: A.Value -> Result PaymentPlan
-      consume (A.String "free"      ) = return FreePlan
-      consume (A.String "one"       ) = return OnePlan
-      consume (A.String "team"      ) = return TeamPlan
-      consume (A.String "enterprise") = return EnterprisePlan
-      consume (A.String "trial"     ) = return TrialPlan
-      consume value                   = fail $ "Invalid payment plan: " <> show value
-
-      produce :: PaymentPlan -> A.Value
-      produce FreePlan       = "free"
-      produce OnePlan        = "one"
-      produce TeamPlan       = "team"
-      produce EnterprisePlan = "enterprise"
-      produce TrialPlan      = "trial"
+  unjsonDef = unjsonEnumBy
+    "PaymentPlan"
+    [(FreePlan, "free"), (TrialPlan, "trial"), (PaidPlan, "paid")]
 
 instance Unjson (Maybe PaymentPlan) where
   unjsonDef = SimpleUnjsonDef "Maybe payment plan"

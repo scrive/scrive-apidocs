@@ -875,6 +875,9 @@ javascriptLocalisation =
                     trial : {
                           name : "$_paymentPlanTrial()$"
                     }
+                    , paid : {
+                          name : "$_paymentPlanPaid()$"
+                    }
                     , team : {
                           name : "$TeamPlanName()$"
                         , price : {
@@ -1134,10 +1137,6 @@ javascriptLocalisation =
               headline : "$_blockingFreeHasNotHeadline()$",
               subtext1 : "$_blockingFreeHasNotSubtext1()$"
             }
-          },
-          usedall : {
-            headline : "$_blockingUsedAllHeadline()$",
-            subtext1 : "$_blockingUsedAllSubtext1()$"
           }
         }
       , apiConfiration : {

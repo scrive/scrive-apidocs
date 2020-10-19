@@ -315,4 +315,5 @@ kontraMigrations =
   , updateLegacyAuthenticationToSignInTemplates
   , featureFlagsAddFlow
   , userGroupAddBillableFlag
+  , userGroupInvoicingsMergePaidPaymentTypes
   ]

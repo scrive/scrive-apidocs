@@ -357,10 +357,8 @@ CREATE OR REPLACE FUNCTION get_report_base(date_from TIMESTAMPTZ, date_to TIMEST
               END :: TEXT) AS "invoicing_type"
            , escape_for_csv(CASE (SELECT get_payment_plan(user_groups.id))
                 WHEN 0 THEN 'free'
-                WHEN 1 THEN 'one'
-                WHEN 2 THEN 'team'
-                WHEN 3 THEN 'enterprise'
-                WHEN 4 THEN 'trial'
+                WHEN 1 THEN 'trial'
+                WHEN 2 THEN 'paid'
               END :: TEXT) AS "payment_plan"
            , (SELECT MIN(d.mtime)::date
                 FROM documents d

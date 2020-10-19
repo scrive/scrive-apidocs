@@ -340,7 +340,7 @@ ctUserGroupUI = CompositeType
 tableUserGroupInvoicings :: Table
 tableUserGroupInvoicings = tblTable
   { tblName        = "user_group_invoicings"
-  , tblVersion     = 1
+  , tblVersion     = 2
   , tblColumns     =
     [ tblColumn { colName = "user_group_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "invoicing_type", colType = SmallIntT, colNullable = False }

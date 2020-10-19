@@ -37,7 +37,7 @@ test_jsonCompanies = do
                                                      , signupMethod = CompanyInvitation
                                                      }
   _standarduser2 <- instantiateUser $ randomUserTemplate { groupID = return $ ug2 ^. #id }
-  void . dbUpdate . UserGroupUpdate . set #invoicing (Invoice EnterprisePlan) $ ug2
+  void . dbUpdate . UserGroupUpdate . set #invoicing (Invoice PaidPlan) $ ug2
 
   ctx <-
     set #maybeUser (Just adminuser2)

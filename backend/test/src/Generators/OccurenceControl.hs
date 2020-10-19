@@ -138,7 +138,7 @@ testGeneratorHelper
   -> (a -> Bool) -- ^ Did the event occur?
   -> TestEnv ()
 testGeneratorHelper deltaPercentage generator checkOcc = do
-  let h               = 100
+  let h               = 1000
       n               = 2 * h
       acceptableDelta = round @Double @Int $ fromIntegral n * deltaPercentage
 

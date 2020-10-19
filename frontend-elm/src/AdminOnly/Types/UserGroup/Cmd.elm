@@ -59,7 +59,7 @@ createUserGroup embed globals name ugType =
         params =
             case ugType of
                 CreatePaidUserGroup ->
-                    [ ( "payment_plan", Enum.toString enumPaymentPlan Enterprise ) ]
+                    [ ( "payment_plan", Enum.toString enumPaymentPlan Paid ) ]
 
                 CreateFreeUserGroup ->
                     [ ( "payment_plan", Enum.toString enumPaymentPlan Free ) ]
@@ -68,7 +68,7 @@ createUserGroup embed globals name ugType =
                     [ ( "user_group_parent_id", ugid ) ]
 
                 CreateRootUserGroup ugid ->
-                    [ ( "user_group_child_id", ugid ), ( "payment_plan", Enum.toString enumPaymentPlan Enterprise ) ]
+                    [ ( "user_group_child_id", ugid ), ( "payment_plan", Enum.toString enumPaymentPlan Paid ) ]
     in
     Http.post
         { url = "/adminonly/companyadmin"

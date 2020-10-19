@@ -25,12 +25,8 @@ module.exports = React.createClass({
       var subscription = this.state.model.subscription();
       if (subscription.hasFreePlan()) {
         return "";
-      } else if (subscription.hasOnePlan()) {
-        return localization.payments.plans.one.name;
-      } else if (subscription.hasTeamPlan()) {
-        return localization.payments.plans.team.name;
-      } else if (subscription.hasEnterprisePlan()) {
-        return localization.payments.plans.enterprise.name;
+      } else if (subscription.hasPaidPlan()) {
+        return localization.payments.plans.paid.name;
       } else if (subscription.hasTrialPlan()) {
         return localization.payments.plans.trial.name;
       }
