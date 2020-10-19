@@ -401,7 +401,7 @@ asValidNorwegianSSN input =
 -}
 asValidDanishSSN :: Text -> Result Text
 asValidDanishSSN input =
-  filterOutCharacters [' ', '-'] input
+  filterOutCharacters ['\n', ' ', '-'] input
     >>= checkIfEmpty
     >>= checkLengthIs [10]
     >>= checkOnly [isDigit]
@@ -413,7 +413,7 @@ asValidDanishSSN input =
 -}
 asValidDanishCVR :: Text -> Result Text
 asValidDanishCVR input =
-  filterOutCharacters [' ', '-'] input
+  filterOutCharacters ['\n', ' ', '-'] input
     >>= checkIfEmpty
     >>= checkLengthIs [8]
     >>= checkOnly [isDigit]

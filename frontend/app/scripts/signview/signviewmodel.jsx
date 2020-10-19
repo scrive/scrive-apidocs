@@ -169,8 +169,6 @@ var moment = require("moment");
     },
 
     hasExtraInputs: function () {
-      var askForSSN = this.askForSSN();
-
       return this.askForName()
           || this.askForEmail()
           || this.askForSSNIfNotEID()

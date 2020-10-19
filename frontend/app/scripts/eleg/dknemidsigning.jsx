@@ -52,6 +52,7 @@ module.exports = Backbone.Model.extend({
       nemIDMethod = "dk_nemid_pid";
     }
 
+    var personalNumber = doc.currentSignatory().personalnumber();
     var successCallback = function (resp) {
       self.doc().checksign(function () {
         new FlashMessagesCleaner();
@@ -69,6 +70,7 @@ module.exports = Backbone.Model.extend({
       url: "/eid-service/start/nemid/sign/" + doc.documentid() + "/" + this.siglinkid(),
       method: "POST",
       nemid_method: nemIDMethod,
+      personal_number: personalNumber,
       ajax: true,
       ajaxsuccess: successCallback,
       ajaxerror: errorCallback

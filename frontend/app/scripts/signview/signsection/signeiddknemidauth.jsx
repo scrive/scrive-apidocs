@@ -20,7 +20,7 @@ var SignLegalAgreement = require("./signlegalagreement");
     createTasks: function () {
       var tasks = [this.createSignTask()];
 
-      if (this.props.askForSSN) {
+      if (this.props.model.askForSSN()) {
         tasks.push(this.createSSNTask());
       }
 
@@ -67,7 +67,6 @@ var SignLegalAgreement = require("./signlegalagreement");
       model: React.PropTypes.instanceOf(Backbone.Model).isRequired,
       fieldSSN: React.PropTypes.instanceOf(Field),
       name: React.PropTypes.string.isRequired,
-      askForSSN: React.PropTypes.bool.isRequired,
       canSign: React.PropTypes.bool.isRequired,
       ssn: React.PropTypes.string.isRequired,
       onReject: React.PropTypes.func.isRequired,
@@ -131,8 +130,8 @@ var SignLegalAgreement = require("./signlegalagreement");
           {/* else */ name === "" &&
             <p>{confirmationTextNoName}</p>
           }
-          { /* if */ (sig.dkNemIDCPRAuthenticationToSign() || sig.dkNemIDCVRAuthenticationToSign())
-                && this.props.askForSSN &&
+
+          { /* if */ (sig.dkNemIDCPRAuthenticationToSign()) && model.askForSSN() &&
             <dl className="ssn-list">
               <dt><label htmlFor="ssn">{localization.eID.idName.cpr}</label></dt>
               <dd>
@@ -147,12 +146,25 @@ var SignLegalAgreement = require("./signlegalagreement");
               </dd>
             </dl>
           }
-
-          {/* else */ sig.dkNemIDCPRAuthenticationToSign() && !this.props.askForSSN &&
+          {/* else */ sig.dkNemIDCPRAuthenticationToSign() && !model.askForSSN() &&
             <p className="ssn-text">{localization.eID.idName.cpr} <b>{ssn}</b></p>
           }
-
-          {/* else */ sig.dkNemIDCVRAuthenticationToSign() && !this.props.askForSSN &&
+          { /* else */ (sig.dkNemIDCVRAuthenticationToSign()) && model.askForSSN() &&
+            <dl className="ssn-list">
+              <dt><label htmlFor="ssn">{localization.eID.idName.cvr}</label></dt>
+              <dd>
+                <InfoTextInput
+                  id="ssn"
+                  ref="ssnInput"
+                  infotext={localization.eID.infoText.cvr}
+                  className={inputSSNClass}
+                  value={fieldSSN.value()}
+                  onChange={function (value) { fieldSSN.setValue(value); }}
+                />
+              </dd>
+            </dl>
+          }
+          {/* else */ sig.dkNemIDCVRAuthenticationToSign() && !model.askForSSN() &&
             <p className="ssn-text">{localization.eID.idName.cvr} <b>{ssn}</b></p>
           }
 
