@@ -2,7 +2,9 @@
 jobs:
   backend-tests:
     runs-on:
-      - ubuntu-20.04
+      - linux
+      - self-hosted
+      - build-runner
     steps:
       - name: Checkout Code
         uses: "actions/checkout@v2"
@@ -61,3 +63,4 @@ on:
       - master
       - staging
       - production
+      - nix

@@ -55,5 +55,6 @@ on:
       - master
       - staging
       - production
+      - nix
     paths:
       - nix/source/pdftools.nix

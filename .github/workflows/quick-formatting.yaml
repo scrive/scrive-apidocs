@@ -118,3 +118,6 @@ on:
   pull_request:
     paths:
       - "**.hs"
+  push:
+    branches:
+      - nix

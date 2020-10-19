@@ -2,7 +2,9 @@
 jobs:
   migration-tests:
     runs-on:
-      - ubuntu-20.04
+      - linux
+      - self-hosted
+      - build-runner
     steps:
       - name: Checkout Code
         uses: "actions/checkout@v2"
@@ -32,7 +34,7 @@ jobs:
           PDFTOOLS_CONFIG: "${{ secrets.PDFTOOLS_CONFIG }}"
         name: Run Migration Tests
         run: |
-          nix-shell -j4 -A ghc88.backend-shell release.nix \
+          nix-shell -A ghc88.backend-shell release.nix \
             --run "./ci/workflow/scripts/run-migration-tests.sh"
 name: Migration Tests
 on:

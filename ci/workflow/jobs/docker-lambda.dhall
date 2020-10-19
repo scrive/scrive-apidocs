@@ -16,7 +16,7 @@ BackendWorkflow.createWorkflow
   , use-pdftools-lambda = False
   , triggers = Workflow.Triggers ::
       { push = Some Workflow.BranchSpec ::
-          { branches = Some [ "master", "staging", "production" ]
+          { branches = Some [ "master", "staging", "production", "nix" ]
           , paths = Some [ "nix/source/pdftools.nix" ]
           }
       , pull_request = Some Workflow.BranchSpec ::

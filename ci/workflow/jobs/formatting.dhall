@@ -14,7 +14,7 @@ FormattingWorkflow.createWorkflow
   , quickFormat = False
   , triggers = Workflow.Triggers ::
       { push = Some (Workflow.BranchSpec ::
-          { branches = Some [ "master", "staging", "production" ]
+          { branches = Some [ "master", "staging", "production", "nix" ]
           })
       -- Uncomment this line to temporary enable running this workflow in PR
       -- , pull_request = Some Workflow.BranchSpec.default

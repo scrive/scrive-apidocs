@@ -26,7 +26,7 @@ Workflow.Workflow ::
   { name = "Frontend Tests"
   , on = Some Workflow.Triggers ::
       { push = Some (Workflow.BranchSpec ::
-          { branches = Some [ "master", "staging", "production" ]
+          { branches = Some [ "master", "staging", "production", "nix" ]
           })
       , pull_request = Some Workflow.BranchSpec ::
           { paths = Some [ "frontend/**", "frontend-elm/**" ] }

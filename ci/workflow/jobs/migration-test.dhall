@@ -28,7 +28,7 @@ let migration-tests =
                 , PDFTOOLS_CONFIG = "\${{ secrets.PDFTOOLS_CONFIG }}"
                 })
             , run = Some ''
-                nix-shell -j4 -A ${shell} release.nix \
+                nix-shell -A ${shell} release.nix \
                   --run "./ci/workflow/scripts/run-migration-tests.sh"
                 ''
             }

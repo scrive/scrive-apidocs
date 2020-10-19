@@ -15,7 +15,7 @@ BackendWorkflow.createWorkflow
   , runs-on = [ "ubuntu-20.04" ]
   , triggers = Workflow.Triggers ::
       { push = Some Workflow.BranchSpec ::
-          { branches = Some [ "master", "staging", "production" ]
+          { branches = Some [ "master", "staging", "production", "nix" ]
           }
       , pull_request = Some Workflow.BranchSpec ::
           { paths = Some

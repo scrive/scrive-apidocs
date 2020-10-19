@@ -2,7 +2,9 @@
 jobs:
   run-shake-dist:
     runs-on:
-      - ubuntu-20.04
+      - linux
+      - self-hosted
+      - build-runner
     steps:
       - name: Checkout Code
         uses: "actions/checkout@v2"
@@ -46,3 +48,4 @@ on:
   push:
     branches:
       - master
+      - nix

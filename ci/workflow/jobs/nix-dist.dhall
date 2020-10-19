@@ -25,7 +25,7 @@ let build-kontrakcja-dist = Job.Job ::
       , Step ::
           { name = "Build Kontrakcja Dist"
           , run = Some ''
-              nix-build -j4 -o result -A ghc88.dist release.nix
+              nix-build -o result -A ghc88.dist release.nix
               ''
           }
       , Step ::
@@ -34,7 +34,7 @@ let build-kontrakcja-dist = Job.Job ::
               { PDFTOOLS_CONFIG = "\${{ secrets.PDFTOOLS_CONFIG }}"
               })
           , run = Some ''
-              nix-shell -j4 -A ghc88.dist-shell release.nix --run "./ci/workflow/scripts/run-dist-tests.sh"
+              nix-shell -A ghc88.dist-shell release.nix --run "./ci/workflow/scripts/run-dist-tests.sh"
               ''
           }
       ]
@@ -44,7 +44,7 @@ Workflow.Workflow ::
   { name = "Build Nix Dist"
   , on = Some Workflow.Triggers ::
       { push = Some (Workflow.BranchSpec ::
-          { branches = Some [ "master", "staging", "production" ]
+          { branches = Some [ "master", "staging", "production", "nix" ]
           })
       -- Uncomment this line to temporary enable running this workflow in PR
       -- , pull_request = Some Workflow.BranchSpec.default

@@ -2,7 +2,9 @@
 jobs:
   build-kontrakcja-dist:
     runs-on:
-      - ubuntu-20.04
+      - linux
+      - self-hosted
+      - build-runner
     steps:
       - name: Checkout Code
         uses: "actions/checkout@v2"
@@ -26,12 +28,12 @@ jobs:
         run: "./ci/workflow/scripts/setup-ssh-frontend.sh"
       - name: Build Kontrakcja Dist
         run: |
-          nix-build -j4 -o result -A ghc88.dist release.nix
+          nix-build -o result -A ghc88.dist release.nix
       - env:
           PDFTOOLS_CONFIG: "${{ secrets.PDFTOOLS_CONFIG }}"
         name: Run Dist Tests
         run: |
-          nix-shell -j4 -A ghc88.dist-shell release.nix --run "./ci/workflow/scripts/run-dist-tests.sh"
+          nix-shell -A ghc88.dist-shell release.nix --run "./ci/workflow/scripts/run-dist-tests.sh"
 name: Build Nix Dist
 on:
   push:
@@ -39,3 +41,4 @@ on:
       - master
       - staging
       - production
+      - nix

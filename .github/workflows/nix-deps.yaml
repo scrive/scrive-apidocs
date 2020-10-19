@@ -2,7 +2,9 @@
 jobs:
   cache-new-frontend-deps:
     runs-on:
-      - ubuntu-20.04
+      - linux
+      - self-hosted
+      - build-runner
     steps:
       - name: Checkout Code
         uses: "actions/checkout@v2"
@@ -33,7 +35,9 @@ jobs:
         timeout-minutes: 360
   cache-nix-deps:
     runs-on:
-      - ubuntu-20.04
+      - linux
+      - self-hosted
+      - build-runner
     steps:
       - name: Checkout Code
         uses: "actions/checkout@v2"

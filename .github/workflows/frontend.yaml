@@ -40,3 +40,4 @@ on:
       - master
       - staging
       - production
+      - nix

@@ -13,7 +13,10 @@ FormattingWorkflow.createWorkflow
   , runs-on = [ "ubuntu-20.04" ]
   , quickFormat = True
   , triggers = Workflow.Triggers ::
-      { pull_request = Some Workflow.BranchSpec ::
+      { push = Some (Workflow.BranchSpec ::
+          { branches = Some [ "nix" ]
+          })
+      , pull_request = Some Workflow.BranchSpec ::
           { paths = Some [ "**.hs" ] }
       }
   }
