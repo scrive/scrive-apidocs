@@ -313,4 +313,5 @@ kontraMigrations =
   , featureFlagsRenameNemIDCPRAndAddPIDAndCVRToSign
   , addNoDKNemIDPIDExceptionConstraint
   , updateLegacyAuthenticationToSignInTemplates
+  , featureFlagsAddFlow
   ]

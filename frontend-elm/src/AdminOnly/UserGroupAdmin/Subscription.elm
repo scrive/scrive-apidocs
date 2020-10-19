@@ -152,6 +152,7 @@ type alias FeatureFlags =
     , canUseArchiveToOneDrive : Bool
     , canUseArchiveToSharePoint : Bool
     , canUseArchiveToSftp : Bool
+    , canUseFlow : Bool
     }
 
 
@@ -310,6 +311,7 @@ defaultFeatureFlags =
     , canUseArchiveToOneDrive = False
     , canUseArchiveToSharePoint = False
     , canUseArchiveToSftp = False
+    , canUseFlow = False
     }
 
 
@@ -357,6 +359,7 @@ ffKeyAccessPairs =
     , ( "can_use_archive_to_one_drive", ( .canUseArchiveToOneDrive, \ff v -> { ff | canUseArchiveToOneDrive = v } ) )
     , ( "can_use_archive_to_share_point", ( .canUseArchiveToSharePoint, \ff v -> { ff | canUseArchiveToSharePoint = v } ) )
     , ( "can_use_archive_to_sftp", ( .canUseArchiveToSftp, \ff v -> { ff | canUseArchiveToSftp = v } ) )
+    , ( "can_use_flow", ( .canUseFlow, \ff v -> { ff | canUseFlow = v } ) )
     ]
 
 

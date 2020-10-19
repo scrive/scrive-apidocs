@@ -371,49 +371,50 @@ instance Arbitrary FeatureFlags where
     (k , l , m , n , o , p , q , r , s , t ) <- arbitrary
     (u , v , w , x , z , y , aa, bb, cc, dd) <- arbitrary
     (ee, ff, gg, hh, ii, jj, kk, ll, mm, nn) <- arbitrary
-    oo <- arbitrary
-    return $ FeatureFlags { ffCanUseTemplates                  = a
-                          , ffCanUseBranding                   = b
-                          , ffCanUseAuthorAttachments          = c
-                          , ffCanUseSignatoryAttachments       = d
-                          , ffCanUseMassSendout                = e
-                          , ffCanUseSMSInvitations             = f
-                          , ffCanUseSMSConfirmations           = g
-                          , ffCanUseDKCPRAuthenticationToView  = h
-                          , ffCanUseDKPIDAuthenticationToView  = ll
-                          , ffCanUseDKCVRAuthenticationToView  = mm
-                          , ffCanUseDKCPRAuthenticationToSign  = i
-                          , ffCanUseDKPIDAuthenticationToSign  = nn
-                          , ffCanUseDKCVRAuthenticationToSign  = oo
-                          , ffCanUseNOAuthenticationToView     = j
-                          , ffCanUseNOAuthenticationToSign     = k
-                          , ffCanUseSEAuthenticationToView     = l
-                          , ffCanUseSEAuthenticationToSign     = m
+    (oo, pp) <- arbitrary
+    return $ FeatureFlags { ffCanUseTemplates                = a
+                          , ffCanUseBranding                 = b
+                          , ffCanUseAuthorAttachments        = c
+                          , ffCanUseSignatoryAttachments     = d
+                          , ffCanUseMassSendout              = e
+                          , ffCanUseSMSInvitations           = f
+                          , ffCanUseSMSConfirmations         = g
+                          , ffCanUseDKCPRAuthenticationToView = h
+                          , ffCanUseDKPIDAuthenticationToView = ll
+                          , ffCanUseDKCVRAuthenticationToView = mm
+                          , ffCanUseDKCPRAuthenticationToSign = i
+                          , ffCanUseDKPIDAuthenticationToSign = nn
+                          , ffCanUseDKCVRAuthenticationToSign = oo
+                          , ffCanUseNOAuthenticationToView   = j
+                          , ffCanUseNOAuthenticationToSign   = k
+                          , ffCanUseSEAuthenticationToView   = l
+                          , ffCanUseSEAuthenticationToSign   = m
                           , ffCanUseSMSPinAuthenticationToView = n
                           , ffCanUseSMSPinAuthenticationToSign = o
                           , ffCanUseStandardAuthenticationToView = p
                           , ffCanUseStandardAuthenticationToSign = q
                           , ffCanUseVerimiAuthenticationToView = z
                           , ffCanUseVerimiQesAuthenticationToSign = nn
-                          , ffCanUseIDINAuthenticationToView   = aa
-                          , ffCanUseIDINAuthenticationToSign   = cc
+                          , ffCanUseIDINAuthenticationToView = aa
+                          , ffCanUseIDINAuthenticationToSign = cc
                           , ffCanUseOnfidoAuthenticationToSign = ff
-                          , ffCanUseEmailInvitations           = r
-                          , ffCanUseEmailConfirmations         = v
-                          , ffCanUseAPIInvitations             = s
-                          , ffCanUsePadInvitations             = t
-                          , ffCanUseFIAuthenticationToView     = u
-                          , ffCanUseFIAuthenticationToSign     = ee
-                          , ffCanUseShareableLinks             = w
-                          , ffCanUseForwarding                 = x
+                          , ffCanUseEmailInvitations         = r
+                          , ffCanUseEmailConfirmations       = v
+                          , ffCanUseAPIInvitations           = s
+                          , ffCanUsePadInvitations           = t
+                          , ffCanUseFIAuthenticationToView   = u
+                          , ffCanUseFIAuthenticationToSign   = ee
+                          , ffCanUseShareableLinks           = w
+                          , ffCanUseForwarding               = x
                           , ffCanUseDocumentPartyNotifications = y
-                          , ffCanUsePortal                     = bb
-                          , ffCanUseCustomSMSTexts             = dd
-                          , ffCanUseArchiveToDropBox           = gg
-                          , ffCanUseArchiveToGoogleDrive       = hh
-                          , ffCanUseArchiveToOneDrive          = ii
-                          , ffCanUseArchiveToSharePoint        = jj
-                          , ffCanUseArchiveToSftp              = kk
+                          , ffCanUsePortal                   = bb
+                          , ffCanUseCustomSMSTexts           = dd
+                          , ffCanUseArchiveToDropBox         = gg
+                          , ffCanUseArchiveToGoogleDrive     = hh
+                          , ffCanUseArchiveToOneDrive        = ii
+                          , ffCanUseArchiveToSharePoint      = jj
+                          , ffCanUseArchiveToSftp            = kk
+                          , ffCanUseFlow                     = pp
                           }
 
 instance Arbitrary Features where

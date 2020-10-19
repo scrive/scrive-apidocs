@@ -74,6 +74,7 @@ data FeatureFlags = FeatureFlags
   , ffCanUseArchiveToOneDrive :: Bool
   , ffCanUseArchiveToSharePoint :: Bool
   , ffCanUseArchiveToSftp :: Bool
+  , ffCanUseFlow :: Bool
   } deriving (Eq, Ord, Show)
 
 instance Unjson FeatureFlags where
@@ -174,11 +175,13 @@ instance Unjson FeatureFlags where
       <*> field "can_use_archive_to_one_drive"    ffCanUseArchiveToOneDrive    "TODO desc"
       <*> field "can_use_archive_to_share_point"  ffCanUseArchiveToSharePoint  "TODO desc"
       <*> field "can_use_archive_to_sftp"         ffCanUseArchiveToSftp        "TODO desc"
+      <*> field "can_use_flow"                    ffCanUseFlow                 "TODO desc"
 
 
 
 type instance CompositeRow FeatureFlags
   = ( Bool
+    , Bool
     , Bool
     , Bool
     , Bool
@@ -226,7 +229,7 @@ instance PQFormat FeatureFlags where
   pqFormat = compositeTypePqFormat ctFeatureFlags
 
 instance CompositeFromSQL FeatureFlags where
-  toComposite (ffCanUseTemplates, ffCanUseBranding, ffCanUseAuthorAttachments, ffCanUseSignatoryAttachments, ffCanUseMassSendout, ffCanUseSMSInvitations, ffCanUseSMSConfirmations, ffCanUseDKCPRAuthenticationToView, ffCanUseDKPIDAuthenticationToView, ffCanUseDKCVRAuthenticationToView, ffCanUseDKCPRAuthenticationToSign, ffCanUseDKPIDAuthenticationToSign, ffCanUseDKCVRAuthenticationToSign, ffCanUseFIAuthenticationToView, ffCanUseFIAuthenticationToSign, ffCanUseNOAuthenticationToView, ffCanUseNOAuthenticationToSign, ffCanUseSEAuthenticationToView, ffCanUseSEAuthenticationToSign, ffCanUseSMSPinAuthenticationToView, ffCanUseSMSPinAuthenticationToSign, ffCanUseStandardAuthenticationToView, ffCanUseStandardAuthenticationToSign, ffCanUseVerimiAuthenticationToView, ffCanUseVerimiQesAuthenticationToSign, ffCanUseIDINAuthenticationToView, ffCanUseIDINAuthenticationToSign, ffCanUseOnfidoAuthenticationToSign, ffCanUseEmailInvitations, ffCanUseEmailConfirmations, ffCanUseAPIInvitations, ffCanUsePadInvitations, ffCanUseShareableLinks, ffCanUseForwarding, ffCanUseDocumentPartyNotifications, ffCanUsePortal, ffCanUseCustomSMSTexts, ffCanUseArchiveToDropBox, ffCanUseArchiveToGoogleDrive, ffCanUseArchiveToOneDrive, ffCanUseArchiveToSharePoint, ffCanUseArchiveToSftp)
+  toComposite (ffCanUseTemplates, ffCanUseBranding, ffCanUseAuthorAttachments, ffCanUseSignatoryAttachments, ffCanUseMassSendout, ffCanUseSMSInvitations, ffCanUseSMSConfirmations, ffCanUseDKCPRAuthenticationToView, ffCanUseDKPIDAuthenticationToView, ffCanUseDKCVRAuthenticationToView, ffCanUseDKCPRAuthenticationToSign, ffCanUseDKPIDAuthenticationToSign, ffCanUseDKCVRAuthenticationToSign, ffCanUseFIAuthenticationToView, ffCanUseFIAuthenticationToSign, ffCanUseNOAuthenticationToView, ffCanUseNOAuthenticationToSign, ffCanUseSEAuthenticationToView, ffCanUseSEAuthenticationToSign, ffCanUseSMSPinAuthenticationToView, ffCanUseSMSPinAuthenticationToSign, ffCanUseStandardAuthenticationToView, ffCanUseStandardAuthenticationToSign, ffCanUseVerimiAuthenticationToView, ffCanUseVerimiQesAuthenticationToSign, ffCanUseIDINAuthenticationToView, ffCanUseIDINAuthenticationToSign, ffCanUseOnfidoAuthenticationToSign, ffCanUseEmailInvitations, ffCanUseEmailConfirmations, ffCanUseAPIInvitations, ffCanUsePadInvitations, ffCanUseShareableLinks, ffCanUseForwarding, ffCanUseDocumentPartyNotifications, ffCanUsePortal, ffCanUseCustomSMSTexts, ffCanUseArchiveToDropBox, ffCanUseArchiveToGoogleDrive, ffCanUseArchiveToOneDrive, ffCanUseArchiveToSharePoint, ffCanUseArchiveToSftp, ffCanUseFlow)
     = FeatureFlags { .. }
 
 firstAllowedAuthenticationToView :: FeatureFlags -> AuthenticationToViewMethod
@@ -278,48 +281,49 @@ firstAllowedConfirmationDelivery ff
 defaultFeatures :: PaymentPlan -> Features
 defaultFeatures paymentPlan = Features ff ff
   where
-    defaultFF = FeatureFlags { ffCanUseTemplates                  = True
-                             , ffCanUseBranding                   = True
-                             , ffCanUseAuthorAttachments          = True
-                             , ffCanUseSignatoryAttachments       = True
-                             , ffCanUseMassSendout                = True
-                             , ffCanUseSMSInvitations             = True
-                             , ffCanUseSMSConfirmations           = True
-                             , ffCanUseDKCPRAuthenticationToView  = True
-                             , ffCanUseDKPIDAuthenticationToView  = True
-                             , ffCanUseDKCVRAuthenticationToView  = True
-                             , ffCanUseDKCPRAuthenticationToSign  = True
-                             , ffCanUseDKPIDAuthenticationToSign  = True
-                             , ffCanUseDKCVRAuthenticationToSign  = True
-                             , ffCanUseFIAuthenticationToView     = True
-                             , ffCanUseFIAuthenticationToSign     = True
-                             , ffCanUseNOAuthenticationToView     = True
-                             , ffCanUseNOAuthenticationToSign     = True
-                             , ffCanUseSEAuthenticationToView     = True
-                             , ffCanUseSEAuthenticationToSign     = True
+    defaultFF = FeatureFlags { ffCanUseTemplates                = True
+                             , ffCanUseBranding                 = True
+                             , ffCanUseAuthorAttachments        = True
+                             , ffCanUseSignatoryAttachments     = True
+                             , ffCanUseMassSendout              = True
+                             , ffCanUseSMSInvitations           = True
+                             , ffCanUseSMSConfirmations         = True
+                             , ffCanUseDKCPRAuthenticationToView = True
+                             , ffCanUseDKPIDAuthenticationToView = True
+                             , ffCanUseDKCVRAuthenticationToView = True
+                             , ffCanUseDKCPRAuthenticationToSign = True
+                             , ffCanUseDKPIDAuthenticationToSign = True
+                             , ffCanUseDKCVRAuthenticationToSign = True
+                             , ffCanUseFIAuthenticationToView   = True
+                             , ffCanUseFIAuthenticationToSign   = True
+                             , ffCanUseNOAuthenticationToView   = True
+                             , ffCanUseNOAuthenticationToSign   = True
+                             , ffCanUseSEAuthenticationToView   = True
+                             , ffCanUseSEAuthenticationToSign   = True
                              , ffCanUseSMSPinAuthenticationToView = True
                              , ffCanUseSMSPinAuthenticationToSign = True
                              , ffCanUseStandardAuthenticationToView = True
                              , ffCanUseStandardAuthenticationToSign = True
                              , ffCanUseVerimiAuthenticationToView = True
                              , ffCanUseVerimiQesAuthenticationToSign = True
-                             , ffCanUseIDINAuthenticationToView   = True
-                             , ffCanUseIDINAuthenticationToSign   = True
+                             , ffCanUseIDINAuthenticationToView = True
+                             , ffCanUseIDINAuthenticationToSign = True
                              , ffCanUseOnfidoAuthenticationToSign = True
-                             , ffCanUseEmailInvitations           = True
-                             , ffCanUseEmailConfirmations         = True
-                             , ffCanUseAPIInvitations             = True
-                             , ffCanUsePadInvitations             = True
-                             , ffCanUseShareableLinks             = False
-                             , ffCanUseForwarding                 = True
+                             , ffCanUseEmailInvitations         = True
+                             , ffCanUseEmailConfirmations       = True
+                             , ffCanUseAPIInvitations           = True
+                             , ffCanUsePadInvitations           = True
+                             , ffCanUseShareableLinks           = False
+                             , ffCanUseForwarding               = True
                              , ffCanUseDocumentPartyNotifications = False
-                             , ffCanUsePortal                     = False
-                             , ffCanUseCustomSMSTexts             = False
-                             , ffCanUseArchiveToDropBox           = False
-                             , ffCanUseArchiveToGoogleDrive       = False
-                             , ffCanUseArchiveToOneDrive          = False
-                             , ffCanUseArchiveToSharePoint        = False
-                             , ffCanUseArchiveToSftp              = False
+                             , ffCanUsePortal                   = False
+                             , ffCanUseCustomSMSTexts           = False
+                             , ffCanUseArchiveToDropBox         = False
+                             , ffCanUseArchiveToGoogleDrive     = False
+                             , ffCanUseArchiveToOneDrive        = False
+                             , ffCanUseArchiveToSharePoint      = False
+                             , ffCanUseArchiveToSftp            = False
+                             , ffCanUseFlow                     = False
                              }
     ff = case paymentPlan of
       FreePlan -> defaultFF { ffCanUseDKCPRAuthenticationToView     = False
@@ -388,6 +392,7 @@ setFeatureFlagsSql ff = do
   sqlSet "can_use_archive_to_one_drive" $ ffCanUseArchiveToOneDrive ff
   sqlSet "can_use_archive_to_share_point" $ ffCanUseArchiveToSharePoint ff
   sqlSet "can_use_archive_to_sftp" $ ffCanUseArchiveToSftp ff
+  sqlSet "can_use_flow" $ ffCanUseFlow ff
 
 selectFeatureFlagsSelectors :: [SQL]
 selectFeatureFlagsSelectors =
@@ -433,4 +438,5 @@ selectFeatureFlagsSelectors =
   , "feature_flags.can_use_archive_to_one_drive"
   , "feature_flags.can_use_archive_to_share_point"
   , "feature_flags.can_use_archive_to_sftp"
+  , "feature_flags.can_use_flow"
   ]

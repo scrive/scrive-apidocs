@@ -534,6 +534,10 @@ featureFlagsStructure =
         , ( "Can use archive to SFTP", "can_use_archive_to_sftp" )
         ]
       )
+    , ( "Flow"
+      , [ ( "Can use Flow", "can_use_flow" )
+        ]
+      )
     ]
 
 
