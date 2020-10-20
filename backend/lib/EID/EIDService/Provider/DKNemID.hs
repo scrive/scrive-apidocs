@@ -36,6 +36,7 @@ import Templates
 import User.Lang
 import Util.Actor
 import Util.HasSomeUserInfo
+import qualified InputValidation as IV
 
 provider :: EIDServiceTransactionProvider
 provider = EIDServiceTransactionProviderDKNemID
@@ -446,9 +447,24 @@ beginSignTransaction
   -> SignatoryLink
   -> m (EIDServiceTransactionID, Value, EIDServiceTransactionStatus)
 beginSignTransaction conf doc sl = do
-  userVisibleData <- textToBeSigned
-  nemIDMethod     <- getField "nemid_method" >>= resolveDKNemIDSignMethod
-  redirectUrl     <- do
+  userVisibleData          <- textToBeSigned
+  nemIDMethodRaw           <- getField "nemid_method"
+  mPersonalNumberFromParam <- getField "personal_number"
+  nemIDMethod              <- resolveDKNemIDSignMethod nemIDMethodRaw
+  mPersonalNumber          <- case nemIDMethodRaw of
+    Just "dk_nemid_pid" -> return Nothing
+    _ ->
+      case
+          resolvePersonalNumberFromSL nemIDMethod
+            <|> resolvePersonalNumberFromParam nemIDMethod mPersonalNumberFromParam
+        of
+          Just pn -> return $ Just pn
+          Nothing -> do
+            logAttention_
+              $  "Tried to start sign NemID CPR/CVR transaction without"
+              <> "mandatory personal number"
+            internalError
+  redirectUrl <- do
     ctx <- getContext
     return $ showt UnifiedRedirectUrl { redDomain          = ctx ^. #brandedDomain % #url
                                       , redProvider        = provider
@@ -457,9 +473,7 @@ beginSignTransaction conf doc sl = do
                                       , redSignatoryLinkID = signatorylinkid sl
                                       , redPostRedirectUrl = Nothing
                                       }
-  let (mPersonalNumber :: Maybe Text) =
-        fieldTextValue =<< (getFieldByIdentity PersonalNumberFI . signatoryfields $ sl)
-      createReq = CreateEIDServiceTransactionRequest
+  let createReq = CreateEIDServiceTransactionRequest
         { cestProvider           = provider
         , cestMethod             = EIDServiceSignMethod
         , cestRedirectUrl        = redirectUrl
@@ -504,6 +518,22 @@ beginSignTransaction conf doc sl = do
       Just s              -> do
         logAttention_ $ "No such DK NemID sign method" <> s
         internalError
+    resolvePersonalNumberFromSL :: DKNemIDMethod -> Maybe Text
+    resolvePersonalNumberFromSL m = do
+      pnField  <- getFieldByIdentity PersonalNumberFI (signatoryfields sl)
+      pnFromSL <- fieldTextValue pnField
+      normalisePersonalNumber m pnFromSL
+    resolvePersonalNumberFromParam :: DKNemIDMethod -> Maybe Text -> Maybe Text
+    resolvePersonalNumberFromParam m mParam = mParam >>= normalisePersonalNumber m
+    normalisePersonalNumber :: DKNemIDMethod -> Text -> Maybe Text
+    normalisePersonalNumber method rawPN =
+      let validate = case method of
+            DKNemIDPersonalKeycard -> IV.asValidDanishSSN
+            DKNemIDEmployeeKeycard -> IV.asValidDanishCVR
+            DKNemIDEmployeeKeyfile -> IV.asValidDanishCVR
+      in  case validate rawPN of
+            IV.Good pn -> Just pn
+            _          -> Nothing
 
 newtype StartDKNemIDSignTransactionResponse = StartDKNemIDSignTransactionResponse {
     signUrl :: Text

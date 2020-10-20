@@ -992,6 +992,7 @@ var Task = require("../navigation/task");
               model={this.props.model}
               name={sig.name()}
               ssn={sig.personalnumber()}
+              fieldSSN={ssnField}
               canSign={this.canSignDocument()}
               onReject={this.handleSetStep("reject")}
               onForward={this.handleSetStep("forward")}
