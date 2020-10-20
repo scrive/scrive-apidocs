@@ -26,7 +26,7 @@ tar xvf kontrakcja.tar.gz
 
 cd -
 
-supervisorctl stop features-testbed-cron features-testbed-messenger features-testbed-mailer features-testbed-kontrakcja
+supervisorctl stop features-testbed-cron features-testbed-messenger features-testbed-mailer features-testbed-kontrakcja features-testbed-flow
 
 mv kontrakcja kontrakcja_old
 
@@ -42,7 +42,7 @@ rsync -avz -e ssh --delete /home/features-testbed/kontrakcja/frontend/dist/ /srv
 
 chcon -Rt httpd_sys_content_t /srv/features-testbed.scrive.com
 
-supervisorctl start features-testbed-cron features-testbed-messenger features-testbed-mailer features-testbed-kontrakcja
+supervisorctl start features-testbed-cron features-testbed-messenger features-testbed-mailer features-testbed-kontrakcja features-testbed-flow
 
 sudo /usr/local/sbin/reload-nginx.sh
 
