@@ -1066,7 +1066,7 @@ paths:
   /accesscontrol/roles/{role_id}:
     $ref: ./api/accesscontrol/getrole.yaml
 
-  /accesscontrol/roles/{role_id}/add:
+  /accesscontrol/roles/add:
     $ref: ./api/accesscontrol/createrole.yaml
 
   /accesscontrol/roles/{role_id}/delete:

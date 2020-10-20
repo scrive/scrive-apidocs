@@ -77,7 +77,7 @@ get:
     set to `true` and `id` set to `null`.
 
     Explicit roles are those which have been, as the name suggests, explicitly
-    granted. This was also almost done certainly via this API. Explicit roles
+    granted. This was also almost certainly done via this API. Explicit roles
     have `is_generated` set to `false` and a non-`null` `id`.
 
   parameters:

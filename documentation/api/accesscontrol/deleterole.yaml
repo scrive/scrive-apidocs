@@ -17,7 +17,7 @@ post:
     - name: role_id
       in: url
       type: integer
-      description: The ID of the Access Role you wish to view
+      description: The ID of the Access Role you wish to delete
       required: true
 
   responses:
