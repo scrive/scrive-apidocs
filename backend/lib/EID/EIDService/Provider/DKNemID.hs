@@ -518,19 +518,19 @@ beginSignTransaction conf doc sl = do
       Just s              -> do
         logAttention_ $ "No such DK NemID sign method" <> s
         internalError
-    resolvePersonalNumberFromSL :: DKNemIDMethod -> Maybe Text
+    resolvePersonalNumberFromSL :: EIDServiceDKNemIDInternalProvider -> Maybe Text
     resolvePersonalNumberFromSL m = do
       pnField  <- getFieldByIdentity PersonalNumberFI (signatoryfields sl)
       pnFromSL <- fieldTextValue pnField
       normalisePersonalNumber m pnFromSL
-    resolvePersonalNumberFromParam :: DKNemIDMethod -> Maybe Text -> Maybe Text
+    resolvePersonalNumberFromParam :: EIDServiceDKNemIDInternalProvider -> Maybe Text -> Maybe Text
     resolvePersonalNumberFromParam m mParam = mParam >>= normalisePersonalNumber m
-    normalisePersonalNumber :: DKNemIDMethod -> Text -> Maybe Text
+    normalisePersonalNumber :: EIDServiceDKNemIDInternalProvider -> Text -> Maybe Text
     normalisePersonalNumber method rawPN =
       let validate = case method of
-            DKNemIDPersonalKeycard -> IV.asValidDanishSSN
-            DKNemIDEmployeeKeycard -> IV.asValidDanishCVR
-            DKNemIDEmployeeKeyfile -> IV.asValidDanishCVR
+            EIDServiceNemIDPersonalKeyCard -> IV.asValidDanishSSN
+            EIDServiceNemIDEmployeeKeyCard -> IV.asValidDanishCVR
+            EIDServiceNemIDEmployeeKeyFile -> IV.asValidDanishCVR
       in  case validate rawPN of
             IV.Good pn -> Just pn
             _          -> Nothing
