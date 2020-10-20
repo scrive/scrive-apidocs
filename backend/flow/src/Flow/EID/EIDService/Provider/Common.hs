@@ -6,7 +6,6 @@ module Flow.EID.EIDService.Provider.Common
 import Control.Monad.Catch
 import Control.Monad.Trans.Maybe
 import Data.Aeson
-import Log
 
 import DB
 import Doc.DocInfo
@@ -54,7 +53,6 @@ getTransactionForUser conf eidProvider instanceId userName = runMaybeT $ do
     . GetEIDServiceTransactionGuardSessionID sessionID instanceId userName
     $ EIDServiceAuthToView authKind
   Just trans <- getTransactionFromEIDService conf eidProvider (estID estDB)
-  logInfo_ $ "EID transaction: " <> showt trans
   pure (authKind, estDB, trans)
 
 resolveSignatoryAndDocument

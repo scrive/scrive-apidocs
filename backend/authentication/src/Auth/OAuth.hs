@@ -12,6 +12,7 @@ module Auth.OAuth
 
 import Control.Conditional ((<|), (|>))
 import Control.Monad.Catch
+import Data.Aeson
 import Data.Int
 import Data.Unjson
 import Database.PostgreSQL.PQTypes
@@ -94,6 +95,9 @@ unjsonAPIToken = unjsonInvmapR
   )
   show
   unjsonDef
+
+instance ToJSON APIToken where
+  toJSON = unjsonToJSON unjsonAPIToken
 
 data OAuthAuthorization = OAuthAuthorization
   { oaAPIToken     :: APIToken

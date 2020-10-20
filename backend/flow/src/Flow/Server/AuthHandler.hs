@@ -63,7 +63,10 @@ authHandlerAccount runLogger flowConfiguration = mkAuthHandler handler
                     either (throwAuthError OAuthHeaderParseFailureError . Just . String)
                            pure
                       $ parseOAuthAuthorization oauthHeader
-                  logInfo_ ("Authenticating Account using OAuth: " <> showt oauthTokens)
+                  logInfo "Authenticating Account using OAuth" $ object
+                    [ "api_token" .= oaAPIToken oauthTokens
+                    , "access_token" .= oaAccessToken oauthTokens
+                    ]
                   maybeIds <- fmap unsafeToIds <$> authenticateToken oauthTokens
                   maybe (throwAuthError InvalidTokenError Nothing) pure maybeIds
                 -- Session
@@ -71,7 +74,8 @@ authHandlerAccount runLogger flowConfiguration = mkAuthHandler handler
                   authData <- either (`throwAuthError` Nothing)
                                      pure
                                      (getSessionAuthData req)
-                  logInfo_ ("Authenticating Account using a session: " <> showt authData)
+                  logInfo "Authenticating Account using a session"
+                    $ object ["cookie_session_id" .= (cookieSessionID . fst) authData]
                   maybeIds <- runMaybeT $ do
                     sessionId <- MaybeT
                       $ authenticateSession authData (cookieDomain $ mHost req)
@@ -129,7 +133,8 @@ instanceUserHandler runLogger flowConfiguration errorThrower req =
           authData <- either (\err -> errorThrower (Just bd) err Nothing)
                              pure
                              (getSessionAuthData req)
-          logInfo_ ("Authenticating InstanceUser using a session: " <> showt authData)
+          logInfo "Authenticating InstanceUser using a session"
+            $ object ["cookie_session_id" .= (cookieSessionID . fst) authData]
           mInstanceSession <- runMaybeT $ do
             sessionId <- MaybeT $ authenticateSession authData (cookieDomain $ mHost req)
             MaybeT $ Model.selectInstanceSession sessionId
