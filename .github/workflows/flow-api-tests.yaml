@@ -1,0 +1,29 @@
+# DO NOT EDIT MANUALLY. Workflow generated from workflow/scripts/generate-workflow.sh.
+jobs:
+  dev:
+    runs-on:
+      - ubuntu-latest
+    steps:
+      - name: Cancel previous runs
+        uses: "styfle/cancel-workflow-action@0.4.1"
+        with:
+          access_token: "${{ secrets.GITHUB_TOKEN }}"
+      - name: Checkout Code
+        uses: "actions/checkout@v2"
+      - env:
+          GITCRYPT_KEY: "${{ secrets.GITCRYPT_KEY }}"
+        name: Run Flow API Tests
+        run: |
+          sudo apt-get update && sudo apt-get install -y git-crypt python3 virtualenv
+          cd backend/flow/test
+          echo "$GITCRYPT_KEY" | base64 -d > git-crypt.key
+          git-crypt unlock git-crypt.key
+          ./run_tests.sh --capture=no
+name: "Flow API Tests (script changes)"
+on:
+  pull_request:
+    paths:
+      - "backend/flow/test/**"
+  push:
+    branches:
+      - master
