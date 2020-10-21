@@ -523,7 +523,8 @@ beginSignTransaction conf doc sl = do
       pnField  <- getFieldByIdentity PersonalNumberFI (signatoryfields sl)
       pnFromSL <- fieldTextValue pnField
       normalisePersonalNumber m pnFromSL
-    resolvePersonalNumberFromParam :: EIDServiceDKNemIDInternalProvider -> Maybe Text -> Maybe Text
+    resolvePersonalNumberFromParam
+      :: EIDServiceDKNemIDInternalProvider -> Maybe Text -> Maybe Text
     resolvePersonalNumberFromParam m mParam = mParam >>= normalisePersonalNumber m
     normalisePersonalNumber :: EIDServiceDKNemIDInternalProvider -> Text -> Maybe Text
     normalisePersonalNumber method rawPN =
