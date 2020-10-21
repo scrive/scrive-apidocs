@@ -63,6 +63,13 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m MarkOrphanFilesFor
       , "  JOIN main_files mf ON f.id = mf.file_id"
       , "  JOIN documents d ON mf.document_id = d.id"
       , " WHERE d.purged_time IS NULL"
+      -- File is connected as an evidence file to a document that is available
+      -- to somebody.
+      , "EXCEPT ALL"
+      , "SELECT f.id FROM files f"
+      , "  JOIN main_files mf ON f.id = mf.evidence_file_id"
+      , "  JOIN documents d ON mf.document_id = d.id"
+      , " WHERE d.purged_time IS NULL"
       -- File is connected as a signatory attachment to a document
       -- that is available to somebody.
       , "EXCEPT ALL"
