@@ -8,7 +8,7 @@ let setupSteps = ../lib/setup-steps.dhall
 let shell = "ghc88.frontend-shell"
 
 let frontendTests = Job.Job ::
-  { runs-on = [ "ubuntu-20.04" ]
+  { runs-on = default-runner
   , steps =
       setupSteps.setup-steps #
       [ setupSteps.nix-shell-step shell

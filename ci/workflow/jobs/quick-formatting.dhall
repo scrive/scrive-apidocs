@@ -10,7 +10,7 @@ in
 FormattingWorkflow.createWorkflow
   FormattingWorkflow.Args ::
   { name = "Quick Formatting Tests"
-  , runs-on = [ "ubuntu-20.04" ]
+  , runs-on = default-runner
   , quickFormat = True
   , triggers = Workflow.Triggers ::
       { push = Some (Workflow.BranchSpec ::
