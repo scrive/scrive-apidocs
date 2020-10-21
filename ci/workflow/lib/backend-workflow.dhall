@@ -87,7 +87,7 @@ let createWorkflow =
             { name = "Build Haddock"
             , run = Some ''
                 nix-shell -A ${shell} release.nix --run \
-                  "./shake.sh haddock"
+                  "cabal haddock all"
                 ''
             }
           , Step ::

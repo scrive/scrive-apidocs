@@ -40,7 +40,7 @@ jobs:
       - name: Build Haddock
         run: |
           nix-shell -A ghc88.backend-shell release.nix --run \
-            "./shake.sh haddock"
+            "cabal haddock all"
       - if: "${{ always() }}"
         name: Upload Logs
         uses: "actions/upload-artifact@v2"
