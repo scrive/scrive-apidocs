@@ -8,6 +8,8 @@ var localiseQesError = function (error) {
       return localization.designview.verimiQes.errorNonAuthorField;
     else if (error.contents.tag == "field_editable_by_signatory")
       return localization.designview.verimiQes.errorFieldEditableBySignatory;
+    else if (error.contents.tag == "field_editable_in_signview")
+      return localization.designview.verimiQes.errorFieldEditableInSignview;
     else if (error.contents.tag == "order_conflict")
       return localization.designview.verimiQes.errorOrderConflict;
     else if (error.contents.tag == "missing_attachment")

@@ -37,6 +37,7 @@ data VerimiQesError
   = IncompatibleSigningMethod SignatoryLinkID
   | NonAuthorField SignatoryLinkID
   | FieldEditableBySignatory SignatoryLinkID
+  | FieldEditableInSignview SignatoryLinkID
   | OrderConflict [SignatoryLinkID]
   | MissingAttachment SignatoryLinkID Text
   deriving Generic
@@ -110,9 +111,13 @@ errorExplanation = \case
       <> showt slid
       <> ", but only the author is allowed to fill fields in documents using Verimi QES signing."
   VerimiQesError (FieldEditableBySignatory slid) ->
-    "There is a field that is set to be editable by signatory "
+    "There is a visible field that is set to be editable by signatory "
       <> showt slid
       <> ", but only the author is allowed to edit fields in documents that Verimi QES signing."
+  VerimiQesError (FieldEditableInSignview slid) ->
+    "There is a visible field assigned to signatory "
+      <> showt slid
+      <> " whose value is editable in signview, but visible fields can't be edited after the document is started when QES signing is used."
   VerimiQesError (OrderConflict slids) ->
     "Conflicting signatories: "
       <> T.intercalate ", " (map showt slids)
@@ -180,10 +185,22 @@ validateVerimiQesUsage doc
 
       -- No _visible_ signatory fields can be changed after the document has been started.
       let visiblefields = filter (not . null . fieldPlacements) $ signatoryfields sig
-      when (any fieldShouldBeFilledBySender visiblefields) $ do
+      unless (all fieldShouldBeFilledBySender visiblefields) $ do
         write $ NonAuthorField slid
       when (any ((== Just True) . fieldEditableBySignatory) visiblefields) $ do
         write $ FieldEditableBySignatory slid
+
+      -- We want to disallow any fields that would allow input from the
+      -- signatory in signview. Turns out that `fieldEditableBySignatory` is
+      -- only used for a few special cases, and the only general solution we
+      -- could come up with is to only allow text fields that already have a
+      -- value assigned; note that this includes 'radio group fields' that are
+      -- preselected.
+      let editableInSignview sigfield = fromMaybe True $ do
+            textvalue <- fieldTextValue sigfield
+            return . T.null $ textvalue
+      when (any editableInSignview visiblefields) $ do
+        write $ FieldEditableInSignview slid
 
       -- All attachments have to be present when the document is started, i.e.
       -- attachments can't be requested as part of the signing process.

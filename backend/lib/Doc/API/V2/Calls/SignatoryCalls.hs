@@ -310,6 +310,11 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
       (SignatoryConsentResponsesForSigning [])
       (ApiV2ParameterJSON "consent_responses" unjsonSignatoryConsentResponsesForSigning)
 
+    -- QES -> visible fields can't be changed
+    whenM (documentUsesVerimiQes <$> theDocument)
+      $   theDocument
+      >>= guardThatFieldForSigningDontContainVisibleFields slid fields
+
     -- Additional guards
     guardThatAllConsentQuestionsHaveResponse slid consentResponses =<< theDocument
     guardThatAllAttachmentsAreAcceptedOrIsAuthor slid acceptedAttachments =<< theDocument

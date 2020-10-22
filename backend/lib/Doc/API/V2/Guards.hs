@@ -37,6 +37,7 @@ module Doc.API.V2.Guards (
 , guardThatDocumentIsReadableBySignatories
 , guardAccessToDocumentWithSignatory
 , guardNotInFlow
+, guardThatFieldForSigningDontContainVisibleFields
 ) where
 
 import Control.Conditional (whenM)
@@ -615,6 +616,30 @@ guardThatAllAttachmentsAreAcceptedOrIsAuthor slid acceptedAttachments doc = do
     . unless (isAuthor . fromJust $ getSigLinkFor slid doc)
     $ -- Author does not need to accept attachments
       apiError (signatoryStateError "Some mandatory author attachments aren't accepted")
+
+-- | Guard that SignatoryFieldsValuesForSigning does not contain any visible
+-- fields. This guard is to be used for QES documents, where we can't update
+-- visible fields in the pdf.
+guardThatFieldForSigningDontContainVisibleFields
+  :: Kontrakcja m
+  => SignatoryLinkID
+  -> SignatoryFieldsValuesForSigning
+  -> Document
+  -> m ()
+guardThatFieldForSigningDontContainVisibleFields slid (SignatoryFieldsValuesForSigning signfields) doc
+  = do
+    let sl = fromJust $ getSigLinkFor slid doc
+
+    let fieldIsVisible :: FieldIdentity -> Bool
+        fieldIsVisible ident
+          | Just field <- getFieldByIdentity ident $ signatoryfields sl
+          = not . null $ fieldPlacements field
+        fieldIsVisible _ = False
+
+    when (any (fieldIsVisible . fst) signfields)
+      . apiError
+      $ signatoryStateError
+          "Some of the field values provided during signing modify visible fields, which is disallowed for QES documents."
 
 guardThatAllSignatoryAttachmentsAreUploadedOrMarked
   :: Kontrakcja m => SignatoryLinkID -> [Text] -> Document -> m ()

@@ -536,6 +536,7 @@ javascriptLocalisation =
                 errorIncompatibleSigningMethod: "$_verimiQesErrorIncompatibleSigningMethod()$",
                 errorNonAuthorField: "$_verimiQesErrorNonAuthorField()$",
                 errorFieldEditableBySignatory : "$_verimiQesErrorFieldEditableBySignatory()$",
+                errorFieldEditableInSignview : "$_verimiQesErrorFieldEditableInSignview()$",
                 errorOrderConflict: "$_verimiQesErrorOrderConflict()$",
                 errorMissingAttachment: "$_verimiQesErrorMissingAttachment()$"
              }
