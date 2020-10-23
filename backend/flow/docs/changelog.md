@@ -1,5 +1,10 @@
 # API specification changelog
 
+## 0.11.0
+
+* New /cancel endpoint added to allow the flow author to withdraw the flow and all its unsealed docs.
+* Change to the error code for the reject endpoint when not able to reject the flow due to state already being failed or cancelled.
+
 ## 0.10.8
 
 * Add support for specifying allowed document types when using Onfido for authentication.

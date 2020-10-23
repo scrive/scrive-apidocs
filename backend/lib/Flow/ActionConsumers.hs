@@ -467,6 +467,7 @@ consumeRejectionAction RejectAction {..} = do
   forM_ documentIds $ \docId -> do
     -- Use the system actor for now as otherwise it requires
     -- additional monad constraints
+    -- TODO: Fix this so that we don't have to use system actor
     actor <- systemActor <$> currentTime
     withDocumentID docId . dbUpdate $ CancelDocument actor
 

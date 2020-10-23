@@ -6,7 +6,7 @@ import Control.Monad.Extra (fromMaybeM)
 import Control.Monad.Reader
 import Data.Aeson
 import Data.Foldable (fold)
-import Data.Map (Map)
+import Data.Map (Map, elems)
 import Data.Set (Set)
 import Data.Tuple.Extra
 import Log.Class
@@ -19,7 +19,10 @@ import qualified Data.Text as T
 
 import AccessControl.Check
 import AccessControl.Types
+import DB
 import Doc.DocumentID (DocumentID)
+import Doc.DocumentMonad
+import Doc.Model
 import Doc.SignatoryLinkID (SignatoryLinkID)
 import Flow.ActionConsumers
 import Flow.Aggregator as Aggregator
@@ -41,12 +44,16 @@ import Flow.Server.Types
 import Flow.Server.Utils
 import KontraLink
 import User.Lang
+import Util.Actor
+import qualified Doc.Types.Document as DT
+import qualified Doc.Types.DocumentStatus as DT
 import qualified Flow.Model as Model
 import qualified Flow.Model.InstanceSession as Model
 import qualified Flow.Model.Types as Model
 
 accountEndpoints :: ServerT (AuthProtect "account" :> InstanceApi) AppM
-accountEndpoints account = getInstance account :<|> listInstances account
+accountEndpoints account =
+  getInstance account :<|> listInstances account :<|> cancelInstance account
 
 -- brittany-disable-next-binding
 userEndpoints
@@ -134,6 +141,37 @@ listInstances account@Account { user } = do
   let iids = map (view #id) is
   mapM (getInstance account) iids
 
+cancelInstance :: Account -> InstanceId -> AppM NoContent
+cancelInstance account iid = do
+  logInfo_ "Cancelling instance"
+  void $ checkInstancePerms account iid DeleteA
+  keyValues    <- Model.selectInstanceKeyValues iid
+  fullInstance <- fromMaybeM throwInstanceNotFoundError $ Model.selectFullInstance iid
+
+  let aggrState = instanceToAggregator fullInstance
+      status    = if
+        | currentStage aggrState == failureStageName -> Failed
+        | currentStage aggrState == finalStageName -> Completed
+        | otherwise -> InProgress
+
+  when (status /= InProgress) throwFlowCannotBeCancelledError
+
+  templates <- asks templates
+  docs      <- mapM (dbQuery . GetDocumentByDocumentID) . elems $ keyValues ^. #documents
+  void
+    . runTemplatesT (T.unpack $ codeFromLang LANG_EN, templates)
+    . forM_ docs
+    $ \DT.Document { DT.documentid = docId, DT.documentstatus = docStatus } -> do
+        -- Use the system actor for now as otherwise it requires
+        -- additional monad constraints
+        -- TODO: Fix this so that we don't have to use system actor
+        when (docStatus == DT.Pending) $ do
+          actor <- systemActor <$> currentTime
+          withDocumentID docId . dbUpdate $ CancelDocument actor
+
+  Model.cancelFlowInstance iid
+
+  pure NoContent
 
 getAllowedEvents
   :: (Expect -> [ExpectEvent]) -> HighTongue -> AggregatorState -> Maybe (Set ExpectEvent)
@@ -207,10 +245,9 @@ rejectInstance InstanceUser { instanceId = userInstanceId, userName } targetInst
     -- A flow instance cannot be rejected if it has been completed
     -- or has failed, i.e. rejected before.
     when (currentState == failureStageName || currentState == finalStageName)
-      $ throwAuthenticationError RejectForbiddenError
+         throwFlowCannotBeRejectedError
 
-    let mDetails :: Maybe EventDetails =
-          fmap (RejectionEventDetails . RejectionDetails) mRejectMessage
+    let mDetails = fmap (RejectionEventDetails . RejectionDetails) mRejectMessage
 
     let eventInfo = EventInfo { eventInfoAction   = FlowRejection
                               , eventInfoUser     = userName

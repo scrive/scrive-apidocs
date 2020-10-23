@@ -73,6 +73,7 @@ type InstanceApi
   = -- Progress
          Capture "instance_id" InstanceId :> Get '[JSON] GetInstance
     :<|> Get '[JSON] [GetInstance]
+    :<|> Capture "instance_id" InstanceId :> "cancel" :> PostNoContent '[JSON] NoContent
 
 -- brittany-disable-next-binding
 type AllApis

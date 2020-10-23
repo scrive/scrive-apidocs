@@ -25,6 +25,7 @@ module Flow.Model
     , selectUserNameFromKV
     , selectUserIdsBySessionId
     , updateAggregatorState
+    , cancelFlowInstance
     , insertUserAuthenticationConfigurations
     , selectUserAuthenticationConfigurations
     , selectUserAuthenticationConfiguration
@@ -299,7 +300,7 @@ selectFullInstance id = do
       pure $ Just FullInstance { .. }
 
 updateAggregatorState
-  :: (MonadDB m) => InstanceId -> AggregatorState -> EventId -> Bool -> m ()
+  :: MonadDB m => InstanceId -> AggregatorState -> EventId -> Bool -> m ()
 updateAggregatorState instanceId AggregatorState {..} eventId stateChange = do
   runQuery_ . sqlUpdate "flow_instances" $ do
     sqlSet "current_state" currentStage
@@ -312,6 +313,11 @@ updateAggregatorState instanceId AggregatorState {..} eventId stateChange = do
       sqlWhereEq "flow_events.instance_id" instanceId
     else runQuery_ . sqlInsert "flow_aggregator_events" $ do
       sqlSet "id" eventId
+
+cancelFlowInstance :: MonadDB m => InstanceId -> m ()
+cancelFlowInstance instanceId = runQuery_ . sqlUpdate "flow_instances" $ do
+  sqlSet "current_state" failureStageName
+  sqlWhereEq "id" instanceId
 
 updateInstanceLastModified :: (MonadDB m, MonadTime m, MonadThrow m) => InstanceId -> m ()
 updateInstanceLastModified instanceId = do

@@ -46,6 +46,7 @@ data ApiClient = ApiClient
   , commitTemplate   :: TemplateId -> ClientM NoContent
   , startTemplate    :: TemplateId -> CreateInstance -> ClientM GetInstance
   , getInstance      :: InstanceId -> ClientM GetInstance
+  , cancelInstance   :: InstanceId -> ClientM NoContent
   , listInstances    :: ClientM [GetInstance]
   , validateTemplate :: Process -> ClientM NoContent
   , version          :: ClientM Version
@@ -80,7 +81,8 @@ mkApiClient authData = ApiClient { .. }
         :<|> startTemplate)
       :<|>
         (getInstance
-        :<|> listInstances)
+        :<|> listInstances
+        :<|> cancelInstance)
       = accountEndpoints (mkAuthenticatedRequest authData addOAuthOrSessionAuthHeaders)
     validateTemplate :<|> version = noAuthEndpoints
 
@@ -104,9 +106,7 @@ mkPageClient authData = PageClient { .. }
     instanceOverviewMagicHash = noAuthEndpoints
 
 addOAuthOrSessionAuthHeaders :: OAuthOrSessionAuthData -> Client.Request -> Client.Request
-addOAuthOrSessionAuthHeaders authData = either addOAuthAuthorization
-                                               addSessionAuthHeaders
-                                               authData
+addOAuthOrSessionAuthHeaders = either addOAuthAuthorization addSessionAuthHeaders
   where
     addOAuthAuthorization :: OAuthAuthorization -> Client.Request -> Client.Request
     addOAuthAuthorization OAuthAuthorization {..} = Client.addHeader "authorization"

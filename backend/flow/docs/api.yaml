@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: Scrive Flow API
-  version: "0.10.8"
+  version: "0.11.0"
   description: |
     This is a specification of an API for configuring and managing Scrive Flow processes.
 
@@ -13,6 +13,11 @@ info:
 
     # Recent changes
 
+    ## 0.11.0
+
+    * New /cancel endpoint added to allow the flow author to withdraw the flow and all its unsealed docs.
+    * Change to the error code for the reject endpoint when not able to reject the flow due to state already being failed or cancelled.
+
     ## 0.10.8
 
     * Add support for specifying allowed document types when using Onfido for authentication.
@@ -22,11 +27,6 @@ info:
     ## 0.10.7
 
     * Add support for SMS OTP (one-time password) authentication via EID Hub.
-
-    ## 0.10.6
-
-    * Add support for specifying which method when using Onfido for authentication.
-    * Schema `AuthenticationOnfido`: add optional `method` field.
 
     Download the full [API changelog (md)](/experimental/flow/documentation/changelog.md) here.
 
@@ -422,6 +422,39 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /instances/{instance_id}/cancel:
+    post:
+      tags:
+        - control
+      summary: Cancel a Flow instance
+      operationId: cancelFlow
+      description: |
+        Cancel a flow instance, causing all unsealed documents in the flow to
+        be cancelled.
+      parameters:
+        - $ref: "#/components/parameters/InstanceId"
+      responses:
+        204:
+          description: The flow instance is cancelled successfully.
+        401:
+          description: Error authenticating the API caller.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Flow instance not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        409:
+          description: Cannot cancel the flow.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /instances/{instance_id}/reject:
     post:
       tags:
@@ -457,6 +490,12 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         404:
           description: Flow instance not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        409:
+          description: Cannot reject the flow.
           content:
             application/json:
               schema:
@@ -1246,7 +1285,7 @@ components:
               type: number
               enum: [1]
         - oneOf:
-          - $ref: "#/components/schemas/CallbackEventVersion1"
+            - $ref: "#/components/schemas/CallbackEventVersion1"
 
     CallbackEventVersion1:
       description: |

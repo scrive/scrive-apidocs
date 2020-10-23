@@ -1223,6 +1223,7 @@ Test-suite kontrakcja-test
                  Flow.EIDTest
                  Flow.HighTongueTest
                  Flow.IntegrationTest
+                 Flow.IntegrationTest.Cancellation
                  Flow.IntegrationTest.Common
                  Flow.IntegrationTest.ComplexCompleteProcess
                  Flow.IntegrationTest.Failure

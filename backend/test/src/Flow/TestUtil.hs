@@ -71,9 +71,7 @@ getEnv mgrSettings = do
   pure . mkClientEnv mgr $ url { baseUrlPort = flowPort }
 
 request :: ClientM a -> TestEnv (Either ClientError a)
-request req = do
-  env <- getEnv managerSettings
-  liftIO $ runClientM req env
+request req = liftIO . runClientM req =<< getEnv managerSettings
 
 requestWithEnv :: MonadIO m => ClientEnv -> ClientM a -> m (Either ClientError a)
 requestWithEnv env req = liftIO $ runClientM req env

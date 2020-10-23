@@ -9,6 +9,8 @@ module Flow.Error (
   , throwDSLValidationError
   , TemplateStartErrorType(..)
   , throwTemplateCannotBeStartedError
+  , throwFlowCannotBeRejectedError
+  , throwFlowCannotBeCancelledError
   , throwInternalServerError
   , throwDocumentCouldNotBeStarted
   , throwUnableToAddDocumentSessionHTML
@@ -51,7 +53,6 @@ data AuthError
   | XTokenMissingError
   | SessionCookieOrXTokenInvalidError
   | AccessControlError
-  | RejectForbiddenError
   | InvalidInstanceAccessTokenError
 
 instance Show AuthError where
@@ -65,7 +66,6 @@ instance Show AuthError where
     SessionCookieOrXTokenInvalidError ->
       "The provided session cookie and/or xtoken header are invalid"
     AccessControlError -> "You do not have permission to perform the requested action"
-    RejectForbiddenError -> "You are not allowed to reject the flow instance"
     InvalidInstanceAccessTokenError -> "This invitation link is invalid"
 
 makeJSONError :: FlowError -> ServerError
@@ -129,6 +129,22 @@ throwDSLValidationError explanation = throwError $ makeJSONError FlowError
   { code        = 409
   , message     = "Template DSL failed validation"
   , explanation = explanation
+  , details     = Nothing
+  }
+
+throwFlowCannotBeRejectedError :: MonadError ServerError m => m a
+throwFlowCannotBeRejectedError = throwError $ makeJSONError FlowError
+  { code        = 409
+  , message     = "Flow cannot be rejected"
+  , explanation = "You cannot reject a flow which is in Completed or Failed state"
+  , details     = Nothing
+  }
+
+throwFlowCannotBeCancelledError :: MonadError ServerError m => m a
+throwFlowCannotBeCancelledError = throwError $ makeJSONError FlowError
+  { code        = 409
+  , message     = "Flow cannot be cancelled"
+  , explanation = "You cannot cancel a flow which is in Completed or Failed state"
   , details     = Nothing
   }
 

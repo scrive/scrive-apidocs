@@ -33,6 +33,7 @@ import User.Types.User
 import Util.Actor
 import Util.HasSomeUserInfo
 import qualified Auth.Model as AuthModel
+import qualified Flow.IntegrationTest.Cancellation as Cancellation
 import qualified Flow.IntegrationTest.Rejection as Rejection
 import qualified Flow.Model as Model
 import qualified Flow.Model.InstanceSession as Model
@@ -67,6 +68,7 @@ tests env = testGroup
              env
              testUnmatchedSignatoriesAreNotAllowed
   , Rejection.tests env
+  , Cancellation.tests env
   ]
 
 testTemplateHappyCrud :: TestEnv ()
