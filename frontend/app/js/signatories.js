@@ -979,10 +979,11 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
           return bs.indexOf(item) > -1;
         });
       }
-
-      // maximum of 1 national EID is allowed per signatory
-      var eids = ["se_bankid", "no_bankid", "dk_nemid_cpr", "dk_nemid_pid", "dk_nemid_cvr",  "fi_tupas", "nl_idin", "verimi", "verimi_qes"];
-      return (1 >= intersect( eids, [authToSign, authToView, authToViewArchived]).length);
+      var active_auths = _.map([authToSign, authToView, authToViewArchived], function (auth) {return auth == "verimi_qes" ? "verimi" : auth});
+      var national_eids = ["se_bankid", "no_bankid", "dk_nemid_cpr", "dk_nemid_pid", "dk_nemid_cvr",  "fi_tupas", "nl_idin", "verimi"];
+      var active_eids = intersect(national_eids, active_auths);
+      // maximum of 1 national EID is allowed per signatory (Verimi and Verimi QES can coexist)
+      return (active_eids.length <= 1);
     },
     setAuthenticationToView: function(a) {
         var canMix = this.authenticationMethodsCanMix(a, this.authenticationToSign(), this.authenticationToViewArchived());
