@@ -180,7 +180,8 @@ var EmailModal = require("../../common/email_modal");
         && signatory.document().pending()
         && signatory.canHaveAuthenticationToSign()
         && !signatory.hasSigned()
-        && (!signatory.standardAuthenticationToSign() || currentFeatures.canUseNonstandardAuthenticationToSign());
+        && (!signatory.standardAuthenticationToSign() || currentFeatures.canUseNonstandardAuthenticationToSign())
+        && !signatory.document().usesVerimiQes();
     },
 
     hasGoToSignviewOption: function () {
