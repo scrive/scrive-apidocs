@@ -9,22 +9,11 @@ git-crypt unlock git-crypt.key
 ```
 Ask the team for the key.
 
-If you want to use other credentials or server, please export the following environment variables before running the command.
-```
-export BASE_URL=...
-export USER_EMAIL=...
-export USER_PASSWORD=...
-export OAUTH_CONSUMER_KEY=...
-export OAUTH_CONSUMER_SECRET=...
-export OAUTH_TOKEN=...
-export OAUTH_TOKEN_SECRET=...
-```
-
 # Run
 You can start all tests with a single command:
-`./run_tests.sh --env <dev|staging>`
+`./run_tests.sh --env <local|dev|staging>`
 
-The default test environment is `dev` if not specified.
+The default test environment is `local` if not specified.
 
 For example, if you want to run the test `test_one_document_process` with logging enabled against `dev`:
 ```

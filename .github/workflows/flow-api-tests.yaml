@@ -18,7 +18,7 @@ jobs:
           cd backend/flow/test
           echo "$GITCRYPT_KEY" | base64 -d > git-crypt.key
           git-crypt unlock git-crypt.key
-          ./run_tests.sh --capture=no
+          ./run_tests.sh --capture=no --env=dev
 name: "Flow API Tests (script changes)"
 on:
   pull_request:

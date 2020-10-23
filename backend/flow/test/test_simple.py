@@ -1,13 +1,12 @@
 import requests
 import utils
 import json
+from fixtures import *
 
 
-def test_one_document_process(config):
-    base_url = config["base_url"]
-    user_email = config["user_email"]
-    user_password = config["user_password"]
-    flow_path = f"{base_url}/experimental/flow"
+def test_one_document_process(author, base_url, flow_path):
+    user_email = author.email
+    session = author.create_session()
 
     process = """
     dsl-version: "0.2.0"
@@ -19,8 +18,6 @@ def test_one_document_process(config):
               users: [user1]
               documents: [doc1]
     """
-
-    session = utils.create_session(base_url, user_email, user_password)
 
     # Validate the template
     resp = utils.post(session, f"{flow_path}/templates/validate", json=process)

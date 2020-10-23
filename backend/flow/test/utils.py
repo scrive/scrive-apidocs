@@ -83,9 +83,9 @@ def create_personal_access_auth_header(base_url, email, password):
 
 def create_oauth_header(config):
     auth_dict = {
-        "oauth_consumer_key": config["oauth"]["oauth_consumer_key"],
-        "oauth_token": config["oauth"]["oauth_token"],
-        "oauth_signature": config["oauth"]["oauth_consumer_secret"] + '&' + config["oauth"]["oauth_token_secret"]
+        "oauth_consumer_key": config["oauth_consumer_key"],
+        "oauth_token": config["oauth_token"],
+        "oauth_signature": config["oauth_consumer_secret"] + '&' + config["oauth_token_secret"]
     }
     return make_auth_header(auth_dict)
 
@@ -255,16 +255,3 @@ def sign_document(base_url, flow_path, instance, document_id, user):
          f"{base_url}/api/v2/documents/{document_id}/{signatory_id}/sign",
          data=data,
          files=files)
-
-
-def update_config_from_env(config):
-    config["base_url"] = (os.environ.get("BASE_URL", config["base_url"])).rstrip("/")
-    config["user_email"] = os.environ.get("USER_EMAIL", config["user_email"])
-    config["user_password"] = os.environ.get("USER_PASSWORD", config["user_password"])
-    config["oauth"]["oauth_consumer_key"] = os.environ.get("OAUTH_CONSUMER_KEY", config["oauth"]["oauth_consumer_key"])
-    config["oauth"]["oauth_consumer_secret"] = os.environ.get("OAUTH_CONSUMER_SECRET",
-                                                              config["oauth"]["oauth_consumer_secret"])
-    config["oauth"]["oauth_token"] = os.environ.get("OAUTH_TOKEN", config["oauth"]["oauth_token"])
-    config["oauth"]["oauth_token_secret"] = os.environ.get("OAUTH_TOKEN_SECRET", config["oauth"]["oauth_token_secret"])
-
-    return config

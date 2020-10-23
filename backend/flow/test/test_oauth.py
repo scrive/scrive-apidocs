@@ -1,11 +1,10 @@
 import requests
 from utils import post, get, create_document, sign_document, create_oauth_header
+from fixtures import *
 
 
-def test_oauth(config):
-    base_url = config["base_url"]
-    user_email = config["user_email"]
-    flow_path = f"{base_url}/experimental/flow"
+def test_oauth(author, base_url, flow_path):
+    user_email = author.email
 
     process = """
     dsl-version: "0.2.0"
@@ -28,7 +27,7 @@ def test_oauth(config):
               documents: [doc1]
     """
 
-    auth_header = create_oauth_header(config)
+    auth_header = author.create_authentication_header()
 
     session = requests.Session()
     resp = post(session, f"{flow_path}/templates",
