@@ -1148,7 +1148,7 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
              || (this.views() && this.seBankIDAuthenticationToViewArchived())
              || (this.views() && this.noBankIDAuthenticationToViewArchived())
              || (this.views() && this.dkNemIDCPRAuthenticationToViewArchived())
-             || (this.views() && this.dkNemIDPIDAuthenticationToViewArchived())
+             || (this.dkNemIDPIDAuthenticationToViewArchived()) // PID has to be always entered, because PN is not provided in PID authentication to sign
              || (this.views() && this.dkNemIDCVRAuthenticationToViewArchived())
              || (this.views() && this.fiTupasAuthenticationToViewArchived()));
     },
