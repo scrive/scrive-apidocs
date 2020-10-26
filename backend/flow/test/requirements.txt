@@ -1,2 +1,3 @@
 pytest==v6.0.1
 requests==2.24.0
+flask==1.1.2

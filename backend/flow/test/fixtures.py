@@ -2,6 +2,7 @@ import pytest
 
 import utils
 from environment import environment as environment_data
+from environment_functions import *
 
 
 public_secrets = {
@@ -12,30 +13,11 @@ public_secrets = {
 }
 
 
-# Compose environment from default, configuration file, and environment
-# variables, and enrich it by secrets.
-def get_environment(pytestconfig):
+def get_environment_in_test(pytestconfig):
     environment_name = pytestconfig.getoption("env")
     environment = environment_data[environment_name]
 
-    # Try to load `secrets.py`, which is stored encrypted in git and should
-    # have been decrypted by now. Ignore the error if we're running in the
-    # local environment.
-    all_secrets = {}
-    try:
-        from secrets import secrets
-        all_secrets = secrets
-    except:
-        pass
-    all_secrets.update(public_secrets)
-    if all_secrets.get(environment_name) is None:
-        raise Exception(f"Can't find secrets for environment {environment_name}. Did you forget to decrypt `secrets.py` file? See README for how to do it.")
-    secrets = all_secrets[environment_name]
-
-    environment["user_password"] = secrets["user_password"]
-    environment["oauth"] = secrets["oauth"]
-
-    return environment
+    return get_environment(environment_name, environment)
 
 
 def get_base_url(environment):
@@ -67,18 +49,18 @@ class Author:
 
 @pytest.fixture()
 def author(pytestconfig):
-    environment = get_environment(pytestconfig)
+    environment = get_environment_in_test(pytestconfig)
     return Author(environment)
 
 
 @pytest.fixture()
 def base_url(pytestconfig):
-    environment = get_environment(pytestconfig)
+    environment = get_environment_in_test(pytestconfig)
     return get_base_url(environment)
 
 
 @pytest.fixture()
 def flow_path(pytestconfig):
-    environment = get_environment(pytestconfig)
+    environment = get_environment_in_test(pytestconfig)
     base = get_base_url(environment)
     return f"{base}/experimental/flow"

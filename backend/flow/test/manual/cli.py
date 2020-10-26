@@ -1,19 +1,15 @@
 import argparse
-from utils import update_config_from_env
+
+from environment import environment as environment_data
+from environment_functions import *
 
 
 def parse():
-    try:
-        from env import config as conf
-    except:
-        raise Exception("Unable to import `env.py`, did you decrypt it?")
-
     parser = argparse.ArgumentParser()
-    parser.add_argument('-e', '--env', action='store', default='dev')
+    parser.add_argument('-e', "--env", default="local", choices=environment_data.keys(), help="environment to run against")
     parser.add_argument('args', nargs=argparse.REMAINDER)
     args, _ = parser.parse_known_args()
 
-    target = args.env
-    config = update_config_from_env(conf[target])
+    environment = environment_data[args.env]
 
-    return config
+    return get_environment(args.env, environment)

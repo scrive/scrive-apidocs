@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import pathmagic # noqa
 import cli
-from utils import post, create_personal_access_auth_header, create_document
+from utils import post, create_personal_access_auth_header, create_document, set_verbose
 import requests
 import random
 
@@ -130,4 +130,5 @@ def flow_onfido_checker(config):
 
 
 if __name__ == "__main__":
+    set_verbose(False)
     flow_onfido_checker(cli.parse())

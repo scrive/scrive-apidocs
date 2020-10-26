@@ -5,24 +5,34 @@ import os
 from data import first_name_list, surname_list
 
 
+g_verbose = True
+
+
+def set_verbose(verbose=False):
+    global g_verbose
+    g_verbose = verbose
+
+
 # Some utility functions to simplify error handling
 def print_response(msg, resp):
     print(msg, " response:", resp.status_code)
-    try:
-        print(json.dumps(resp.json(), indent=2))
-    except:
-        print(resp.text)
+    if g_verbose:
+        try:
+            print(json.dumps(resp.json(), indent=2))
+        except:
+            print(resp.text)
     print()
 
 
 def print_request(msg, **kwargs):
     print(msg)
-    if kwargs.get("json"):
-        print("json:", json.dumps(kwargs["json"], indent=2))
-    if kwargs.get("data"):
-        print("data:", kwargs["data"])
-    if kwargs.get("headers"):
-        print("headers:", kwargs["headers"])
+    if g_verbose:
+        if kwargs.get("json"):
+            print("json:", json.dumps(kwargs["json"], indent=2))
+        if kwargs.get("data"):
+            print("data:", kwargs["data"])
+        if kwargs.get("headers"):
+            print("headers:", kwargs["headers"])
     print()
 
 
@@ -30,8 +40,6 @@ def handle_response(url, resp):
     if resp.status_code >= 300:
         print_response(url, resp)
         assert False
-
-    print_response(url, resp)
 
 
 # Add an xtoken header if we are not using OAuth

@@ -2,7 +2,7 @@
 import pathmagic # noqa
 import cli
 import requests
-from utils import get, post, create_personal_access_auth_header, create_document
+from utils import get, post, create_personal_access_auth_header, create_document, set_verbose
 
 
 def create_document_and_start(base_url, session, auth_header, parties):
@@ -79,4 +79,5 @@ def onfido_checker(config):
 
 
 if __name__ == "__main__":
+    set_verbose(False)
     onfido_checker(cli.parse())
