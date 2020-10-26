@@ -19,7 +19,7 @@ nixpkgs.stdenv.mkDerivation {
   unpackPhase = "true";
 
   buildPhase = ''
-    mkdir -p Shake frontend frontend-elm texts templates
+    mkdir -p Shake frontend frontend-elm api-docs texts templates
     mkdir -p backend/flow/docs
 
     cp -r \
@@ -56,6 +56,13 @@ nixpkgs.stdenv.mkDerivation {
       ./scripts/sort_imports \
       ./scripts/detect_old_templates \
       ./scripts/detect_old_localizations
+
+    cp -r \
+      ${kontrakcja-src}/api-docs/default.nix \
+      ${kontrakcja-src}/api-docs/nix \
+      ${kontrakcja-src}/api-docs/Gemfile \
+      ${kontrakcja-src}/api-docs/Gemfile.lock \
+      ./api-docs/
 
     cp ${dummy-main} ./Shake/Shake.hs
     cp ${dummy-main} ./localization/src/LocalizationMain.hs

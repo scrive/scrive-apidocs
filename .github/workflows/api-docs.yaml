@@ -1,0 +1,55 @@
+# DO NOT EDIT MANUALLY. Workflow generated from workflow/scripts/generate-workflow.sh.
+jobs:
+  api-docs:
+    runs-on:
+      - linux
+      - self-hosted
+      - build-runner
+    steps:
+      - name: Checkout Code
+        uses: "actions/checkout@v2"
+      - name: Setup Nix
+        run: |
+          ./ci/workflow/scripts/setup-nix.sh
+      - name: Setup Cachix
+        run: |
+          if ! type cachix
+          then
+            nix-env -iA cachix -f https://cachix.org/api/v1/install
+          fi
+          
+          cachix authtoken ${{ secrets.CACHIX_AUTH_TOKEN }}
+          cachix use scrive
+      - env:
+          SSH_KEY_PDFTOOLS: "${{ secrets.SSH_KEY_PDFTOOLS }}"
+        name: Setup SSH
+        run: "./ci/workflow/scripts/setup-ssh.sh"
+      - name: Build API Docs
+        run: |
+          nix-build -A api-docs release.nix
+          mkdir -p _build
+          
+          cp -r result/* _build/
+          
+          find _build -type d -exec chmod 755 {} \;
+          find _build -type f -exec chmod 644 {} \;
+      - if: "${{ github.ref == 'refs/heads/production' }}"
+        name: Publish API Docs
+        uses: "peaceiris/actions-gh-pages@v3"
+        with:
+          deploy_key: "${{ secrets.SSH_KEY_API_DOCS }}"
+          external_repository: scrive/scrive-apidocs
+          publish_dir: "./_build"
+name: API Docs
+on:
+  pull_request:
+    paths:
+      - "api-docs/**"
+  push:
+    branches:
+      - master
+      - staging
+      - production
+      - nix
+    paths:
+      - "api-docs/**"

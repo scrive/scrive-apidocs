@@ -1,9 +1,8 @@
+{ nixpkgs ? import <nixpkgs> {}
+, src ? ../.
+}:
 let
-  nixpkgs = import <nixpkgs> {};
-
   inherit (nixpkgs) pkgs stdenv nodePackages;
-
-  src = ../.;
 
   gems = pkgs.bundlerEnv {
     name = "scrive-api-docs";

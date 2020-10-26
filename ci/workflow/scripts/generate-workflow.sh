@@ -14,6 +14,7 @@ jobs=(
   nix-deps-mac
   nix-dist
   docker-lambda
+  api-docs
   flow-api-tests
   migration-test
   selenium-staging

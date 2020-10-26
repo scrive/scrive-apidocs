@@ -11,6 +11,7 @@ nix_deps=$(mktemp -d -t kontrakcja-nix-XXXX)
 instances=(
   $(nix-instantiate -A ghc88.shell-deps $nix_deps/release.nix)
   $(nix-instantiate -A ghc810.shell-deps $nix_deps/release.nix)
+  $(nix-instantiate -A api-docs $nix_deps/release.nix)
   $(nix-instantiate $nix_deps/nix/releases/new-frontend.nix)
   $(nix-instantiate $nix_deps/nix/releases/plan.nix)
 )
