@@ -116,3 +116,17 @@ items:
         - text
       text:
         type: string
+  - title: Is part of a Scrive Flow
+    type: object
+    properties:
+      filter_by:
+        type: string
+        enum:
+        - is_part_of_a_flow
+  - title: Is not part of a Scrive Flow
+    type: object
+    properties:
+      filter_by:
+        type: string
+        enum:
+        - is_not_part_of_a_flow
