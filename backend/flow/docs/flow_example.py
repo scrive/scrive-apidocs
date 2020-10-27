@@ -297,7 +297,7 @@ party_user1 = {
     "surname": "Smith",
 }
 
-user2_email = "foo@bar.com"
+user2_email = "foo@example.com"
 
 party_user2 = {
     "email": user2_email,
@@ -308,7 +308,7 @@ party_user2 = {
     "surname": "Bar",
 }
 
-user3_email = "bar@baz.com"
+user3_email = "bar@example.com"
 
 party_user3 = {
     "email": user3_email,

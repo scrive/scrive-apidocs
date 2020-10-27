@@ -1,10 +1,12 @@
 import requests
-import utils
 import json
 from fixtures import *
 
 
-def test_one_document_process(author, base_url, flow_path):
+@pytest.mark.parametrize("method, allowed_document_types",
+                         [("document", ["national_identity_card", "driving_licence", "passport", "residence_permit"]),
+                          ("document_and_photo",  ["driving_licence", "passport"])])
+def test_one_document_process(method, allowed_document_types, author, base_url, flow_path):
     user_email = author.email
     session = author.create_session()
 
@@ -30,7 +32,7 @@ def test_one_document_process(author, base_url, flow_path):
 
     parties = [{"email": user_email,
                 "role": "signing_party",
-                "number": None,
+                "number": "+46712345678",
                 "signing_order": 1
                 }]
 
@@ -40,13 +42,15 @@ def test_one_document_process(author, base_url, flow_path):
     documents = {
         "doc1": document_id,
     }
+
     users = {
         "user1": {
             "id_type": "email",
             "id": user_email,
             "auth_to_view": {
                 "provider": "onfido",
-                "method": "document",
+                "method": method,
+                "allowed_document_types": allowed_document_types,
                 "max_failures": 1
             },
             "auth_to_view_archived": {

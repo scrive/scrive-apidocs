@@ -40,18 +40,18 @@ def onfido_checker(config):
     party_user1 = {
         "email": user_email,
         "role": "signing_party",
-        "number": None,
+        "number": "+46712345678",
         "signing_order": 1,
         "first_name": "John",
         "surname": "Smith",
     }
 
-    user2_email = "foo@bar.com"
+    user2_email = "qa-bot+flow+foo@scrive.com"
 
     party_user2 = {
         "email": user2_email,
         "role": "signing_party",
-        "number": None,
+        "number": "+46712345678",
         "signing_order": 1,
         "first_name": "Foo",
         "surname": "Bar",
@@ -59,12 +59,12 @@ def onfido_checker(config):
         #    "surname": "Consider",
     }
 
-    user3_email = "bar@baz.com"
+    user3_email = "qa-bot+flow+bar@scrive.com"
 
     party_user3 = {
         "email": user3_email,
         "role": "signing_party",
-        "number": None,
+        "number": "+46712345678",
         "signing_order": 1,
         "first_name": "Richard",
         "surname": "MacTester",
