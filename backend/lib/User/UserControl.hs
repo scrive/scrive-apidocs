@@ -41,6 +41,7 @@ import IPAddress
 import Kontra
 import KontraLink
 import Log.Identifier
+import LoginAuth.LoginAuthMethod
 import MagicHash (MagicHash)
 import Mails.SendMail
 import MinutesTime
@@ -261,11 +262,17 @@ sendNewUserMail user = do
   return ()
 
 createNewUserByAdmin
-  :: Kontrakcja m => Text -> (Text, Text) -> (UserGroupID, Bool) -> Lang -> m (Maybe User)
-createNewUserByAdmin email names usergroupandrole lg = do
+  :: Kontrakcja m
+  => Text
+  -> (Text, Text)
+  -> (UserGroupID, Bool)
+  -> Lang
+  -> LoginAuthMethod
+  -> m (Maybe User)
+createNewUserByAdmin email names usergroupandrole lg lam = do
   ctx   <- getContext
   muser <-
-    createUser (Email email) names usergroupandrole lg ByAdmin
+    createUser (Email email) names usergroupandrole lg lam ByAdmin
       =<< getCreateUserContextFromContext
   case muser of
     Just user -> do

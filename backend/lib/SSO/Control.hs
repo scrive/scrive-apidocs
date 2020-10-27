@@ -156,13 +156,10 @@ consumeAssertions = guardHttps . handle handleSAMLException $ do
                       (spFirstname p               , spLastname p)
                       (ugID, False)
                       LANG_EN
+                      LoginAuthSSO
                       BySSO
                       cuctx
-            >>= \case
-                  Nothing   -> unexpectedError "User creation failed."
-                  Just user -> do
-                    void . dbUpdate $ SetLoginAuth (user ^. #id) LoginAuthSSO
-                    return $ set #sysAuth LoginAuthSSO user
+            >>= maybe (unexpectedError "User creation failed.") return
 
     updateUserWithNameIdInCompanyPosition :: Kontrakcja m => UserGroupSSOConfiguration -> User -> Text -> m User
     updateUserWithNameIdInCompanyPosition ssoConfig user nameID = do

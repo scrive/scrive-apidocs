@@ -62,13 +62,14 @@ data AddUser = AddUser
   (Maybe Password)
   (UserGroupID, Maybe FolderID, Bool)
   Lang
+  LoginAuthMethod
   BrandedDomainID
   SignupMethod
   (S.Set Tag)
   (S.Set Tag)
 
 instance (MonadDB m, MonadThrow m) => DBUpdate m AddUser (Maybe User) where
-  dbUpdate (AddUser (fname, lname) email mpwd (ugid, mFid, admin) l ad sm it et) = do
+  dbUpdate (AddUser (fname, lname) email mpwd (ugid, mFid, admin) l lam ad sm it et) = do
     mu <- dbQuery . GetUserByEmail $ Email email
     case mu of
       Just _  -> return Nothing -- user with the same email address exists
@@ -88,6 +89,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m AddUser (Maybe User) where
           sqlSet "phone"             ("" :: String)
           sqlSet "email" $ T.toLower email
           sqlSet "lang"                 l
+          sqlSet "sysauth"              lam
           sqlSet "deleted"              (Nothing :: Maybe UTCTime)
           sqlSet "associated_domain_id" ad
           sqlSet "user_group_id"        ugid

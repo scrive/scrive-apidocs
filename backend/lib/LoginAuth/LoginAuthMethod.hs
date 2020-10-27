@@ -1,5 +1,7 @@
 module LoginAuth.LoginAuthMethod
   ( LoginAuthMethod(..)
+  , loginAuthMethodFromText
+  , loginAuthMethodToText
   ) where
 
 import Control.Monad.Catch (throwM)
@@ -30,3 +32,14 @@ instance ToSQL LoginAuthMethod where
   type PQDest LoginAuthMethod = PQDest Int16
   toSQL LoginAuthNative = toSQL (1 :: Int16)
   toSQL LoginAuthSSO    = toSQL (2 :: Int16)
+
+loginAuthMethodFromText :: Text -> Maybe LoginAuthMethod
+loginAuthMethodFromText = \case
+  "native" -> Just LoginAuthNative
+  "sso"    -> Just LoginAuthSSO
+  _        -> Nothing
+
+loginAuthMethodToText :: LoginAuthMethod -> Text
+loginAuthMethodToText = \case
+  LoginAuthNative -> "native"
+  LoginAuthSSO    -> "sso"

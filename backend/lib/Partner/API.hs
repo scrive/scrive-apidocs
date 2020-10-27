@@ -30,6 +30,7 @@ import Doc.API.V2.Guards (guardThatUserExists)
 import Folder.Model
 import InputValidation (Result(..), asValidEmail)
 import Kontra
+import LoginAuth.LoginAuthMethod (LoginAuthMethod(..))
 import OAuth.Model
 import Partner.JSON
 import Partner.Logging
@@ -190,6 +191,7 @@ partnerApiCallV1UserCreate partnerUsrGrpID ugid = do
                     (userInfo ^. #firstName, userInfo ^. #lastName)
                     (ugid                  , False)
                     lang
+                    LoginAuthNative
                     PartnerInvitation
                     cuctx
         )

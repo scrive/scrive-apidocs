@@ -1132,6 +1132,7 @@ tryInstantiateUser UserTemplate { firstName = generateFirstName, lastName = gene
                                        password
                                        (groupID, homeFolderID, isCompanyAdmin)
                                        lang
+                                       LoginAuthNative
                                        associatedDomainID
                                        signupMethod
                                        internalTags

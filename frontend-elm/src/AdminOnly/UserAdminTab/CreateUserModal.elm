@@ -9,6 +9,7 @@ module AdminOnly.UserAdminTab.CreateUserModal exposing
     , view
     )
 
+import Authentication exposing (Authentication, enumAuthentication)
 import Bootstrap.Button as Button
 import Bootstrap.Form as Form
 import Bootstrap.Form.Checkbox as Checkbox
@@ -37,6 +38,7 @@ type alias Model =
     , firstName : String
     , secondName : String
     , language : Language
+    , auth : Authentication
     , isUserGroupAdmin : Bool
     }
 
@@ -53,6 +55,7 @@ type Msg
     | SetFirstName String
     | SetSecondName String
     | SetLanguage String
+    | SetAuthentication String
     | SetIsUserGroupAdmin Bool
     | GotResponse (Result Http.Error Response)
 
@@ -66,6 +69,7 @@ init config =
         , firstName = ""
         , secondName = ""
         , language = Language.English
+        , auth = Authentication.Native
         , isUserGroupAdmin = False
         }
 
@@ -101,6 +105,7 @@ update embed userCreatedMsg globals msg model =
                             , ( "sndname", model.secondName )
                             , ( "email", model.email )
                             , ( "lang", Enum.toString enumLanguage model.language )
+                            , ( "sysauth", Enum.toString enumAuthentication model.auth )
                             ]
                                 ++ moreParams
                     , expect = Http.expectJson (embed << GotResponse) responseDecoder
@@ -123,6 +128,15 @@ update embed userCreatedMsg globals msg model =
 
                     Ok language ->
                         { model | language = language }
+
+        SetAuthentication authString ->
+            singleton <|
+                case findEnumValue enumAuthentication authString of
+                    Err _ ->
+                        model
+
+                    Ok auth ->
+                        { model | auth = auth }
 
         SetIsUserGroupAdmin isAdmin ->
             singleton { model | isUserGroupAdmin = isAdmin }
@@ -159,7 +173,15 @@ responseDecoder =
 
 show : Model -> Model
 show model =
-    { model | modalVisibility = Modal.shown, firstName = "", secondName = "", email = "", language = Language.English, isUserGroupAdmin = False }
+    { model
+        | modalVisibility = Modal.shown
+        , firstName = ""
+        , secondName = ""
+        , email = ""
+        , language = Language.English
+        , auth = Authentication.Native
+        , isUserGroupAdmin = False
+    }
 
 
 view : (Msg -> msg) -> Model -> Html msg
@@ -235,6 +257,22 @@ view embed model =
                                 )
                             <|
                                 Enum.allValues enumLanguage
+                        ]
+                    ]
+                , Form.row []
+                    [ Form.colLabel labelColAttrs [ text "Authentication" ]
+                    , Form.col inputColAttrs
+                        [ Select.select [ Select.onChange <| SetAuthentication ] <|
+                            L.map
+                                (\auth ->
+                                    Select.item
+                                        [ value <| Enum.toString enumAuthentication auth
+                                        , selected <| auth == model.auth
+                                        ]
+                                        [ text <| Enum.toHumanString enumAuthentication auth ]
+                                )
+                            <|
+                                Enum.allValues enumAuthentication
                         ]
                     ]
                 ]

@@ -20,6 +20,7 @@ import Happstack.Fields
 import IPAddress
 import Kontra
 import Log.Identifier
+import LoginAuth.LoginAuthMethod
 import MinutesTime
 import PasswordService.Control
 import Session.Model
@@ -148,10 +149,11 @@ createUser
   -> (Text, Text)
   -> (UserGroupID, Bool)
   -> Lang
+  -> LoginAuthMethod
   -> SignupMethod
   -> CreateUserContext
   -> m (Maybe User)
-createUser email names (ugid, iscompanyadmin) lang sm ctx = do
+createUser email names (ugid, iscompanyadmin) lang lam sm ctx = do
   passwd <- randomPassword
   dbQuery (UserGroupGet ugid) >>= \case
     Nothing -> return Nothing
@@ -166,6 +168,7 @@ createUser email names (ugid, iscompanyadmin) lang sm ctx = do
                                   (Just passwd)
                                   (ugid, view #id <$> mUserFolder, iscompanyadmin)
                                   lang
+                                  lam
                                   (brandedDomain ctx ^. #id)
                                   sm
                                   S.empty

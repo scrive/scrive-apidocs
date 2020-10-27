@@ -72,6 +72,7 @@ import IPAddress ()
 import Kontra
 import KontraLink
 import Log.Identifier
+import LoginAuth.LoginAuthMethod
 import Mails.Model
 import MinutesTime
 import PadApplication.Types (padAppModeFromText)
@@ -340,6 +341,11 @@ handleUserChange uid = onlySalesOrAdmin $ do
   maybeNewTotpIsMandatory <- getField "usertotpismandatory"
   void . dbUpdate . SetUserTotpIsMandatory uid $ Just "true" == maybeNewTotpIsMandatory
 
+
+  -- Set the user authentication
+  maybeNewAuthentication <- getAuth "userauth"
+  whenJust maybeNewAuthentication $ void . dbUpdate . SetLoginAuth uid
+
   museraccounttype <- getField "useraccounttype"
   olduser          <- guardJustM . dbQuery $ GetUserByID uid
   user             <- case (museraccounttype, olduser ^. #isCompanyAdmin) of
@@ -552,6 +558,7 @@ handleCreateUser = onlySalesOrAdmin $ do
   fstname  <- guardJustM $ getField "fstname"
   sndname  <- guardJustM $ getField "sndname"
   lang     <- guardJustM $ (langFromCode =<<) <$> getField "lang"
+  auth     <- fromMaybe LoginAuthNative <$> getAuth "sysauth"
   ugFolder <- dbUpdate . FolderCreate $ defaultFolder
   ug       <-
     dbUpdate
@@ -559,7 +566,7 @@ handleCreateUser = onlySalesOrAdmin $ do
     . set #homeFolderID (Just $ ugFolder ^. #id)
     $ defaultUserGroup
 
-  muser <- createNewUserByAdmin email (fstname, sndname) (ug ^. #id, True) lang
+  muser <- createNewUserByAdmin email (fstname, sndname) (ug ^. #id, True) lang auth
   freeDocumentsValidity <- (31 `daysAfter`) <$> currentTime
   let freeDocumentsCount = 3
       freeDocuments =
@@ -580,7 +587,8 @@ handlePostAdminCompanyUsers ugid = onlySalesOrAdmin $ do
   sndname <- fromMaybe "" <$> getOptionalField asValidName "sndname"
   lang    <- guardJustM $ (langFromCode =<<) <$> getField "lang"
   admin   <- isFieldSet "iscompanyadmin"
-  muser   <- createNewUserByAdmin email (fstname, sndname) (ugid, admin) lang
+  auth    <- fromMaybe LoginAuthNative <$> getAuth "sysauth"
+  muser   <- createNewUserByAdmin email (fstname, sndname) (ugid, admin) lang auth
   runJSONGenT $ case muser of
     Nothing -> do
       value "success" False
@@ -588,6 +596,9 @@ handlePostAdminCompanyUsers ugid = onlySalesOrAdmin $ do
     Just _ -> do
       value "success"       True
       value "error_message" (Nothing :: Maybe String)
+
+getAuth :: (HasRqData m, ServerMonad m) => Text -> m (Maybe LoginAuthMethod)
+getAuth name = (loginAuthMethodFromText =<<) <$> getField name
 
 {- | Reads params and returns function for conversion of user group info.  With no param leaves fields unchanged -}
 getUserGroupSettingsChange

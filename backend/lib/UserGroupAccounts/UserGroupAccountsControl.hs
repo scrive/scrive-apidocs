@@ -30,6 +30,7 @@ import InputValidation
 import InternalResponse
 import Kontra
 import KontraLink
+import LoginAuth.LoginAuthMethod (LoginAuthMethod(..))
 import Mails.SendMail
 import MinutesTime
 import User.Action
@@ -233,6 +234,7 @@ handleAddUserGroupAccount = withUserAndGroup $ \(user, currentUserGroup) -> do
                              (fstname      , sndname)
                              (targetGroupID, False)
                              (ctx ^. #lang)
+                             LoginAuthNative
                              CompanyInvitation
               =<< getCreateUserContextFromContext
             void . dbUpdate $ LogHistoryUserInfoChanged

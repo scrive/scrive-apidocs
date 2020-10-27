@@ -7,6 +7,7 @@ module AdminOnly.UserAdmin.DetailsTab.User exposing
 
 import AdminOnly.Types.UserGroup.PadAppMode as PadAppMode exposing (PadAppMode)
 import AdminOnly.Types.UserGroup.SmsProvider as SmsProvider exposing (SmsProvider)
+import Authentication exposing (Authentication, enumAuthentication)
 import EnumExtra as Enum exposing (Enum, makeEnum)
 import Json.Decode as D exposing (Decoder)
 import Json.Decode.Pipeline as DP
@@ -28,6 +29,7 @@ type alias User =
     , phone : String
     , companyPosition : String
     , language : Language
+    , auth : Authentication
     , userGroup : UserGroup
     , accountType : AccountType
     , callbackUrl : String
@@ -48,6 +50,7 @@ decoder =
         |> DP.required "phone" D.string
         |> DP.required "companyposition" D.string
         |> DP.required "lang" (D.string |> D.andThen Language.decoder)
+        |> DP.required "sysauth" (D.string |> D.andThen Authentication.decoder)
         |> DP.required "company" userGroupDecoder
         |> DP.required "companyadmin" (D.bool |> D.andThen accountTypeDecoder)
         |> DP.required "callbackurl" D.string
@@ -67,6 +70,7 @@ formValues user =
     , ( "userlang", Enum.toString enumLanguage user.language )
     , ( "useraccounttype", Enum.toString enumAccountType user.accountType )
     , ( "usercallbackurl", user.callbackUrl )
+    , ( "userauth", Enum.toString enumAuthentication user.auth )
     , ( "usertotpismandatory", ite user.twoFAMandatory "true" "false" )
     ]
 

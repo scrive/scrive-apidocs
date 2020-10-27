@@ -63,10 +63,7 @@ maybeAdd ma b =
 getDocs :
     GetInstanceView
     -> Dict String Document
-    ->
-        ( List ( Document, M.Maybe Url )
-        , List ( Document, M.Maybe a )
-        )
+    -> ( List ( Document, M.Maybe Url ), List ( Document, M.Maybe a ) )
 getDocs instance documents =
     ( let
         actionDocs =

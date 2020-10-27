@@ -12,6 +12,7 @@ import AdminOnly.UserAdmin.DetailsTab.ChangePasswordModal as ChangePasswordModal
 import AdminOnly.UserAdmin.DetailsTab.DeleteUserModal as DeleteUserModal
 import AdminOnly.UserAdmin.DetailsTab.MoveUserModal as MoveUserModal
 import AdminOnly.UserAdmin.DetailsTab.User as User exposing (User, enumAccountType)
+import Authentication exposing (enumAuthentication)
 import Bootstrap.Button as Button
 import Bootstrap.Form as Form
 import Bootstrap.Form.Checkbox as Checkbox
@@ -58,6 +59,7 @@ type Msg
     | SetEmail String
     | SetAccountType String
     | SetLanguage String
+    | SetAuthentication String
     | SetPersonalNumber String
     | SetPhone String
     | SetCompanyPosition String
@@ -189,6 +191,9 @@ update embed globals msg model =
 
         SetLanguage str ->
             singleton <| handleSetEnum model enumLanguage str (\u v -> { u | language = v })
+
+        SetAuthentication str ->
+            singleton <| handleSetEnum model enumAuthentication str (\u v -> { u | auth = v })
 
         SubmitForm ->
             case fromStatus model.sUser of
@@ -488,6 +493,7 @@ viewUser user =
             , formTextRowM "Phone" user.phone SetPhone []
             , formTextRowM "Company position" user.companyPosition SetCompanyPosition []
             , formSelectRowM enumLanguage "Language" user.language SetLanguage
+            , formSelectRowM enumAuthentication "Authentication" user.auth SetAuthentication
             , Form.row []
                 [ Form.colLabel labelColAttrs [ text "Company" ]
                 , Form.colLabel inputColAttrs

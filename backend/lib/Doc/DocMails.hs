@@ -56,6 +56,7 @@ import InputValidation
 import Kontra
 import KontraLink
 import Log.Identifier
+import LoginAuth.LoginAuthMethod (LoginAuthMethod(..))
 import MailContext
 import Mails.MailsData
 import Mails.SendMail
@@ -893,7 +894,13 @@ createUserForPortal lang email cuctx = do
   ugFolder <- dbUpdate . FolderCreate $ defaultFolder
   let ug0 = set #homeFolderID (Just $ ugFolder ^. #id) defaultUserGroup
   ug     <- dbUpdate $ UserGroupCreate ug0
-  mnuser <- createUser email ("", "") (ug ^. #id, True) lang PortalInvite cuctx
+  mnuser <- createUser email
+                       (""       , "")
+                       (ug ^. #id, True)
+                       lang
+                       LoginAuthNative
+                       PortalInvite
+                       cuctx
   case mnuser of
     Nothing    -> unexpectedError "User was not created"
     Just nuser -> return nuser

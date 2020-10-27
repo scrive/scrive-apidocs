@@ -40,6 +40,7 @@ import Flow.Server.Types
 import Folder.Model
 import Happstack.Server.ReqHandler
 import Log.Configuration
+import LoginAuth.LoginAuthMethod (LoginAuthMethod(..))
 import Monitoring
 import PdfToolsLambda.Conf
 import RoutingTable
@@ -221,6 +222,7 @@ initDatabaseEntries appConf = do
                                   (Just passwd)
                                   (ug ^. #id, Just $ userFolder ^. #id, True)
                                   LANG_EN
+                                  LoginAuthNative
                                   (bd ^. #id)
                                   ByAdmin
                                   S.empty

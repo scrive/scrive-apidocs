@@ -26,6 +26,7 @@ import qualified Data.Set as S
 
 import DigitalSignatureMethod
 import Doc.API.V2.JSON.Misc
+import LoginAuth.LoginAuthMethod (loginAuthMethodToText)
 import MinutesTime
 import PadApplication.Types
 import User.CallbackScheme.Model (UserCallbackScheme(..))
@@ -63,7 +64,7 @@ userJSONUserDetails user = do
   value "fstname" $ getFirstName user
   value "sndname" $ getLastName user
   value "email" $ getEmail user
-  value "sysauth" . show $ user ^. #sysAuth
+  value "sysauth" . loginAuthMethodToText $ user ^. #sysAuth
   value "home_folder_id" $ user ^. #homeFolderID
   value "twofactor_active" $ user ^. #totpActive
   value "twofactor_is_mandatory" $ user ^. #totpIsMandatory
