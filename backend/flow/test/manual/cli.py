@@ -1,3 +1,4 @@
+import pathmagic # noqa
 import argparse
 
 from environment import environment as environment_data

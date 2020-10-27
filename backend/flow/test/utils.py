@@ -16,11 +16,10 @@ def set_verbose(verbose=False):
 # Some utility functions to simplify error handling
 def print_response(msg, resp):
     print(msg, " response:", resp.status_code)
-    if g_verbose:
-        try:
-            print(json.dumps(resp.json(), indent=2))
-        except:
-            print(resp.text)
+    try:
+        print(json.dumps(resp.json(), indent=2))
+    except:
+        print(resp.text)
     print()
 
 
