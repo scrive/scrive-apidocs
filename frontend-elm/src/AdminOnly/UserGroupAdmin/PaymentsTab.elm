@@ -2,12 +2,12 @@ module AdminOnly.UserGroupAdmin.PaymentsTab exposing
     ( Model
     , Msg
     , init
-    , setUserGroupID
     , tabName
     , update
     , view
     )
 
+import AdminOnly.UserGroupAdmin.PaymentsTab.InvoiceConfirmationModal as InvoiceConfirmationModal
 import AdminOnly.UserGroupAdmin.Subscription as Subscription
     exposing
         ( Features
@@ -59,8 +59,10 @@ type alias FormData =
 
 type alias Model =
     { sSubscription : Status Subscription
-    , sFormData : Maybe FormData
+    , mFormData : Maybe FormData
     , ugid : String
+    , originalInvoicingType : InvoicingType
+    , invoiceConfirmationModal : InvoiceConfirmationModal.Model
     }
 
 
@@ -75,6 +77,7 @@ type Msg
     | FreeDocumentTokenInputValidityInputChange String
     | SubmitForm
     | GotSaveResponse (Result Http.Error String)
+    | InvoiceConfirmationModalMsg InvoiceConfirmationModal.Msg
 
 
 tabName : String
@@ -87,8 +90,10 @@ init embed ugid =
     let
         model =
             { sSubscription = Loading
-            , sFormData = Nothing
+            , mFormData = Nothing
             , ugid = ugid
+            , originalInvoicingType = InvoicingTypeNone
+            , invoiceConfirmationModal = InvoiceConfirmationModal.init ugid
             }
     in
     return model <| Cmd.map embed <| getSubscriptionCmd model
@@ -107,11 +112,6 @@ getSubscriptionCmd model =
         { url = "/adminonly/companyadmin/getsubscription/" ++ model.ugid
         , expect = Http.expectJson GotSubscription subscriptionDecoder
         }
-
-
-setUserGroupID : (Msg -> msg) -> String -> Model -> Return msg Model
-setUserGroupID embed ugid model =
-    return { model | ugid = ugid } <| Cmd.map embed <| getSubscriptionCmd model
 
 
 modifySubscription : (Subscription -> Subscription) -> Model -> Model
@@ -241,7 +241,7 @@ validateFreeTokenFields model =
         mDate v =
             stringNonEmpty v |> M.andThen (Time.toDate >> Result.toMaybe)
     in
-    case model.sFormData of
+    case model.mFormData of
         Just fd ->
             case ( mInt fd.freeDocumentTokensInput, mDate fd.freeDocumentTokensValidityInput ) of
                 ( Just tc, Just tv ) ->
@@ -269,7 +269,8 @@ update embed globals msg model =
                     Ok subscription ->
                         { model
                             | sSubscription = Success subscription
-                            , sFormData = Just <| getFormDataFromSubscription subscription
+                            , originalInvoicingType = invoicingType subscription.invoicing
+                            , mFormData = Just <| getFormDataFromSubscription subscription
                         }
 
                     Err _ ->
@@ -301,7 +302,7 @@ update embed globals msg model =
 
         FreeDocumentTokenInputChange value ->
             singleton <|
-                case model.sFormData of
+                case model.mFormData of
                     Just fd ->
                         let
                             incorrectValue =
@@ -310,16 +311,16 @@ update embed globals msg model =
                             newValue =
                                 ite incorrectValue "0" value
                         in
-                        { model | sFormData = Just <| { fd | freeDocumentTokensInput = newValue } }
+                        { model | mFormData = Just <| { fd | freeDocumentTokensInput = newValue } }
 
                     _ ->
                         model
 
         FreeDocumentTokenInputValidityInputChange value ->
             singleton <|
-                case model.sFormData of
+                case model.mFormData of
                     Just fd ->
-                        { model | sFormData = Just <| { fd | freeDocumentTokensValidityInput = value } }
+                        { model | mFormData = Just <| { fd | freeDocumentTokensValidityInput = value } }
 
                     _ ->
                         model
@@ -389,28 +390,53 @@ update embed globals msg model =
                     return model <| globals.flashMessage <| FlashMessage.error "Request failed."
 
                 Ok _ ->
-                    return model <|
+                    let
+                        isInvoice invType =
+                            invType == InvoicingTypeInvoice
+
+                        modal =
+                            fromStatus model.sSubscription
+                                |> M.map
+                                    (\subscription ->
+                                        if isInvoice (invoicingType subscription.invoicing) && not (isInvoice model.originalInvoicingType) then
+                                            InvoiceConfirmationModal.show model.invoiceConfirmationModal
+
+                                        else
+                                            model.invoiceConfirmationModal
+                                    )
+                                |> M.withDefault model.invoiceConfirmationModal
+                    in
+                    return { model | invoiceConfirmationModal = modal } <|
                         Cmd.batch
                             [ globals.flashMessage <| FlashMessage.success "Saved"
-                            , globals.setPageUrlFromModel -- reloads UserGroup Details
+                            , Cmd.map embed <| getSubscriptionCmd model
                             ]
+
+        InvoiceConfirmationModalMsg modalMsg ->
+            let
+                modal =
+                    InvoiceConfirmationModal.update (embed << InvoiceConfirmationModalMsg) modalMsg model.invoiceConfirmationModal
+            in
+            singleton { model | invoiceConfirmationModal = modal }
 
 
 view : (Msg -> msg) -> Model -> Html msg
 view embed model =
-    case ( model.sSubscription, model.sFormData ) of
-        ( Loading, _ ) ->
-            h4 [] [ text "Loading ..." ]
+    let
+        loaded subscription =
+            case model.mFormData of
+                Nothing ->
+                    h4 [] [ text "Failure ..." ]
 
-        ( Failure, _ ) ->
-            h4 [] [ text "Failure ..." ]
-
-        ( _, Nothing ) ->
-            h4 [] [ text "Failure ..." ]
-
-        ( Success subscription, Just formData ) ->
-            div [] <|
-                [ Html.map embed <| viewSubscription subscription formData ]
+                Just formData ->
+                    div []
+                        [ Html.map embed <| viewSubscription subscription formData
+                        ]
+    in
+    div []
+        [ statusView loaded model.sSubscription
+        , InvoiceConfirmationModal.view (embed << InvoiceConfirmationModalMsg) model.invoiceConfirmationModal
+        ]
 
 
 formCheckbox :

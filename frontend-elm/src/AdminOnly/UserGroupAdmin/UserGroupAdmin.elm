@@ -422,10 +422,7 @@ updatePage embed page model =
         PaymentsTab ->
             let
                 ( tab, tabCmd ) =
-                    model.mPaymentsTab
-                        |> M.map (PaymentsTab.setUserGroupID (embed << PaymentsTabMsg) page.ugid)
-                        |> M.withDefault
-                            (PaymentsTab.init (embed << PaymentsTabMsg) page.ugid)
+                    PaymentsTab.init (embed << PaymentsTabMsg) page.ugid
             in
             return
                 { model

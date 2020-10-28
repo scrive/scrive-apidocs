@@ -17,7 +17,6 @@ import Bootstrap.Form.Input as Input
 import Bootstrap.Form.Select as Select
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Modal as Modal
-import Debug
 import EnumExtra as Enum exposing (findEnumValue)
 import Html exposing (Html, div, h3, p, text)
 import Html.Attributes exposing (checked, class, selected, value)
