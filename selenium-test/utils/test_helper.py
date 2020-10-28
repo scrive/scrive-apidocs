@@ -8,6 +8,7 @@ from selenium import webdriver
 import utils
 from driver_wrapper import SeleniumDriverWrapper
 from scrivepy import Language, Signatory
+from selenium.webdriver.firefox.options import Options
 
 
 class TestHelper(object):
@@ -77,7 +78,9 @@ class TestHelper(object):
         except KeyError:
             selenium_timeout = 30
 
-        driver_factory = lambda: webdriver.Firefox()
+        options = Options()
+        options.headless = True
+        driver_factory = lambda: webdriver.Firefox(options=options)
         driver = SeleniumDriverWrapper(driver_factory,
                                        driver_name='local_firefox',
                                        test_name=self._driver._test_name,
@@ -107,3 +110,17 @@ class TestHelper(object):
     def write_artifact(self, artifact_name, contents):
         with open(self.artifact_path_for(artifact_name), 'wb') as f:
             f.write(contents)
+
+    def wait_until_sealed(self, doc_id, api, *, max_time=300):
+        start_time = time.time()
+        for x in range(1, 1000):
+            try:
+                doc = api.get_document(doc_id)
+                assert doc.sealed_document is not None
+                return doc
+            except AssertionError as err:
+                current_time = time.time()
+                if current_time - start_time > max_time:
+                    raise Exception("Document is not sealed in %d seconds" % max_time)
+                else:
+                    time.sleep(10 * x)

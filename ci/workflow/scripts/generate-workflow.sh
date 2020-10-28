@@ -13,6 +13,7 @@ jobs=(
   flow-api-tests
   migration-test
   selenium-staging
+  selenium-scripts-update
   shake-dist-master
   shake-dist-staging
   shake-dist-production

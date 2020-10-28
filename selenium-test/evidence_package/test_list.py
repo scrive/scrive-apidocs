@@ -3,9 +3,9 @@ import sys
 sys.path.append(os.path.abspath('../utils'))
 sys.path.append(os.path.abspath('..'))
 
-import screenshot_tests
-import tests
-import tests2
+import cases_of_screenshot
+import cases
+import cases2
 from make_drivers import generate_tests
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
@@ -91,11 +91,11 @@ screenshots_dir = os.path.join(dir_path, 'screenshots')
 
 
 def test_generator():
-    for x in generate_tests(tests, screenshots_dir, artifact_dir,
+    for x in generate_tests(cases, screenshots_dir, artifact_dir,
                             LOCAL_DEVICES, REMOTE_DEVICES):
         yield x
-    for x in generate_tests(tests2, screenshots_dir, artifact_dir, selenium=False):
+    for x in generate_tests(cases2, screenshots_dir, artifact_dir, selenium=False):
         yield x
-    for x in generate_tests(screenshot_tests, screenshots_dir, artifact_dir,
+    for x in generate_tests(cases_of_screenshot, screenshots_dir, artifact_dir,
                             LOCAL_DEVICES, REMOTE_DEVICES_FOR_SCREENSHOTS):
         yield x

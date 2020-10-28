@@ -11,7 +11,7 @@ from selenium import webdriver
 from driver_wrapper import SeleniumDriverWrapper
 from scrivepy import Scrive
 from test_helper import TestHelper
-import utils
+from noseflow import testcase
 
 ###############################################################################
 #                               CONFIG LOADING                                #
@@ -192,31 +192,21 @@ def generate_tests(module, screenshots_dir, artifact_dir, local_devices=None,
                 test_helper = TestHelper(api, driver,
                                          artifact_dir=artifact_dir)
 
-                def wrapper(fn):
-                    def inner(test_helper, driver, api):
-                        def close(driver):
-                            driver.quit()
-                            screenshot_requests.extend(
-                                driver.extract_screenshot_requests())
+                def close(driver):
+                    driver.quit()
+                    screenshot_requests.extend(
+                        driver.extract_screenshot_requests())
 
-                        try:
-                            func_name = "%s (%s) (%s)" % (fn.__name__, lang, driver.driver_name)
-                            print("👉 Running %s ..." % func_name)
-                            fn(test_helper, driver, api)
-                            print('📭 Result: %s ︎✅ ' % func_name)
-                        except Exception as err:
-                            print('📭 Result: %s ❌ - %s ︎' % (func_name, err))
-                            raise err
-                        finally:
-                            close(driver)
-
-                    return inner
-                test = wrapper(test)
+                text = "%s (%s) (%s)" % (test_name, lang, driver.driver_name)
+                test = testcase(test, text, close, driver=driver)
                 yield test, test_helper, driver, api
 
             if screenshots_enabled:
                 yield download_screenshots, screenshot_requests, screenshots_dir
         else:
+            text = "%s (%s)" % (test_name, lang)
+            test = testcase(test, text)
             test_helper = TestHelper(api, driver=None,
                                      artifact_dir=artifact_dir)
+
             yield test, test_helper, api

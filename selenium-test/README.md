@@ -8,7 +8,7 @@ pip install -r requirements.txt
 ```
 `virtualenv` is highly encouraged!
 
-The only non-python dependency is `pdfdetach` app (usually available in `poppler` package)
+The only non-python dependency is `pdfdetach` app (usually available in `poppler` or `poppler-utils` package)
 
 ## Configuration
 A file called `config.py` should be created with following the template below:

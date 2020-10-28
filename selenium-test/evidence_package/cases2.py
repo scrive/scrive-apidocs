@@ -8,6 +8,7 @@ import requests
 from pyquery import PyQuery
 
 import utils
+from retrying import retry
 
 
 def signed_doc(title, api, test_helper):
@@ -36,6 +37,7 @@ def verify_doc(doc):
 
 def check_service_description(test_helper, api):
     doc = signed_doc('service description', api, test_helper)
+    doc = test_helper.wait_until_sealed(doc.id, api)
 
     att_name = 'Appendix 2 Service Description.html'
     contents = test_helper.get_evidence_attachment_contents(doc, 2, att_name)
@@ -51,6 +53,7 @@ def check_service_description(test_helper, api):
 
 def check_evidence_of_time(test_helper, api):
     doc = signed_doc('evidence of time', api, test_helper)
+    doc = test_helper.wait_until_sealed(doc.id, api)
 
     att_name = 'Appendix 4 Evidence of Time.html'
     contents = test_helper.get_evidence_attachment_contents(doc, 4, att_name)
@@ -61,6 +64,7 @@ def check_evidence_of_time(test_helper, api):
 
 def check_all_attachments_included(test_helper, api):
     doc = signed_doc('attachments included', api, test_helper)
+    doc = test_helper.wait_until_sealed(doc.id, api)
 
     with utils.temp_file_path() as fp:
         doc.sealed_document.save_as(fp)
@@ -95,7 +99,8 @@ def check_guardtime_extended_sigs(test_helper, api):
     result_docs = result.json()['list']
     assert result_docs, 'No signed docs from two months ago on this account'
 
-    old_doc = api.get_document(result_docs[0]['fields']['id'])
+    old_doc_id = result_docs[0]['fields']['id']
+    old_doc = test_helper.wait_until_sealed(old_doc_id, api)
     old_doc.sealed_document.save_as(test_helper.artifact_path_for('old_document.pdf'))
 
     verification_result = verify_doc(old_doc)
@@ -104,8 +109,10 @@ def check_guardtime_extended_sigs(test_helper, api):
     assert verification_result.get('success') is True, err_msg
 
 
+@retry(stop_max_attempt_number=10, wait_exponential_multiplier=10_000, wait_exponential_max=60_000)
 def check_guardtime_new_sigs(test_helper, api):
     doc = signed_doc('guardtime sig', api, test_helper)
+    doc = test_helper.wait_until_sealed(doc.id, api)
     doc.sealed_document.save_as(test_helper.artifact_path_for('new_document.pdf'))
 
     verification_result = verify_doc(doc)

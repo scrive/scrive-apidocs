@@ -1,0 +1,109 @@
+# DO NOT EDIT MANUALLY. Workflow generated from workflow/scripts/generate-workflow.sh.
+jobs:
+  evidence-package:
+    runs-on:
+      - ubuntu-latest
+    steps:
+      - name: Cancel previous runs
+        uses: "styfle/cancel-workflow-action@0.4.1"
+        with:
+          access_token: "${{ secrets.GITHUB_TOKEN }}"
+      - name: Checkout Code
+        uses: "actions/checkout@v2"
+      - env:
+          SELENIUM_CONFIG: "${{ secrets.STAGING_SELENIUM_CONFIG }}"
+        name: "Run Selenium Tests (evidence Package)"
+        run: |
+          sudo apt-get update && sudo apt-get install -y poppler-utils python3 virtualenv
+          virtualenv --python=$(which python3) venv
+          source ./venv/bin/activate
+          python --version && pip --version
+          cd selenium-test/evidence_package
+          echo "$SELENIUM_CONFIG" > ../config.py
+          pip install -r ../requirements.txt
+          python run.py --local --timeout 120
+      - if: "${{ always() }}"
+        name: Upload Screenshots
+        uses: "actions/upload-artifact@v2"
+        with:
+          name: screenshots
+          path: selenium-test/evidence_package/screenshots
+      - if: "${{ always() }}"
+        name: Upload Artifacts
+        uses: "actions/upload-artifact@v2"
+        with:
+          name: artifacts
+          path: selenium-test/evidence_package/artifacts
+  general:
+    runs-on:
+      - ubuntu-latest
+    steps:
+      - name: Cancel previous runs
+        uses: "styfle/cancel-workflow-action@0.4.1"
+        with:
+          access_token: "${{ secrets.GITHUB_TOKEN }}"
+      - name: Checkout Code
+        uses: "actions/checkout@v2"
+      - env:
+          SELENIUM_CONFIG: "${{ secrets.STAGING_SELENIUM_CONFIG }}"
+        name: "Run Selenium Tests (general)"
+        run: |
+          sudo apt-get update && sudo apt-get install -y poppler-utils python3 virtualenv
+          virtualenv --python=$(which python3) venv
+          source ./venv/bin/activate
+          python --version && pip --version
+          cd selenium-test/general
+          echo "$SELENIUM_CONFIG" > ../config.py
+          pip install -r ../requirements.txt
+          python run.py --local --timeout 120
+      - if: "${{ always() }}"
+        name: Upload Screenshots
+        uses: "actions/upload-artifact@v2"
+        with:
+          name: screenshots
+          path: selenium-test/general/screenshots
+      - if: "${{ always() }}"
+        name: Upload Artifacts
+        uses: "actions/upload-artifact@v2"
+        with:
+          name: artifacts
+          path: selenium-test/general/artifacts
+  language:
+    runs-on:
+      - ubuntu-latest
+    steps:
+      - name: Cancel previous runs
+        uses: "styfle/cancel-workflow-action@0.4.1"
+        with:
+          access_token: "${{ secrets.GITHUB_TOKEN }}"
+      - name: Checkout Code
+        uses: "actions/checkout@v2"
+      - env:
+          SELENIUM_CONFIG: "${{ secrets.STAGING_SELENIUM_CONFIG }}"
+        name: "Run Selenium Tests (languages)"
+        run: |
+          sudo apt-get update && sudo apt-get install -y poppler-utils python3 virtualenv
+          virtualenv --python=$(which python3) venv
+          source ./venv/bin/activate
+          python --version && pip --version
+          cd selenium-test/language-test
+          echo "$SELENIUM_CONFIG" > ../config.py
+          pip install -r ../requirements.txt
+          python run.py --local --timeout 120
+      - if: "${{ always() }}"
+        name: Upload Screenshots
+        uses: "actions/upload-artifact@v2"
+        with:
+          name: screenshots
+          path: selenium-test/language-test/screenshots
+      - if: "${{ always() }}"
+        name: Upload Artifacts
+        uses: "actions/upload-artifact@v2"
+        with:
+          name: artifacts
+          path: selenium-test/language-test/artifacts
+name: "Selenium Tests (script changes)"
+on:
+  pull_request:
+    paths:
+      - "selenium-test/**"

@@ -95,8 +95,7 @@ def check_evidence_log(test_helper, drv, api):
         drv.open_url('https://api.ipify.org/?format=html')
         my_ip = drv.find_element('pre').text.strip()
 
-    test_helper.sleep(10)  # wait for sealing
-    doc = api.get_document(doc.id)  # refresh
+    doc = test_helper.wait_until_sealed(doc.id, api)
 
     att_name = 'Appendix 3 Evidence Log.html'
     contents = test_helper.get_evidence_attachment_contents(doc, 3, att_name)
@@ -109,7 +108,7 @@ def check_evidence_log(test_helper, drv, api):
     if drv.is_remote():
         ips = [td.text.strip() for td in html('#event-table td:nth-child(3)')]
         ips = ips[1:]  # skip first ip because it's ip of the local machine
-        assert ips == [my_ip, my_ip, '', ''], (str(ips) + ':' + my_ip)
+        assert my_ip == ips[0] and my_ip == ips[1]
 
     five_minutes_ago = datetime.utcnow() - timedelta(minutes=5)
     hour_ago = datetime.utcnow() - timedelta(hours=1)

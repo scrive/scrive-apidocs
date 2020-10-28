@@ -3,7 +3,7 @@ import sys
 sys.path.append(os.path.abspath('../utils'))
 sys.path.append(os.path.abspath('..'))
 
-import tests
+import cases
 from make_drivers import generate_tests
 from scrivepy import Language
 from selenium import webdriver
@@ -56,7 +56,7 @@ def test_generator():
     except KeyError:
         remote = False
     for lang in Language:
-        for x in generate_tests(tests, screenshots_dir, artifact_dir,
+        for x in generate_tests(cases, screenshots_dir, artifact_dir,
                                 LOCAL_DEVICES, REMOTE_DEVICES,
                                 lang=lang.value, screenshots_enabled=remote):
             yield x
