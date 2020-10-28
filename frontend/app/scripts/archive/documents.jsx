@@ -350,7 +350,8 @@ module.exports = React.createClass({
             url={Utils.listCallUrl}
             paramsFunction={Utils.paramsFunctionWithFilter([
                 {"filter_by" : "is_not_template"},
-                {"filter_by" : "is_not_in_trash"}
+                {"filter_by" : "is_not_in_trash"},
+                {"filter_by" : "is_not_part_of_a_flow"}
               ])}
             dataFetcher={Utils.dataFetcher}
             idFetcher={Utils.idFetcher}

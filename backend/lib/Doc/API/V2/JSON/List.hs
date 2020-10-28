@@ -30,8 +30,14 @@ defaultDocumentAPISort = [DocumentAPISort DocumentAPISortTime DocumentAPISortDes
 
 data DocumentAPISort = DocumentAPISort DocumentAPISortOn DocumentAPISortOrder
 
-data DocumentAPISortOn = DocumentAPISortStatus | DocumentAPISortTitle | DocumentAPISortTime| DocumentAPISortAuthor deriving Eq
-data DocumentAPISortOrder = DocumentAPISortAsc | DocumentAPISortDesc  deriving Eq
+data DocumentAPISortOn
+  = DocumentAPISortStatus
+  | DocumentAPISortTitle
+  | DocumentAPISortTime
+  | DocumentAPISortAuthor
+  deriving Eq
+
+data DocumentAPISortOrder = DocumentAPISortAsc | DocumentAPISortDesc deriving Eq
 
 instance Unjson DocumentAPISortOrder where
   unjsonDef = unjsonEnumBy
@@ -89,7 +95,8 @@ data DocumentAPIFilter = DocumentAPIFilterStatuses [DocumentStatus]
                     | DocumentAPIFilterByText Text
                     | DocumentAPIFilterCanBeSignedBy UserID
                     | DocumentAPIFilterFolderTree FolderID
-
+                    | DocumentAPIFilterIsPartOfAFlow
+                    | DocumentAPIFilterIsNotPartOfAFlow
 
 filterType :: DocumentAPIFilter -> Text
 filterType (DocumentAPIFilterStatuses _)      = "status"
@@ -105,6 +112,8 @@ filterType DocumentAPIFilterIsNotInTrash      = "is_not_in_trash"
 filterType (DocumentAPIFilterByText        _) = "text"
 filterType (DocumentAPIFilterCanBeSignedBy _) = "user_can_sign"
 filterType (DocumentAPIFilterFolderTree    _) = "folder_id"
+filterType DocumentAPIFilterIsPartOfAFlow     = "is_part_of_a_flow"
+filterType DocumentAPIFilterIsNotPartOfAFlow  = "is_not_part_of_a_flow"
 
 instance Unjson DocumentAPIFilter where
   unjsonDef =
@@ -129,6 +138,8 @@ instance Unjson DocumentAPIFilter where
           , ( DocumentAPIFilterFolderTree (unsafeFolderID 0)
             , unjsonDocumentAPIFilterByFolderTree
             )
+          , (DocumentAPIFilterIsPartOfAFlow   , unjsonDocumentAPIFilterIsPartOfFlow)
+          , (DocumentAPIFilterIsNotPartOfAFlow, unjsonDocumentAPIFilterIsNotPartOfFlow)
           ]
     where
       filterMatch
@@ -259,6 +270,17 @@ unjsonDocumentAPIFilterByFolderTree =
     unsafeDocmentAPIFilterFolderTree _ =
       unexpectedError "unsafeDocumentAPIFilterFolderTree"
 
+unjsonDocumentAPIFilterIsPartOfFlow
+  :: AltF.Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
+unjsonDocumentAPIFilterIsPartOfFlow =
+  DocumentAPIFilterIsPartOfAFlow <$ fieldReadonly "filter_by" filterType "Type of filter"
+
+unjsonDocumentAPIFilterIsNotPartOfFlow
+  :: AltF.Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
+unjsonDocumentAPIFilterIsNotPartOfFlow =
+  DocumentAPIFilterIsNotPartOfAFlow
+    <$ fieldReadonly "filter_by" filterType "Type of filter"
+
 toDocumentFilter :: UserID -> DocumentAPIFilter -> [DF.DocumentFilter]
 toDocumentFilter _ (DocumentAPIFilterStatuses ss) = [DF.DocumentFilterStatuses ss]
 toDocumentFilter _ (DocumentAPIFilterTime (Just start) (Just end)) =
@@ -283,3 +305,6 @@ toDocumentFilter _ (DocumentAPIFilterCanBeSignedBy uid) =
   [DF.DocumentFilterByCanSign uid]
 toDocumentFilter _ (DocumentAPIFilterFolderTree fid) =
   [DF.DocumentFilterByFolderTree fid]
+toDocumentFilter _ DocumentAPIFilterIsNotPartOfAFlow =
+  [DF.DocumentFilterIsNotPartOfAFlow]
+toDocumentFilter _ DocumentAPIFilterIsPartOfAFlow = [DF.DocumentFilterIsPartOfAFlow]

@@ -22,4 +22,6 @@
 , {"filter_by": "is_not_in_trash"}
 , {"filter_by": "text", "text":"atext"}
 , {"filter_by": "user_can_sign", "user_id":"1"}
+, {"filter_by": "is_part_of_a_flow"}
+, {"filter_by": "is_not_part_of_a_flow"}
 ]

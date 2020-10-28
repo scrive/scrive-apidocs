@@ -416,8 +416,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentsWithSoftLimit (Int, 
         -- get ids of documents for total count
         sqlWith "selected_ids"
           . selectDocuments domain filters orders (offset + limit)
-          $ do
-              sqlResult "documents.id AS id"
+          $ sqlResult "documents.id AS id"
         -- restrict them with the soft limit
         sqlWith "relevant_ids" . sqlSelect "selected_ids" $ do
           sqlResult "ROW_NUMBER() OVER() AS position"

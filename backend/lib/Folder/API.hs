@@ -174,7 +174,7 @@ folderAPIListDocs fid = api $ do
     startQueryTime          <- liftBase getCurrentTime
     (allDocsCount, allDocs) <- dbQuery $ GetDocumentsWithSoftLimit
       (DocumentsByFolderOnly fid)
-      []
+      [DocumentFilterIsNotPartOfAFlow]
       documentSorting
       (offset, 1000, maxcount)
     finishQueryTime <- liftBase getCurrentTime

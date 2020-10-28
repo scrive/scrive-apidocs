@@ -62,6 +62,8 @@ data DocumentFilter
                                               -- in folder specific parts when a
                                               -- filter doesn't make sense in
                                               -- this context.
+  | DocumentFilterIsPartOfAFlow               -- ^ Only documents which are part of a flow
+  | DocumentFilterIsNotPartOfAFlow            -- ^ Only documents which are not part of a flow
 
   deriving Show
 
@@ -220,6 +222,14 @@ documentFilterToSQL (DocumentFilterByFolderTree fid) = do
 
 documentFilterToSQL DocumentFilterEverythingOut = do
   sqlWhere "FALSE"
+
+documentFilterToSQL DocumentFilterIsPartOfAFlow =
+  sqlWhereExists . sqlSelect "flow_instance_key_value_store" $ do
+    sqlWhere "flow_instance_key_value_store.document_id = documents.id"
+
+documentFilterToSQL DocumentFilterIsNotPartOfAFlow =
+  sqlWhereNotExists . sqlSelect "flow_instance_key_value_store" $ do
+    sqlWhere "flow_instance_key_value_store.document_id = documents.id"
 
 data FilterString = Quoted Text | Unquoted Text
   deriving (Show, Eq)

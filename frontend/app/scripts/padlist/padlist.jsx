@@ -220,7 +220,8 @@ module.exports = React.createClass({
                 {"filter_by" : "is_not_in_trash"},
                 {"filter_by" : "is_not_template"},
                 {"filter_by" : "is_signable_on_pad"},
-                {"filter_by" : "is_author"}
+                {"filter_by" : "is_author"},
+                {"filter_by" : "is_not_part_of_a_flow"}
               ])}
             dataFetcher={Utils.dataFetcher}
             idFetcher={Utils.idFetcher}
