@@ -116,11 +116,11 @@ testCompleteFlowProcess = do
     == lastEventAtStart
 
   authorFlowLink <-
-    assertJust' "author's access link should be present"
+    assertJust "author's access link should be present"
     $      (startedInstance ^. #accessLinks)
     Map.!? "author"
   signatoryFlowLink <-
-    assertJust' "signatory's access link should be present"
+    assertJust "signatory's access link should be present"
     $      (startedInstance ^. #accessLinks)
     Map.!? "signatory"
 
@@ -363,13 +363,13 @@ testScenario1 = do
     . startTemplate authorClient templateId
     $ CreateInstance Nothing (toTemplateParameters mapping) Nothing
 
-  authorFlowLink <- assertJust' "author's access link should be present"
+  authorFlowLink <- assertJust "author's access link should be present"
     $ Map.lookup "author" (flowInstance ^. #accessLinks)
 
-  signatoryFlowLink1 <- assertJust' "author's access link should be present"
+  signatoryFlowLink1 <- assertJust "author's access link should be present"
     $ Map.lookup "signatory1" (flowInstance ^. #accessLinks)
 
-  signatoryFlowLink2 <- assertJust' "author's access link should be present"
+  signatoryFlowLink2 <- assertJust "author's access link should be present"
     $ Map.lookup "signatory2" (flowInstance ^. #accessLinks)
 
   authorEnv     <- mkEnvForUser
@@ -553,13 +553,13 @@ testScenario2 = do
     . startTemplate authorClient templateId
     $ CreateInstance Nothing (toTemplateParameters mapping) Nothing
 
-  authorFlowLink <- assertJust' "author's access link should be present"
+  authorFlowLink <- assertJust "author's access link should be present"
     $ Map.lookup "author" (flowInstance ^. #accessLinks)
 
-  signatoryFlowLink1 <- assertJust' "author's access link should be present"
+  signatoryFlowLink1 <- assertJust "author's access link should be present"
     $ Map.lookup "signatory1" (flowInstance ^. #accessLinks)
 
-  signatoryFlowLink2 <- assertJust' "author's access link should be present"
+  signatoryFlowLink2 <- assertJust "author's access link should be present"
     $ Map.lookup "signatory2" (flowInstance ^. #accessLinks)
 
   authorEnv     <- mkEnvForUser

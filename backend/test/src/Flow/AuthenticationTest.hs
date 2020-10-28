@@ -164,7 +164,7 @@ testInvitationLinkLogin = do
                                  (instanceToken ^. #hash)
                                  Nothing
                                  Nothing
-  response <- assertJustAndExtract mResponse
+  response <- assertJust' mResponse
   assertEqual "instanceOverviewMagicHash should respond with a redirect"
               302
               (statusCode . responseStatusCode $ response)
@@ -172,7 +172,7 @@ testInvitationLinkLogin = do
   -- If the link login is successful we should get auth cookies
   let cookies      = toCookies $ responseSetCookieHeaders response
       mAuthCookies = readAuthCookies cookies
-  (sessionCookieInfo, xtoken) <- assertJustAndExtract mAuthCookies
+  (sessionCookieInfo, xtoken) <- assertJust' mAuthCookies
 
   -- Use these cookies to access the instance overview page
   let instanceOverviewAuth =

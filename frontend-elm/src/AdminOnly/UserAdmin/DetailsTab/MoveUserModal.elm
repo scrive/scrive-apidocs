@@ -80,7 +80,9 @@ update embed globals msg model =
                             ]
 
                 Err _ ->
-                    singleton { model | response = Just result }
+                    return { model | response = Just result } <|
+                        globals.flashMessage <|
+                            FlashMessage.error "User was not moved"
 
         GotUserGroup response ->
             case response of
@@ -129,6 +131,12 @@ view embed model =
                             ( False
                             , [ Input.danger ]
                             , Form.invalidFeedback [] [ text "Company ID is same as before." ]
+                            )
+
+                        else if newUserGroup.isBillable then
+                            ( False
+                            , [ Input.danger ]
+                            , Form.invalidFeedback [] [ text "Can't move user into billable user group." ]
                             )
 
                         else

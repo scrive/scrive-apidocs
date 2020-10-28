@@ -65,7 +65,7 @@ testDocApiV1FromTemplateImpersonateEID = do
   did <- getMockDocId <$> testDocApiV2New' ctx
 
   -- User group to impersonate
-  ug  <- instantiateRandomUserGroup
+  ug  <- instantiateRandomFreeUserGroup
   let ugid = ug ^. #id
 
   -- grant impersonate role
@@ -114,7 +114,7 @@ testDocApiV1ReadyImpersonateEID = do
   did <- getMockDocId <$> testDocApiV2New' ctx
 
   -- User group to impersonate
-  ug  <- instantiateRandomUserGroup
+  ug  <- instantiateRandomFreeUserGroup
   let ugid = ug ^. #id
 
   -- grant impersonate role

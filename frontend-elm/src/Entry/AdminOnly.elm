@@ -46,6 +46,7 @@ type Page
 type alias Flags =
     { cookies : Dict String String
     , cdnBaseUrl : String
+    , isAdmin : Bool
     }
 
 
@@ -92,6 +93,7 @@ init flagsValue url0 navKey =
         globals0 =
             { xtoken = ""
             , cdnBaseUrl = ""
+            , userRole = SalesUserRole
             , flashMessage = perform << AddFlashMessage
             , setPageUrlFromModel = perform SetPageUrlFromModel
             , gotoUserGroupUsers =
@@ -164,6 +166,12 @@ init flagsValue url0 navKey =
                         globals1 =
                             { globals0
                                 | cdnBaseUrl = flags.cdnBaseUrl
+                                , userRole =
+                                    if flags.isAdmin then
+                                        AdminUserRole
+
+                                    else
+                                        SalesUserRole
                             }
                     in
                     case Dict.get "xtoken" flags.cookies of
@@ -221,6 +229,7 @@ decodeFlags =
     JD.succeed Flags
         |> JDP.required "cookie" (JD.string |> JD.andThen Cookie.decoder)
         |> JDP.required "cdnBaseUrl" JD.string
+        |> JDP.required "isAdmin" JD.bool
 
 
 urlUpdate : Url -> Model -> Return Msg Model
@@ -465,7 +474,7 @@ mainContent model =
         case model.page of
             AdminOnly _ ->
                 [ model.mAdminOnly
-                    |> M.map (AdminOnly.view AdminOnlyMsg)
+                    |> M.map (AdminOnly.view AdminOnlyMsg model.globals)
                     |> M.withDefault viewError
                 ]
 

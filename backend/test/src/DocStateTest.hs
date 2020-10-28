@@ -426,7 +426,7 @@ testNewDocumentForNonCompanyUser = replicateM_ 10 $ do
 
 testNewDocumentForACompanyUser :: TestEnv ()
 testNewDocumentForACompanyUser = replicateM_ 10 $ do
-  ug     <- instantiateRandomUserGroup
+  ug     <- instantiateRandomFreeUserGroup
   ugwp   <- dbQuery . UserGroupGetWithParentsByUG $ ug
   result <- performNewDocumentWithRandomUser (Just ug) Signable "doc title"
   assertGoodNewDocument (Just ugwp) Signable "doc title" result
@@ -456,7 +456,7 @@ testRejectDocumentEvidenceLog = replicateM_ 10 $ do
             `elem` [ Current RejectDocumentEvidence
                    , Current RejectDocumentByApproverEvidence
                    ]
-    assertJust $ find rejectEvent lg
+    assertJust'_ $ find rejectEvent lg
 
 testRestartDocumentEvidenceLog :: TestEnv ()
 testRestartDocumentEvidenceLog = do
@@ -467,12 +467,12 @@ testRestartDocumentEvidenceLog = do
   withDocument doc . randomUpdate $ CancelDocument . systemActor
   cdoc <- dbQuery . GetDocumentByDocumentID $ documentid doc
   mdoc <- randomUpdate $ \t -> RestartDocument cdoc (systemActor t)
-  assertJust mdoc
+  assertJust'_ mdoc
   lg <- dbQuery $ GetEvidenceLog (documentid $ fromJust mdoc)
-  assertJust $ find (\e -> evType e == Current RestartDocumentEvidence) lg
-  assertJust $ find (\e -> evType e == Current CancelDocumentEvidence) lg
+  assertJust'_ $ find (\e -> evType e == Current RestartDocumentEvidence) lg
+  assertJust'_ $ find (\e -> evType e == Current CancelDocumentEvidence) lg
   lg2 <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == Current CancelDocumentEvidence) lg2
+  assertJust'_ $ find (\e -> evType e == Current CancelDocumentEvidence) lg2
 
 testRestartDocumentKeepsHidePN :: TestEnv ()
 testRestartDocumentKeepsHidePN = do
@@ -483,7 +483,7 @@ testRestartDocumentKeepsHidePN = do
   withDocument doc . randomUpdate $ CancelDocument . systemActor
   cdoc <- dbQuery . GetDocumentByDocumentID $ documentid doc
   mdoc <- randomUpdate $ \t -> RestartDocument cdoc (systemActor t)
-  assertJust mdoc
+  assertJust'_ mdoc
   assertEqual "After restart signatorylinkhidepn for all signatories is the same"
               (signatorylinkhidepn <$> documentsignatorylinks doc)
               (signatorylinkhidepn <$> documentsignatorylinks (fromJust mdoc))
@@ -531,7 +531,7 @@ testSignDocumentEvidenceLog = do
     randomUpdate $ \t -> CloseDocument (systemActor t)
 
     lg <- dbQuery . GetEvidenceLog =<< theDocumentID
-    assertJust $ find (\e -> evType e == Current SignDocumentEvidence) lg
+    assertJust'_ $ find (\e -> evType e == Current SignDocumentEvidence) lg
 
     runPdfToolsLambdaT pdfSealLambdaEnv $ do
       closeDocumentFile "https://scrive.com"
@@ -698,7 +698,7 @@ testTimeoutDocumentEvidenceLog = do
     success <- randomUpdate $ \t -> TimeoutDocument (systemActor t)
     assert success
     lg <- dbQuery . GetEvidenceLog =<< theDocumentID
-    assertJust $ find (\e -> evType e == Current TimeoutDocumentEvidence) lg
+    assertJust'_ $ find (\e -> evType e == Current TimeoutDocumentEvidence) lg
 
 
 testProlongTimeoutedDocument :: TestEnv ()
@@ -714,7 +714,7 @@ testProlongTimeoutedDocument = do
     pending <- (\d -> Pending == documentstatus d) <$> theDocument
     assert pending
     lg <- dbQuery . GetEvidenceLog =<< theDocumentID
-    assertJust $ find (\e -> evType e == Current ProlongDocumentEvidence) lg
+    assertJust'_ $ find (\e -> evType e == Current ProlongDocumentEvidence) lg
 
 testProlongPendingDocument :: TestEnv ()
 testProlongPendingDocument = do
@@ -727,7 +727,7 @@ testProlongPendingDocument = do
     pending <- (\d -> Pending == documentstatus d) <$> theDocument
     assert pending
     lg <- dbQuery . GetEvidenceLog =<< theDocumentID
-    assertJust $ find (\e -> evType e == Current ProlongDocumentEvidence) lg
+    assertJust'_ $ find (\e -> evType e == Current ProlongDocumentEvidence) lg
 
 testPreparationToPendingEvidenceLog :: TestEnv ()
 testPreparationToPendingEvidenceLog = do
@@ -740,7 +740,7 @@ testPreparationToPendingEvidenceLog = do
     randomUpdate $ \t -> PreparationToPending (systemActor t) tz
 
     lg <- dbQuery . GetEvidenceLog =<< theDocumentID
-    assertJust $ find (\e -> evType e == Current PreparationToPendingEvidence) lg
+    assertJust'_ $ find (\e -> evType e == Current PreparationToPendingEvidence) lg
 
 testMarkInvitationReadEvidenceLog :: TestEnv ()
 testMarkInvitationReadEvidenceLog = do
@@ -760,7 +760,7 @@ testMarkInvitationReadEvidenceLog = do
     -- manually since it relies on external mail system notifications,
     -- so we test it explicitly.
     let me = find (\e -> evType e == Current MarkInvitationReadEvidence) lg
-    assertJust me
+    assertJust'_ me
     let Just e = me
     let
       expectedFull =
@@ -791,7 +791,7 @@ testSaveSigAttachmentEvidenceLog = do
       (systemActor t)
 
     lg <- dbQuery . GetEvidenceLog =<< theDocumentID
-    assertJust $ find (\e -> evType e == Current SaveSigAttachmentEvidence) lg
+    assertJust'_ $ find (\e -> evType e == Current SaveSigAttachmentEvidence) lg
 
 
 testDeleteSigAttachmentAlreadySigned :: TestEnv ()
@@ -848,7 +848,7 @@ testDeleteSigAttachmentEvidenceLog = do
       (systemActor t)
 
     lg <- dbQuery . GetEvidenceLog =<< theDocumentID
-    assertJust $ find (\e -> evType e == Current DeleteSigAttachmentEvidence) lg
+    assertJust'_ $ find (\e -> evType e == Current DeleteSigAttachmentEvidence) lg
 
 testAppendFirstSealedFileEvidenceLog :: TestEnv ()
 testAppendFirstSealedFileEvidenceLog = do
@@ -864,7 +864,7 @@ testAppendFirstSealedFileEvidenceLog = do
       (systemActor t)
 
     lg <- dbQuery . GetEvidenceLog =<< theDocumentID
-    assertJust
+    assertJust'_
       $ find (\e -> evType e == Current AttachDigitalSignatureSealedFileEvidence) lg
 
 testCancelDocumentEvidenceLog :: TestEnv ()
@@ -876,7 +876,7 @@ testCancelDocumentEvidenceLog = do
   withDocumentM genDoc $ do
     randomUpdate $ \t -> CancelDocument (systemActor t)
     lg <- dbQuery . GetEvidenceLog =<< theDocumentID
-    assertJust $ find (\e -> evType e == Current CancelDocumentEvidence) lg
+    assertJust'_ $ find (\e -> evType e == Current CancelDocumentEvidence) lg
 
 testChangeSignatoryEmailEvidenceLog :: TestEnv ()
 testChangeSignatoryEmailEvidenceLog = do
@@ -895,7 +895,7 @@ testChangeSignatoryEmailEvidenceLog = do
       ChangeSignatoryEmail (signatorylinkid sl) Nothing "email@email.com" (systemActor t)
     assert success
     lg <- dbQuery . GetEvidenceLog =<< theDocumentID
-    assertJust $ find (\e -> evType e == Current ChangeSignatoryEmailEvidence) lg
+    assertJust'_ $ find (\e -> evType e == Current ChangeSignatoryEmailEvidence) lg
 
 testCloseDocumentEvidenceLog :: TestEnv ()
 testCloseDocumentEvidenceLog = do
@@ -922,7 +922,7 @@ testCloseDocumentEvidenceLog = do
         randomUpdate $ \t -> ApproveDocument (signatorylinkid sl) (systemActor t)
     randomUpdate $ \t -> CloseDocument (systemActor t)
     lg <- dbQuery . GetEvidenceLog =<< theDocumentID
-    assertJust $ find (\e -> evType e == Current CloseDocumentEvidence) lg
+    assertJust'_ $ find (\e -> evType e == Current CloseDocumentEvidence) lg
 
 
 performNewDocumentWithRandomUser
@@ -931,7 +931,7 @@ performNewDocumentWithRandomUser mug doctype title = do
   user <- instantiateUser $ randomUserTemplate
     { groupID = case mug of
                   Just ug -> return $ ug ^. #id
-                  Nothing -> fmap (view #id) instantiateRandomUserGroup
+                  Nothing -> fmap (view #id) instantiateRandomFreeUserGroup
     }
   ctx <- mkContext defaultLang
   let aa           = authorActor ctx user
@@ -1056,7 +1056,7 @@ testArchiveDocumentAuthorRight = replicateM_ 10 $ do
 
 testArchiveDocumentCompanyAdminRight :: TestEnv ()
 testArchiveDocumentCompanyAdminRight = replicateM_ 10 $ do
-  ug        <- instantiateRandomUserGroup
+  ug        <- instantiateRandomFreeUserGroup
   author    <- instantiateUser $ randomUserTemplate { groupID = return $ ug ^. #id }
   adminuser <- instantiateUser
     $ randomUserTemplate { isCompanyAdmin = True, groupID = return $ ug ^. #id }
@@ -1083,7 +1083,7 @@ testRestoreArchivedDocumentAuthorRight = replicateM_ 10 $ do
 
 testRestoreArchiveDocumentCompanyAdminRight :: TestEnv ()
 testRestoreArchiveDocumentCompanyAdminRight = replicateM_ 10 $ do
-  ug        <- instantiateRandomUserGroup
+  ug        <- instantiateRandomFreeUserGroup
   author    <- instantiateUser $ randomUserTemplate { groupID = return $ ug ^. #id }
   adminuser <- instantiateUser
     $ randomUserTemplate { isCompanyAdmin = True, groupID = return $ ug ^. #id }
@@ -1120,10 +1120,10 @@ testChangeAuthenticationToSignMethod = replicateM_ 10 $ do
                                                           Nothing
                                                           (systemActor t)
     lg1 <- dbQuery . GetEvidenceLog =<< theDocumentID
-    assertJust
+    assertJust'_
       $ find (\e -> evType e == Current ChangeAuthenticationToSignFromStandard) lg1
-    assertJust $ find (\e -> evType e == Current ChangeAuthenticationToSignToSMSPin) lg1
-    assertNothing $ find (\e -> evType e == Current UpdateFieldMobileEvidence) lg1
+    assertJust'_ $ find (\e -> evType e == Current ChangeAuthenticationToSignToSMSPin) lg1
+    assertNothing' $ find (\e -> evType e == Current UpdateFieldMobileEvidence) lg1
 
     randomUpdate $ \t -> ChangeAuthenticationToSignMethod (signatorylinkid sl)
                                                           SMSPinAuthenticationToSign
@@ -1141,7 +1141,7 @@ testChangeAuthenticationToSignMethod = replicateM_ 10 $ do
       "Too many evidence logs for change authentication method from"
       (length $ filter (\e -> evType e == Current ChangeAuthenticationToSignToSMSPin) lg2)
       1
-    assertJust $ find (\e -> evType e == Current UpdateFieldMobileEvidence) lg2
+    assertJust'_ $ find (\e -> evType e == Current UpdateFieldMobileEvidence) lg2
 
 --------------------------------------------------------------------------------
 testReallyDeleteDocument :: TestEnv ()
@@ -1169,7 +1169,7 @@ testReallyDeleteDocument = replicateM_ 10 $ do
 
 testReallyDeleteDocumentCompanyAdmin :: TestEnv ()
 testReallyDeleteDocumentCompanyAdmin = replicateM_ 10 $ do
-  ug        <- instantiateRandomUserGroup
+  ug        <- instantiateRandomFreeUserGroup
   author    <- instantiateUser $ randomUserTemplate { groupID = return $ ug ^. #id }
   adminuser <- instantiateUser
     $ randomUserTemplate { isCompanyAdmin = True, groupID = return $ ug ^. #id }
@@ -1193,7 +1193,7 @@ testReallyDeleteDocumentCompanyAdmin = replicateM_ 10 $ do
 
 testReallyDeleteDocumentSomebodyElse :: TestEnv ()
 testReallyDeleteDocumentSomebodyElse = replicateM_ 10 $ do
-  ug     <- instantiateRandomUserGroup
+  ug     <- instantiateRandomFreeUserGroup
   author <- instantiateUser $ randomUserTemplate { groupID = return $ ug ^. #id }
   other  <- instantiateUser $ randomUserTemplate { groupID = return $ ug ^. #id }
   let genDoc = addRandomDocument (rdaDefault author) { rdaStatuses = OneOf
@@ -1214,7 +1214,7 @@ testReallyDeleteDocumentSomebodyElse = replicateM_ 10 $ do
 
 testPurgeDocument :: TestEnv ()
 testPurgeDocument = replicateM_ 10 $ do
-  ug     <- instantiateRandomUserGroup
+  ug     <- instantiateRandomFreeUserGroup
   author <- instantiateUser $ randomUserTemplate { groupID = return $ ug ^. #id }
   doc    <- addRandomDocument (rdaDefault author) { rdaTypes    = OneOf [Signable]
                                                   , rdaStatuses = OneOf
@@ -1234,7 +1234,7 @@ testPurgeDocument = replicateM_ 10 $ do
 
 testPurgeDocumentUserSaved :: TestEnv ()
 testPurgeDocumentUserSaved = replicateM_ 10 $ do
-  ug     <- instantiateRandomUserGroup
+  ug     <- instantiateRandomFreeUserGroup
   author <- instantiateUser $ randomUserTemplate { groupID = return $ ug ^. #id }
   doc    <- addRandomDocument (rdaDefault author) { rdaTypes    = OneOf [Signable]
                                                   , rdaStatuses = OneOf
@@ -1248,7 +1248,7 @@ testPurgeDocumentUserSaved = replicateM_ 10 $ do
 
 testPurgeDocumentRemovesSensitiveData :: TestEnv ()
 testPurgeDocumentRemovesSensitiveData = replicateM_ 10 $ do
-  ug <- instantiateRandomUserGroup
+  ug <- instantiateRandomFreeUserGroup
   author <- instantiateUser $ randomUserTemplate { groupID = return $ ug ^. #id }
   doc <- addRandomDocument (rdaDefault author) { rdaStatuses = OneOf [Preparation, Closed]
                                                }
@@ -1328,7 +1328,7 @@ testPurgeDocumentRemovesSensitiveData = replicateM_ 10 $ do
 
 testPurgeDocumentSharedTemplates :: TestEnv ()
 testPurgeDocumentSharedTemplates = do
-  ug  <- instantiateRandomUserGroup
+  ug  <- instantiateRandomFreeUserGroup
   bob <- instantiateUser
     $ randomUserTemplate { isCompanyAdmin = True, groupID = return $ ug ^. #id }
   alice <- instantiateUser $ randomUserTemplate { groupID = return $ ug ^. #id }
@@ -1349,7 +1349,7 @@ testPurgeDocumentSharedTemplates = do
 
 testPurgeDocumentImmediateTrash :: TestEnv ()
 testPurgeDocumentImmediateTrash = replicateM_ 10 $ do
-  ug <- instantiateRandomUserGroup
+  ug <- instantiateRandomFreeUserGroup
   author <- instantiateUser $ randomUserTemplate { groupID = return $ ug ^. #id }
   doc <- addRandomDocument (rdaDefault author) { rdaStatuses = OneOf [Preparation, Closed]
                                                }
@@ -1383,7 +1383,7 @@ testPurgeDocumentImmediateTrash = replicateM_ 10 $ do
 
 testArchiveIdleDocument :: TestEnv ()
 testArchiveIdleDocument = replicateM_ 10 $ do
-  ug      <- instantiateRandomUserGroup
+  ug      <- instantiateRandomFreeUserGroup
   author  <- instantiateUser $ randomUserTemplate { groupID = return $ ug ^. #id }
   author2 <- instantiateRandomUser
   doc     <- addRandomDocument (rdaDefault author)
@@ -1408,7 +1408,7 @@ testArchiveIdleDocument = replicateM_ 10 $ do
 
 testArchiveIdleDocumentWhenOnlyUserHasDrpSet :: TestEnv ()
 testArchiveIdleDocumentWhenOnlyUserHasDrpSet = replicateM_ 10 $ do
-  ug      <- instantiateRandomUserGroup
+  ug      <- instantiateRandomFreeUserGroup
   author  <- instantiateUser $ randomUserTemplate { groupID = return $ ug ^. #id }
   author2 <- instantiateRandomUser
   doc     <- addRandomDocument (rdaDefault author)
@@ -1446,7 +1446,7 @@ testArchiveDocumentUnrelatedUserLeft = replicateM_ 10 $ do
 
 testArchiveDocumentCompanyStandardLeft :: TestEnv ()
 testArchiveDocumentCompanyStandardLeft = replicateM_ 10 $ do
-  ug           <- instantiateRandomUserGroup
+  ug           <- instantiateRandomFreeUserGroup
   author       <- instantiateUser $ randomUserTemplate { groupID = return $ ug ^. #id }
   standarduser <- instantiateUser $ randomUserTemplate { groupID = return $ ug ^. #id }
   let genDoc = addRandomDocument (rdaDefault author) { rdaStatuses = OneOf
@@ -1473,7 +1473,7 @@ testRestoreArchivedDocumentUnrelatedUserLeft = replicateM_ 10 $ do
 
 testRestoreArchiveDocumentCompanyStandardLeft :: TestEnv ()
 testRestoreArchiveDocumentCompanyStandardLeft = replicateM_ 10 $ do
-  ug           <- instantiateRandomUserGroup
+  ug           <- instantiateRandomFreeUserGroup
   author       <- instantiateUser $ randomUserTemplate { groupID = return $ ug ^. #id }
   standarduser <- instantiateUser $ randomUserTemplate { groupID = return $ ug ^. #id }
   let genDoc = addRandomDocument (rdaDefault author) { rdaStatuses = OneOf
@@ -1494,7 +1494,7 @@ testGetDocumentsByAuthorNoArchivedDocs =
 checkQueryDoesntContainArchivedDocs
   :: DBQuery (DocumentT TestEnv) q [Document] => (User -> q) -> TestEnv ()
 checkQueryDoesntContainArchivedDocs qry = replicateM_ 10 $ do
-  ug     <- instantiateRandomUserGroup
+  ug     <- instantiateRandomFreeUserGroup
   author <- instantiateUser
     $ randomUserTemplate { isCompanyAdmin = True, groupID = return $ ug ^. #id }
   let genDoc = addRandomDocument (rdaDefault author) { rdaTypes    = OneOf [Signable]
@@ -1607,7 +1607,7 @@ testDocumentAttachHasAttachment = replicateM_ 10 $ do
 
     randomUpdate $ \t -> SetInputMainfile file (systemActor t)
     --assert
-    -- assertJust $ find ((== a) . filename) (documentfiles $ fromRight edoc)
+    -- assertJust'_ $ find ((== a) . filename) (documentfiles $ fromRight edoc)
     assertInvariants =<< theDocument
 
 testNoDocumentAppendSealedAlwaysLeft :: TestEnv ()
@@ -1904,8 +1904,8 @@ testGetDocumentsSharedInCompany :: TestEnv ()
 testGetDocumentsSharedInCompany = replicateM_ 10 $ do
   -- two companies, two users per company, two users outside of company
   -- each having a document here
-  ug1    <- instantiateRandomUserGroup
-  ug2    <- instantiateRandomUserGroup
+  ug1    <- instantiateRandomFreeUserGroup
+  ug2    <- instantiateRandomFreeUserGroup
   user1' <- instantiateRandomUser
   user2' <- instantiateRandomUser
   void . dbUpdate $ SetUserUserGroup (user1' ^. #id) (ug1 ^. #id)
@@ -2236,7 +2236,7 @@ testCreateFromSharedTemplate = do
 testCreateFromTemplateCompanyField :: TestEnv ()
 testCreateFromTemplateCompanyField = replicateM_ 10 $ do
   user <- instantiateRandomUser
-  ug   <- instantiateRandomUserGroup
+  ug   <- instantiateRandomFreeUserGroup
   void . dbUpdate $ SetUserUserGroup (user ^. #id) (ug ^. #id)
   docid <- documentid
     <$> addRandomDocument (rdaDefault user) { rdaStatuses = OneOf [Preparation] }
@@ -3160,7 +3160,7 @@ assertInvariants document = do
 testGetDocumentsByCompanyWithFilteringCompany :: TestEnv ()
 testGetDocumentsByCompanyWithFilteringCompany = replicateM_ 10 $ do
   (StringNoNUL name, StringNoNUL value) <- rand 10 arbitrary
-  ug     <- instantiateRandomUserGroup
+  ug     <- instantiateRandomFreeUserGroup
   author <- instantiateRandomUser
   void . dbUpdate $ SetUserUserGroup (author ^. #id) (ug ^. #id)
   Just author' <- dbQuery $ GetUserByID (author ^. #id)
@@ -3178,7 +3178,7 @@ testGetDocumentsByCompanyWithFilteringCompany = replicateM_ 10 $ do
 testGetDocumentsByCompanyWithFilteringFilters :: TestEnv ()
 testGetDocumentsByCompanyWithFilteringFilters = replicateM_ 10 $ do
   (StringNoNUL name, StringNoNUL value) <- rand 10 arbitrary
-  ug     <- instantiateRandomUserGroup
+  ug     <- instantiateRandomFreeUserGroup
   author <- instantiateRandomUser
   void . dbUpdate $ SetUserUserGroup (author ^. #id) (ug ^. #id)
   Just author' <- dbQuery $ GetUserByID (author ^. #id)
@@ -3194,7 +3194,7 @@ testGetDocumentsByCompanyWithFilteringFilters = replicateM_ 10 $ do
 
 testSetDocumentUnsavedDraft :: TestEnv ()
 testSetDocumentUnsavedDraft = replicateM_ 10 $ do
-  ug     <- instantiateRandomUserGroup
+  ug     <- instantiateRandomFreeUserGroup
   author <- instantiateRandomUser
   void . dbUpdate $ SetUserUserGroup (author ^. #id) (ug ^. #id)
   Just author' <- dbQuery $ GetUserByID (author ^. #id)
@@ -3238,7 +3238,7 @@ testSetDocumentUnsavedDraft = replicateM_ 10 $ do
 testGetDocumentsByCompanyWithFilteringFinds :: TestEnv ()
 testGetDocumentsByCompanyWithFilteringFinds = replicateM_ 10 $ do
   (StringNoNUL name, StringNoNUL value) <- rand 10 arbitrary
-  ug     <- instantiateRandomUserGroup
+  ug     <- instantiateRandomFreeUserGroup
   author <- instantiateRandomUser
   void . dbUpdate $ SetUserUserGroup (author ^. #id) (ug ^. #id)
   Just author' <- dbQuery $ GetUserByID (author ^. #id)
@@ -3262,7 +3262,7 @@ testGetDocumentsByCompanyWithFilteringFindsMultiple = replicateM_ 10 $ do
   (StringNoNUL name2, StringNoNUL value2) <- rand 10 arbitrary
   (StringNoNUL name3, StringNoNUL value3) <- rand 10 arbitrary
   when (name1 /= name2 && name1 /= name2 && name2 /= name3) $ do
-    ug     <- instantiateRandomUserGroup
+    ug     <- instantiateRandomFreeUserGroup
     author <- instantiateRandomUser
     time   <- currentTime
     let actor = systemActor time

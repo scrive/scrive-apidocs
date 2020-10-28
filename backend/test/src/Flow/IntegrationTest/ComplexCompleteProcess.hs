@@ -118,9 +118,9 @@ testComplexFlowProcess = do
       (toTemplateParameters mapping)
       Nothing
   authorFlowLink <-
-    assertJust' "author's flow sign link is missing" $ accessLinks Map.!? "author"
+    assertJust "author's flow sign link is missing" $ accessLinks Map.!? "author"
   signatoryFlowLink <-
-    assertJust' "signatory's flow sign link is missing" $ accessLinks Map.!? "signatory"
+    assertJust "signatory's flow sign link is missing" $ accessLinks Map.!? "signatory"
 
   authorEnv    <- mkEnvForUser
   signatoryEnv <- mkEnvForUser

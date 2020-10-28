@@ -13,6 +13,7 @@ module API.V2.Errors (
   , documentActionForbidden
   , documentActionForbiddenBecauseNotEnoughTokens
   , documentNotFound
+  , userGroupNotFound
   , resourceNotFound
   -- * Internal to API.V2
   , APIError(..)
@@ -37,6 +38,7 @@ import Doc.Conditions
 import Doc.DocStateData
 import Doc.DocumentID
 import Doc.SignatoryLinkID
+import UserGroup.Types
 
 data APIError = APIError {
       errorType     :: APIErrorType
@@ -249,6 +251,10 @@ documentShortIDNotFound :: DocumentID -> APIError
 documentShortIDNotFound sdid =
   resourceNotFound $ "A document matching short id" <+> sdidText <+> "was not found"
   where sdidText = showt sdid
+
+userGroupNotFound :: UserGroupID -> APIError
+userGroupNotFound ugid =
+  resourceNotFound $ "UserGroup with id" <+> showt ugid <+> "was not found"
 
 resourceNotFound :: Text -> APIError
 resourceNotFound info = APIError { errorType     = ResourceNotFound

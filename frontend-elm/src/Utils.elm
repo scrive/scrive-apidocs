@@ -3,7 +3,7 @@ module Utils exposing (..)
 import Either exposing (Either(..))
 import EnumExtra as Enum exposing (Enum)
 import FlashMessage exposing (FlashMessage)
-import Html exposing (Html, text)
+import Html exposing (Html, h4, text)
 import Http
 import Json.Decode as D exposing (Decoder)
 import List as L
@@ -20,9 +20,15 @@ import Url
 import Url.Builder as UB exposing (QueryParameter)
 
 
+type UserRole
+    = AdminUserRole
+    | SalesUserRole
+
+
 type alias Globals msg =
     { xtoken : String
     , cdnBaseUrl : String
+    , userRole : UserRole
     , flashMessage : FlashMessage -> Cmd msg
     , setPageUrlFromModel : Cmd msg
     , gotoUserGroupUsers : String -> Cmd msg
@@ -51,6 +57,7 @@ mapGlobals liftMessage globals =
     in
     { xtoken = globals.xtoken
     , cdnBaseUrl = globals.cdnBaseUrl
+    , userRole = globals.userRole
     , flashMessage = mapper << globals.flashMessage
     , setPageUrlFromModel = mapper globals.setPageUrlFromModel
     , gotoUserGroupUsers = mapper << globals.gotoUserGroupUsers
@@ -160,6 +167,26 @@ statusMerge2 sA sB =
 
         ( Success a, Success b ) ->
             Success ( a, b )
+
+
+
+-- TODO: Find all occurences of this pattern and replace them with `statusView`
+-- if appropriate. Function can be adjusted for other use cases (different text, formatting, ...).
+-- Search occurences using `text "Loading`' or `text "Failure` pattern
+-- (notice the absent quotation mark at the end).
+
+
+statusView : (a -> Html msg) -> Status a -> Html msg
+statusView view status =
+    case status of
+        Failure ->
+            h4 [] [ text "Failure ..." ]
+
+        Loading ->
+            h4 [] [ text "Loading ..." ]
+
+        Success result ->
+            view result
 
 
 

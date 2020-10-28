@@ -27,7 +27,7 @@ import Flow.Process.Internal
 import Flow.Routes.Api
 import Flow.TestUtil
 import MinutesTime
-import TestingUtil hiding (assertLeft, assertRight)
+import TestingUtil hiding (assertJust, assertLeft, assertRight)
 import TestKontra
 import User.Types.User
 import Util.Actor

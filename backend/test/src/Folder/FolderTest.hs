@@ -74,7 +74,7 @@ testSignuUsersHaveHomeFolders = do
 
 testPartnerUsersWithFolders :: TestEnv ()
 testPartnerUsersWithFolders = do
-  partnerAdminUserGroup <- instantiateRandomUserGroup
+  partnerAdminUserGroup <- instantiateRandomFreeUserGroup
   partnerAdminUser      <- instantiateUser $ randomUserTemplate
     { firstName      = return "Arthur"
     , lastName       = return "Dent"
@@ -108,7 +108,7 @@ testPartnerUsersWithFolders = do
 
 testPartnerUsersWithoutFolders :: TestEnv ()
 testPartnerUsersWithoutFolders = do
-  partnerAdminUserGroup <- instantiateRandomUserGroup
+  partnerAdminUserGroup <- instantiateRandomFreeUserGroup
   partnerAdminUser      <- instantiateUser $ randomUserTemplate
     { firstName      = return "Arthur"
     , lastName       = return "Dent"
@@ -169,7 +169,7 @@ partnerUserCreate ctx cid partnerUgID = do
 
 testNewCompanyAccount :: TestEnv ()
 testNewCompanyAccount = do
-  ug   <- instantiateRandomUserGroup
+  ug   <- instantiateRandomFreeUserGroup
   user <- instantiateUser $ randomUserTemplate { firstName      = return "Andrzej"
                                                , lastName       = return "Rybczak"
                                                , email = return "andrzej@skrivapa.se"

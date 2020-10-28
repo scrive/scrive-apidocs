@@ -41,6 +41,7 @@ import DB
 import Folder.Model
 import Log.Identifier
 import User.UserID
+import UserGroup.Model
 import UserGroup.Types
 
 data AccessRole
@@ -230,16 +231,6 @@ data PermissionCondition
   | OrCond [PermissionCondition]
   | AndCond [PermissionCondition]
   deriving Eq
-
-newtype UserGroupNonExistent = UserGroupNonExistent UserGroupID
-  deriving (Eq, Ord, Show, Typeable)
-
-instance ToJSValue UserGroupNonExistent where
-  toJSValue (UserGroupNonExistent ugid) = runJSONGen $ do
-    value "message"       ("User Group does not exist" :: String)
-    value "user_group_id" (show ugid)
-
-instance DBExtraException UserGroupNonExistent
 
 newtype UserNonExistent = UserNonExistent UserID
   deriving (Eq, Ord, Show, Typeable)

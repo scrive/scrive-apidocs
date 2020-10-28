@@ -79,7 +79,7 @@ companyAccountsTests env = testGroup
 
 test_addInviteForNewEmail :: TestEnv ()
 test_addInviteForNewEmail = do
-  ug    <- instantiateRandomUserGroup
+  ug    <- instantiateRandomFreeUserGroup
   user1 <- instantiateUser $ randomUserTemplate { firstName      = return "a@a.com"
                                                 , lastName       = return "Anna"
                                                 , email          = return "Android"
@@ -91,7 +91,7 @@ test_addInviteForNewEmail = do
 
 test_removingExistingInvite :: TestEnv ()
 test_removingExistingInvite = do
-  ug   <- instantiateRandomUserGroup
+  ug   <- instantiateRandomFreeUserGroup
   user <- instantiateUser $ randomUserTemplate { firstName      = return "a@a.com"
                                                , lastName       = return "Anna"
                                                , email          = return "Android"
@@ -105,13 +105,13 @@ test_removingExistingInvite = do
 
 test_removingNonExistantInvite :: TestEnv ()
 test_removingNonExistantInvite = do
-  ug <- instantiateRandomUserGroup
+  ug <- instantiateRandomFreeUserGroup
   void . dbUpdate $ RemoveUserGroupInvite [ug ^. #id] (unsafeUserID 0)
   assertCompanyInvitesAre ug []
 
 test_addingANewCompanyAccount :: TestEnv ()
 test_addingANewCompanyAccount = do
-  ug   <- instantiateRandomUserGroup
+  ug   <- instantiateRandomFreeUserGroup
   user <- instantiateUser $ randomUserTemplate { firstName      = return "Andrzej"
                                                , lastName       = return "Rybczak"
                                                , email = return "andrzej@skrivapa.se"
@@ -149,7 +149,7 @@ test_addingANewCompanyAccount = do
 
 test_addingExistingCompanyUserAsCompanyAccount :: TestEnv ()
 test_addingExistingCompanyUserAsCompanyAccount = do
-  ug   <- instantiateRandomUserGroup
+  ug   <- instantiateRandomFreeUserGroup
   user <- instantiateUser $ randomUserTemplate { firstName      = return "Andrzej"
                                                , lastName       = return "Rybczak"
                                                , email = return "andrzej@skrivapa.se"
@@ -194,7 +194,7 @@ test_addingANewCompanyAccountWithDifferentTarget = do
                                                , isCompanyAdmin = True
                                                , signupMethod   = CompanyInvitation
                                                }
-  trgug <- instantiateRandomUserGroup
+  trgug <- instantiateRandomFreeUserGroup
   let trgugid = trgug ^. #id
 
   ctx <- mkContextWithUser defaultLang user
@@ -299,7 +299,7 @@ test_addingExistingCompanyUserAsCompanyAccountWithDifferentTarget = do
                                                        , isCompanyAdmin = True
                                                        , signupMethod = CompanyInvitation
                                                        }
-  trgug <- instantiateRandomUserGroup
+  trgug <- instantiateRandomFreeUserGroup
   let trgugid = trgug ^. #id
 
   ctx <- mkContextWithUser defaultLang user
@@ -332,7 +332,7 @@ test_addingExistingCompanyUserAsCompanyAccountWithDifferentTarget = do
 
 test_resendingInviteToNewCompanyAccount :: TestEnv ()
 test_resendingInviteToNewCompanyAccount = do
-  ug   <- instantiateRandomUserGroup
+  ug   <- instantiateRandomFreeUserGroup
   user <- instantiateUser $ randomUserTemplate { firstName      = return "Andrzej"
                                                , lastName       = return "Rybczak"
                                                , email = return "andrzej@skrivapa.se"
@@ -422,7 +422,7 @@ test_switchingAdminToStandardUser = do
 
 test_removingCompanyAccountInvite :: TestEnv ()
 test_removingCompanyAccountInvite = do
-  ug   <- instantiateRandomUserGroup
+  ug   <- instantiateRandomFreeUserGroup
   user <- instantiateUser $ randomUserTemplate { firstName      = return "Andrzej"
                                                , lastName       = return "Rybczak"
                                                , email = return "andrzej@skrivapa.se"
@@ -450,7 +450,7 @@ test_removingCompanyAccountInvite = do
 
 test_removingCompanyAccountWorks :: TestEnv ()
 test_removingCompanyAccountWorks = do
-  ug        <- instantiateRandomUserGroup
+  ug        <- instantiateRandomFreeUserGroup
   adminuser <- instantiateUser $ randomUserTemplate { firstName      = return "Anna"
                                                     , lastName       = return "Android"
                                                     , email = return "anna@android.com"
@@ -493,7 +493,7 @@ test_removingCompanyAccountWorks = do
   assertEqual "Docid matches after user delete" docid (documentid $ head companydocs)
 
   -- test removal with access control only
-  otherug   <- instantiateRandomUserGroup
+  otherug   <- instantiateRandomFreeUserGroup
   otheruser <- instantiateUser $ randomUserTemplate { firstName = return "Mad Jack"
                                                     , lastName = return "Churchill"
                                                     , email = return "madjack@example.com"
@@ -522,7 +522,7 @@ test_removingCompanyAccountWorks = do
 
 test_privateUserTakoverWorks :: TestEnv ()
 test_privateUserTakoverWorks = do
-  ug        <- instantiateRandomUserGroup
+  ug        <- instantiateRandomFreeUserGroup
   adminuser <- instantiateUser $ randomUserTemplate { firstName      = return "Anna"
                                                     , lastName       = return "Android"
                                                     , email = return "anna@android.com"
@@ -568,7 +568,7 @@ test_privateUserTakoverWorks = do
 
 test_mustBeInvitedForTakeoverToWork :: TestEnv ()
 test_mustBeInvitedForTakeoverToWork = do
-  ug   <- instantiateRandomUserGroup
+  ug   <- instantiateRandomFreeUserGroup
   user <- instantiateUser $ randomUserTemplate { firstName = return "Bob"
                                                , lastName  = return "Blue"
                                                , email     = return "bob@blue.com"

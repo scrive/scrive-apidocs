@@ -12,6 +12,8 @@ module AdminOnly.UserGroupAdmin.UsersTab exposing
     , view
     )
 
+import AdminOnly.Types.UserGroup as UserGroup exposing (UserGroup)
+import AdminOnly.Types.UserGroup.Cmd as Cmd
 import AdminOnly.UserAdmin.CreateUserModal as CreateUserModal
 import Bootstrap.Button as Button
 import Bootstrap.Form as Form
@@ -21,7 +23,7 @@ import Bootstrap.Grid.Row as Row
 import Bootstrap.Table as Table
 import EnumExtra as Enum exposing (Enum, findEnumValue)
 import FlashMessage
-import Html exposing (Html, div, text)
+import Html exposing (Html, div, h5, text)
 import Html.Attributes exposing (attribute, class, placeholder, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import Http
@@ -43,12 +45,14 @@ type alias Model =
     { createUserModal : CreateUserModal.Model
     , page : Page
     , sUserList : Status (List User)
+    , sUserGroup : Status UserGroup
     , search : String
     }
 
 
 type Msg
     = GotUserList (Result Http.Error (List User))
+    | GotUserGroup (Result Http.Error UserGroup)
     | CreateUserModalMsg CreateUserModal.Msg
     | UserCreatedCallback CreateUserModal.UserCreated
     | CreateUserClicked
@@ -85,10 +89,13 @@ init embed ugid page =
             { createUserModal = createUserModal
             , page = page
             , sUserList = Loading
+            , sUserGroup = Loading
             , search = ""
             }
     in
-    return model <| Cmd.map embed <| Cmd.batch [ createUserModalCmd, getUsersCmd ugid model ]
+    return model <|
+        Cmd.map embed <|
+            Cmd.batch [ getUsersCmd ugid model, Cmd.getUserGroup GotUserGroup ugid, createUserModalCmd ]
 
 
 getUsersCmd : String -> Model -> Cmd Msg
@@ -133,12 +140,22 @@ update embed globals msg model =
                 globals.setPageUrlFromModel
 
         GotUserList result ->
-            case result of
-                Ok usersList ->
-                    singleton { model | sUserList = Success usersList }
+            singleton <|
+                case result of
+                    Ok usersList ->
+                        { model | sUserList = Success usersList }
 
-                Err _ ->
-                    singleton { model | sUserList = Failure }
+                    Err _ ->
+                        { model | sUserList = Failure }
+
+        GotUserGroup result ->
+            singleton <|
+                case result of
+                    Ok userGroup ->
+                        { model | sUserGroup = Success userGroup }
+
+                    Err _ ->
+                        { model | sUserGroup = Failure }
 
         CreateUserModalMsg createUserModalMsg ->
             let
@@ -148,22 +165,22 @@ update embed globals msg model =
             return { model | createUserModal = createUserModal2 } cmd
 
         UserCreatedCallback userCreated ->
-            case userCreated of
-                Just (Ok str) ->
-                    -- User created successfully
-                    return model <|
+            return model <|
+                case userCreated of
+                    Just (Ok str) ->
+                        -- User created successfully
                         Cmd.batch
                             [ globals.setPageUrlFromModel
                             , globals.flashMessage <| FlashMessage.success str
                             ]
 
-                Just (Err str) ->
-                    -- Failed to create a user
-                    return model <| globals.flashMessage <| FlashMessage.error str
+                    Just (Err str) ->
+                        -- Failed to create a user
+                        globals.flashMessage <| FlashMessage.error str
 
-                Nothing ->
-                    -- No attempt was made to create a user
-                    singleton model
+                    Nothing ->
+                        -- No attempt was made to create a user
+                        Cmd.none
 
         CreateUserClicked ->
             singleton { model | createUserModal = CreateUserModal.show model.createUserModal }
@@ -194,12 +211,14 @@ updatePage embed ugid page model =
                 , createUserModal = createUserModal
                 , search = M.withDefault "" page.mSearch
                 , sUserList = Loading
+                , sUserGroup = Loading
             }
     in
     return model1 <|
         Cmd.map embed <|
             Cmd.batch
                 [ getUsersCmd ugid model1
+                , Cmd.getUserGroup GotUserGroup ugid
                 , createUserModalCmd
                 ]
 
@@ -226,43 +245,75 @@ pageFromModel model =
 
 view : (Msg -> msg) -> Model -> Html msg
 view embed model =
-    Html.map embed <|
-        div []
-            [ Grid.row [ Row.betweenXs ]
-                [ Grid.col []
-                    [ Button.button [ Button.success, Button.attrs [ onClick CreateUserClicked ] ]
-                        [ text "Add new user in company" ]
-                    ]
-                , Grid.col []
-                    [ Form.formInline [ class "justify-content-end", onSubmit FormSubmitted ]
-                        [ Input.text
-                            [ Input.attrs
-                                [ onInput SetSearch
-                                , value model.search
-                                , placeholder "Username, email or company name"
+    let
+        usersNotAllowedView =
+            infoText "Users are not allowed in billable user group!"
+
+        addUserButton userGroup =
+            if not userGroup.isBillable then
+                [ Button.button [ Button.success, Button.attrs [ onClick CreateUserClicked ] ]
+                    [ text "Add new user in company" ]
+                ]
+
+            else
+                []
+
+        usersListView userList =
+            div [ class "mt-3", class "container-fluid" ] [ viewUsers model userList ]
+
+        noUsersView =
+            let
+                title =
+                    case model.page.mSearch of
+                        Just _ ->
+                            "No user matching search criteria was found."
+
+                        Nothing ->
+                            "There are no users in this user group. Start by adding some."
+            in
+            infoText title
+
+        infoText msg =
+            h5 [ class "text-center pt-5" ] [ text msg ]
+
+        loaded ( userList, userGroup ) =
+            Html.map embed <|
+                div []
+                    [ Grid.row [ Row.betweenXs ]
+                        [ Grid.col [] <| addUserButton userGroup
+                        , Grid.col []
+                            [ Form.formInline [ class "justify-content-end", onSubmit FormSubmitted ]
+                                [ Input.text
+                                    [ Input.attrs
+                                        [ onInput SetSearch
+                                        , value model.search
+                                        , placeholder "Username, email or company name"
+                                        ]
+                                    ]
+                                , Button.button
+                                    [ Button.secondary
+                                    , Button.attrs [ attribute "type" "submit", class "ml-sm-2", value "submit" ]
+                                    ]
+                                    [ text "Search" ]
                                 ]
                             ]
-                        , Button.button
-                            [ Button.secondary
-                            , Button.attrs [ attribute "type" "submit", class "ml-sm-2", value "submit" ]
-                            ]
-                            [ text "Search" ]
                         ]
+                    , case ( List.isEmpty userList, userGroup.isBillable ) of
+                        ( False, False ) ->
+                            usersListView userList
+
+                        ( True, False ) ->
+                            noUsersView
+
+                        ( False, True ) ->
+                            div [] [ usersListView userList, usersNotAllowedView ]
+
+                        ( True, True ) ->
+                            usersNotAllowedView
+                    , CreateUserModal.view CreateUserModalMsg model.createUserModal
                     ]
-                ]
-            , div [ class "mt-3", class "container-fluid" ]
-                [ case model.sUserList of
-                    Failure ->
-                        text "Failure"
-
-                    Loading ->
-                        text "Loading"
-
-                    Success sUserList ->
-                        viewUsers model sUserList
-                ]
-            , CreateUserModal.view CreateUserModalMsg model.createUserModal
-            ]
+    in
+    statusView loaded <| statusMerge2 model.sUserList model.sUserGroup
 
 
 type alias User =

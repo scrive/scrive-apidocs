@@ -1,26 +1,27 @@
 module UserGroup.Model (
-    GetUserGroupFirstTOSDate(..)
+    FindOldUserGroups(..)
+  , GetUserGroupFirstTOSDate(..)
+  , ThemesNotOwnedByUserGroup(..)
   , UserGroupCreate(..)
   , UserGroupDelete(..)
+  , UserGroupFilter(..)
   , UserGroupGet(..)
+  , UserGroupGetAllChildrenRecursive(..)
+  , UserGroupGetByHomeFolderID(..)
+  , UserGroupGetBySSOIDPID(..)
   , UserGroupGetByUserID(..)
+  , UserGroupGetImmediateChildren(..)
   , UserGroupGetWithParents(..)
   , UserGroupGetWithParentsByUG(..)
   , UserGroupGetWithParentsByUserID(..)
-  , UserGroupGetBySSOIDPID(..)
-  , UserGroupGetByHomeFolderID(..)
-  , UserGroupsGetFiltered(..)
-  , FindOldUserGroups(..)
-  , UserGroupUpdate(..)
-  , UserGroupUpdateSettings(..)
-  , UserGroupUpdateAddress(..)
-  , UserGroupUpdateUI(..)
-  , UserGroupGetImmediateChildren(..)
-  , UserGroupGetAllChildrenRecursive(..)
+  , UserGroupNonExistent(..)
+  , UserGroupInvalidAsRoot(..)
   , UserGroupsFormCycle(..)
-  , UserGroupIsInvalidAsRoot(..)
-  , UserGroupFilter(..)
-  , ThemesNotOwnedByUserGroup(..)
+  , UserGroupsGetFiltered(..)
+  , UserGroupUpdate(..)
+  , UserGroupUpdateAddress(..)
+  , UserGroupUpdateSettings(..)
+  , UserGroupUpdateUI(..)
   , ugGetChildrenInheritingProperty
   , minUserGroupIdleDocTimeout
   , maxUserGroupIdleDocTimeout
@@ -50,7 +51,7 @@ newtype UserGroupCreate = UserGroupCreate UserGroup
 instance (MonadDB m, MonadThrow m) => DBUpdate m UserGroupCreate UserGroup where
   dbUpdate (UserGroupCreate ug) = do
     guardIfHasNoParentThenIsValidRoot ug
-    new_parentpath <- case ug ^. #parentGroupID of
+    newParentPath <- case ug ^. #parentGroupID of
       Nothing       -> return $ Array1 ([] :: [UserGroupID])
       Just parentid -> do
         runQuery_ . sqlSelect "user_groups" $ do
@@ -61,9 +62,10 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UserGroupCreate UserGroup where
     -- insert user group
     runQuery_ . sqlInsert "user_groups" $ do
       sqlSet "parent_group_id" $ ug ^. #parentGroupID
-      sqlSet "parent_group_path" new_parentpath
+      sqlSet "parent_group_path" newParentPath
       sqlSet "name" $ ug ^. #name
       sqlSet "home_folder_id" $ ug ^. #homeFolderID
+      sqlSet "is_billable" $ ug ^. #isBillable
       sqlResult "id"
     ugid <- fetchOne runIdentity
     -- insert group info
@@ -180,20 +182,9 @@ insertUserGroupUI ugid ui = do
       sqlSet "mail_theme" $ ui ^. #mailTheme
       sqlSet "signview_theme" $ ui ^. #signviewTheme
       sqlSet "service_theme" $ ui ^. #serviceTheme
-    else throwM . SomeDBExtraException . ThemesNotOwnedByUserGroup ugid $ filter
+    else throwDBExtra . ThemesNotOwnedByUserGroup ugid $ filter
       (not . (`elem` ownedids))
       themeids
-
-data ThemesNotOwnedByUserGroup = ThemesNotOwnedByUserGroup UserGroupID [ThemeID]
-  deriving (Eq, Show, Typeable)
-
-instance ToJSValue ThemesNotOwnedByUserGroup where
-  toJSValue (ThemesNotOwnedByUserGroup ugid themeids) = runJSONGen $ do
-    value "message" ("Themes not owned by user group" :: String)
-    value "user_group_id" $ show ugid
-    value "offending_theme_ids" $ show themeids
-
-instance DBExtraException ThemesNotOwnedByUserGroup
 
 insertFeatures :: (MonadDB m, MonadThrow m) => UserGroupID -> Features -> m ()
 insertFeatures ugid features = do
@@ -273,8 +264,8 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetWithParentsByUG User
           []                  -> (ug, [])
           (ugr : ug_rev_path) -> (ugr, ug : reverse ug_rev_path)
     case ugrFromUG ug_root0 of
-      Nothing      -> throwM . SomeDBExtraException . UserGroupIsInvalidAsRoot $ ug_root0
-      Just ug_root -> return (ug_root, ug_children_path)
+      Left  e       -> throwDBExtra $ UserGroupInvalidAsRoot (Just $ ug_root0 ^. #id) e
+      Right ug_root -> return (ug_root, ug_children_path)
 
 newtype UserGroupGetWithParentsByUserID = UserGroupGetWithParentsByUserID UserID
 instance (MonadDB m, MonadThrow m)
@@ -329,58 +320,57 @@ instance (MonadDB m, MonadTime m) => DBQuery m FindOldUserGroups [UserGroup] whe
 
 newtype UserGroupUpdate = UserGroupUpdate UserGroup
 instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m UserGroupUpdate () where
-  dbUpdate (UserGroupUpdate new_ug) = do
-    guardIfHasNoParentThenIsValidRoot new_ug
-    let ugid = new_ug ^. #id
+  dbUpdate (UserGroupUpdate newUg) = do
+    guardIfHasNoParentThenIsValidRoot newUg
+    let ugid = newUg ^. #id
     -- update group settings
-    dbUpdate . UserGroupUpdateSettings ugid $ new_ug ^. #settings
+    dbUpdate . UserGroupUpdateSettings ugid $ newUg ^. #settings
     -- update group address
-    dbUpdate . UserGroupUpdateAddress ugid $ new_ug ^. #address
+    dbUpdate . UserGroupUpdateAddress ugid $ newUg ^. #address
     -- update group tags
     runQuery_ . sqlDelete "user_group_tags" $ sqlWhereEq "user_group_id" ugid
-    insertUserGroupTags ugid Tag.Internal $ new_ug ^. #internalTags
-    insertUserGroupTags ugid Tag.External $ new_ug ^. #externalTags
-    -- update invoicing
+    insertUserGroupTags ugid Tag.Internal $ newUg ^. #internalTags
+    insertUserGroupTags ugid Tag.External $ newUg ^. #externalTags
     runQuery_ . sqlUpdate "user_group_invoicings" $ do
       sqlWhereEq "user_group_id" ugid
-      sqlSet "invoicing_type" . ugInvoicingType $ new_ug
-      sqlSet "payment_plan" . ugPaymentPlan $ new_ug
+      sqlSet "invoicing_type" $ ugInvoicingType newUg
+      sqlSet "payment_plan" $ ugPaymentPlan newUg
     -- update UI
     runQuery_ . sqlDelete "user_group_uis" $ do
       sqlWhereEq "user_group_id" ugid
-    whenJust (new_ug ^. #ui) $ insertUserGroupUI ugid
+    whenJust (newUg ^. #ui) $ insertUserGroupUI ugid
 
     -- update feature flags
     runQuery_ . sqlDelete "feature_flags" $ do
       sqlWhereEq "user_group_id" ugid
-    whenJust (new_ug ^. #features) $ insertFeatures ugid
+    whenJust (newUg ^. #features) $ insertFeatures ugid
 
     -- updated group may have children already, these need to be adjusted
-    Array1 (old_parentpath :: [UserGroupID]) <- do
+    Array1 (oldParentpath :: [UserGroupID]) <- do
       runQuery_ . sqlSelect "user_groups" $ do
         sqlResult "parent_group_path"
         sqlWhereEq "id" ugid
       fetchOne runIdentity
-    (Array1 new_parentpath :: Array1 UserGroupID) <- case new_ug ^. #parentGroupID of
+    (Array1 newParentPath :: Array1 UserGroupID) <- case newUg ^. #parentGroupID of
       Nothing       -> return $ Array1 ([] :: [UserGroupID])
-      Just parentid -> do
+      Just parentId -> do
         runQuery_ . sqlSelect "user_groups" $ do
           sqlResult "parent_group_path"
-          sqlWhereEq "id" . Just $ parentid
+          sqlWhereEq "id" . Just $ parentId
         Array1 parentpath <- fetchOne runIdentity
-        return . Array1 $ parentid : parentpath
+        return . Array1 $ parentId : parentpath
     -- verify, that groups will not form a cycle
-    when (ugid `elem` new_parentpath)
+    when (ugid `elem` newParentPath)
       . throwM
       . SomeDBExtraException
       . UserGroupsFormCycle
       $ ugid
     -- update user group
     runQuery_ . sqlUpdate "user_groups" $ do
-      sqlSet "parent_group_id" $ new_ug ^. #parentGroupID
-      sqlSet "parent_group_path" . Array1 $ new_parentpath
-      sqlSet "name" $ new_ug ^. #name
-      sqlSet "home_folder_id" $ new_ug ^. #homeFolderID
+      sqlSet "parent_group_id" $ newUg ^. #parentGroupID
+      sqlSet "parent_group_path" . Array1 $ newParentPath
+      sqlSet "name" $ newUg ^. #name
+      sqlSet "home_folder_id" $ newUg ^. #homeFolderID
       sqlWhereEq "id" ugid
     -- update all child groups parentpaths
     runQuery_ . sqlUpdate "user_groups" $ do
@@ -391,10 +381,10 @@ instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m UserGroupUpdate () 
         $   "array_cat(parent_group_path[ 1"
         <>  ": ( array_length(parent_group_path, 1)"
         <>  "- "
-        <?> length old_parentpath
+        <?> length oldParentpath
         <+> ")]"
         <>  ","
-        <?> Array1 new_parentpath
+        <?> Array1 newParentPath
         <+> ")"
       sqlWhere $ "parent_group_path @> " <?> Array1 [ugid]
 
@@ -416,6 +406,38 @@ instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m UserGroupUpdateUI (
     runQuery_ . sqlDelete "user_group_uis" $ sqlWhereEq "user_group_id" ugid
     whenJust mugUI $ insertUserGroupUI ugid
 
+data ThemesNotOwnedByUserGroup = ThemesNotOwnedByUserGroup UserGroupID [ThemeID]
+  deriving (Eq, Show, Typeable)
+
+instance ToJSValue ThemesNotOwnedByUserGroup where
+  toJSValue (ThemesNotOwnedByUserGroup ugid themeids) = runJSONGen $ do
+    value "message" ("Themes not owned by user group" :: String)
+    value "user_group_id" $ show ugid
+    value "offending_theme_ids" $ show themeids
+
+instance DBExtraException ThemesNotOwnedByUserGroup
+
+newtype UserGroupNonExistent = UserGroupNonExistent UserGroupID
+  deriving (Eq, Ord, Show, Typeable)
+
+instance ToJSValue UserGroupNonExistent where
+  toJSValue (UserGroupNonExistent ugid) = runJSONGen $ do
+    value "message"       ("User Group does not exist" :: String)
+    value "user_group_id" (show ugid)
+
+instance DBExtraException UserGroupNonExistent
+
+data UserGroupInvalidAsRoot = UserGroupInvalidAsRoot (Maybe UserGroupID) String
+  deriving (Eq, Ord, Show, Typeable)
+
+instance ToJSValue UserGroupInvalidAsRoot where
+  toJSValue (UserGroupInvalidAsRoot mUgid reason) = runJSONGen $ do
+    value "message"       ("User Group is invalid as root" :: String)
+    value "user_group_id" (show <$> mUgid)
+    value "reason"        reason
+
+instance DBExtraException UserGroupInvalidAsRoot
+
 newtype UserGroupsFormCycle = UserGroupsFormCycle UserGroupID
   deriving (Eq, Ord, Show, Typeable)
 
@@ -428,20 +450,13 @@ instance DBExtraException UserGroupsFormCycle
 
 guardIfHasNoParentThenIsValidRoot :: (MonadDB m, MonadThrow m) => UserGroup -> m ()
 guardIfHasNoParentThenIsValidRoot ug = case ug ^. #parentGroupID of
-  Just _  -> return ()
+  Just _  -> pure ()
   Nothing -> case ugrFromUG ug of
-    Just _  -> return ()
-    Nothing -> throwM . SomeDBExtraException . UserGroupIsInvalidAsRoot $ ug
-
-newtype UserGroupIsInvalidAsRoot = UserGroupIsInvalidAsRoot UserGroup
-  deriving (Eq, Show, Typeable)
-
-instance ToJSValue UserGroupIsInvalidAsRoot where
-  toJSValue (UserGroupIsInvalidAsRoot ug) = runJSONGen $ do
-    value "message"    ("User Group is invalid as root" :: String)
-    value "user_group" (show ug)
-
-instance DBExtraException UserGroupIsInvalidAsRoot
+    Right _ -> return ()
+    Left  e -> throwDBExtra $ UserGroupInvalidAsRoot mUgid e
+  where
+    mUgid =
+      let ugid = ug ^. #id in if ugid == emptyUserGroupID then Nothing else Just ugid
 
 userGroupSelectors :: [SQL]
 userGroupSelectors =
@@ -489,6 +504,7 @@ userGroupSelectors =
     <>  ")::"
     <>  raw (ctName ctTag)
     <+> "FROM user_group_tags ugt WHERE user_groups.id = ugt.user_group_id AND NOT ugt.internal ORDER BY ugt.name)"
+  , "user_groups.is_billable"
   ]
 
 ugSettingsSelectors :: [SQL]

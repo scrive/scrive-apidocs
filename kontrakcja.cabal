@@ -13,7 +13,7 @@ Build-type:    Simple
 
 -- Note:
 --
--- To allow warnings use command:
+-- By default -Werror is enabled, to allow warnings use command:
 --
 --    cabal configure --ghc-option=-Wwarn
 --

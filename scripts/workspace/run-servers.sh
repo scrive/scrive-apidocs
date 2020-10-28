@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 trap 'kill 0' EXIT
 
 script_dir="$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )"

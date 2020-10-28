@@ -307,7 +307,7 @@ testLoginGetTokenForPersonalCredentialsSucceedsForAdminUserInUserGroup = do
 
 testLoginGetTokenForPersonalCredentialsFailsForNonAdminUserInUserGroup :: TestEnv ()
 testLoginGetTokenForPersonalCredentialsFailsForNonAdminUserInUserGroup = do
-  ug   <- instantiateRandomUserGroup
+  ug   <- instantiateRandomFreeUserGroup
   user <- createTestUser' "thomas.busby@scrive.com"
   ctx  <- mkContextWithUser defaultLang user
   let uid1 = user ^. #id

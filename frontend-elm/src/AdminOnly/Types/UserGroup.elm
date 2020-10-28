@@ -42,6 +42,8 @@ type alias UserGroup =
     , entityName : String
     , parentID : Maybe String
     , parentGroupPath : List ParentUserGroup
+    , isBillable : Bool
+    , rootIsBillable : Bool
     , address : Address
     , addressIsInherited : Bool
     , inheritedAddress : Maybe Address
@@ -63,6 +65,8 @@ decoder =
         |> DP.required "entityname" JD.string
         |> DP.required "parentid" (JD.string |> JD.nullable)
         |> DP.required "parentgrouppath" (JD.list parentUserGroupDecoder)
+        |> DP.required "companyisbillable" JD.bool
+        |> DP.required "companyrootisbillable" JD.bool
         |> DP.custom Address.decoder
         |> DP.required "companyaddressisinherited" JD.bool
         |> DP.optional "companyinheritedaddress" (Address.decoder |> JD.nullable) Nothing

@@ -266,8 +266,8 @@ testLastPersonSigningADocumentClosesIt = do
 
 testSigningWithPin :: TestEnv ()
 testSigningWithPin = do
-  ugid1 <- view #id <$> instantiateRandomUserGroup
-  ugid2 <- view #id <$> instantiateRandomUserGroup
+  ugid1 <- view #id <$> instantiateRandomFreeUserGroup
+  ugid2 <- view #id <$> instantiateRandomFreeUserGroup
   user1 <- instantiateUser $ randomUserTemplate { firstName = return "Bob"
                                                 , lastName  = return "Blue"
                                                 , email     = return "bob@blue.com"
@@ -420,7 +420,7 @@ testSendReminderEmailUpdatesLastModifiedDate = do
 
 testSendReminderEmailByCompanyAdmin :: TestEnv ()
 testSendReminderEmailByCompanyAdmin = do
-  ugid      <- view #id <$> instantiateRandomUserGroup
+  ugid      <- view #id <$> instantiateRandomFreeUserGroup
   user      <- instantiateUser $ randomUserTemplate { groupID = return ugid }
   otheruser <- instantiateUser $ randomUserTemplate { groupID = return ugid }
   adminuser <- instantiateUser
@@ -472,7 +472,7 @@ testSendReminderEmailByCompanyAdmin = do
 
 testDownloadFile :: TestEnv ()
 testDownloadFile = do
-  ugid      <- view #id <$> instantiateRandomUserGroup
+  ugid      <- view #id <$> instantiateRandomFreeUserGroup
   user      <- instantiateUser $ randomUserTemplate { groupID = return ugid }
   otheruser <- instantiateUser $ randomUserTemplate { groupID = return ugid }
   adminuser <- instantiateUser
@@ -971,7 +971,7 @@ testGetDocumentWithSignatoryAccessTokens = do
 
 testSendEmailOnTimeout :: TestEnv ()
 testSendEmailOnTimeout = do
-  ug   <- instantiateRandomUserGroup
+  ug   <- instantiateRandomFreeUserGroup
   user <- instantiateUser $ randomUserTemplate { firstName = return "Bob"
                                                , lastName  = return "Blue"
                                                , email     = return "bob@blue.com"

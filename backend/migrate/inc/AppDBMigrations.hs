@@ -314,4 +314,5 @@ kontraMigrations =
   , addNoDKNemIDPIDExceptionConstraint
   , updateLegacyAuthenticationToSignInTemplates
   , featureFlagsAddFlow
+  , userGroupAddBillableFlag
   ]

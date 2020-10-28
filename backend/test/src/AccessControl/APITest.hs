@@ -176,14 +176,16 @@ testUserGroupMemberCannotViewRolesOfOtherUserGroupMembers = do
 
 testAllInheritedRolesAreReturned :: TestEnv ()
 testAllInheritedRolesAreReturned = do
-  userA <- instantiateUser $ randomUserTemplate
+  (_, childUg) <- instantiateRandomPaidUserGroup
+  userA        <- instantiateUser $ randomUserTemplate
     { firstName      = return "Captain"
     , lastName       = return "Hollister"
     , email          = return "captain.hollister@scrive.com"
     , isCompanyAdmin = True
     , signupMethod   = CompanyInvitation
+    , groupID        = pure $ childUg ^. #id
     }
-  ugB0 <- instantiateRandomUserGroup
+  ugB0 <- instantiateRandomFreeUserGroup
   ctx  <- mkContextWithUser defaultLang userA
   void . dbUpdate . UserGroupUpdate . set #parentGroupID (Just $ userA ^. #groupID) $ ugB0
   req <- mkRequest GET []

@@ -19,7 +19,7 @@ padAplicationAPITests env = testGroup
 
 testPadApplicationPadInfoGet :: TestEnv ()
 testPadApplicationPadInfoGet = do
-  ug   <- instantiateRandomUserGroup
+  ug   <- instantiateRandomFreeUserGroup
   user <- instantiateUser $ randomUserTemplate { firstName      = return "Andrzej"
                                                , lastName       = return "Rybczak"
                                                , email = return "andrzej@skrivapa.se"

@@ -5,7 +5,7 @@ import DB
 tableUserGroups :: Table
 tableUserGroups = tblTable
   { tblName        = "user_groups"
-  , tblVersion     = 7
+  , tblVersion     = 8
   , tblColumns     =
     [ tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "parent_group_id", colType = BigIntT, colNullable = True }
@@ -16,6 +16,11 @@ tableUserGroups = tblTable
     , tblColumn { colName = "name", colType = TextT }
     , tblColumn { colName = "deleted", colType = TimestampWithZoneT }
     , tblColumn { colName = "home_folder_id", colType = BigIntT, colNullable = True }
+    , tblColumn { colName     = "is_billable"
+                , colType     = BoolT
+                , colNullable = False
+                , colDefault  = Just "false"
+                }
     ]
   , tblPrimaryKey  = pkOnColumn "id"
   , tblIndexes     = [ indexOnColumnWithMethod "parent_group_path" GIN

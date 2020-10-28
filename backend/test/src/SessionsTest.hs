@@ -99,11 +99,11 @@ testDefaultSessionTimeout = do
   -- make it difficult to test the next step on expired sessions.
   modifyTestTime $ secondsAfter (defaultSessionTimeoutSecs - 3 * 60 * 60)
   mSession3 <- getSession (sesID session1) (sesToken session1) testCookieDomain
-  assertJust mSession3
+  assertJust'_ mSession3
 
   modifyTestTime $ secondsAfter (4 * 60 * 60)
   mSession4 <- getSession (sesID session1) (sesToken session1) testCookieDomain
-  assertNothing mSession4
+  assertNothing' mSession4
 
 testCustomSessionTimeout :: TestEnv ()
 testCustomSessionTimeout = do
@@ -114,7 +114,7 @@ testCustomSessionTimeout = do
 
   let userId      = user ^. #id
       userGroupId = userGroup ^. #id
-  groupSettings1 <- assertJustAndExtract $ userGroup ^. #settings
+  groupSettings1 <- assertJust' $ userGroup ^. #settings
 
   assertEqual "initial group session timeout should be nothing"
               (groupSettings1 ^. #sessionTimeoutSecs)
@@ -170,11 +170,11 @@ testCustomSessionTimeout = do
 
     modifyTestTime $ secondsAfter (defaultSessionTimeoutSecs - 2 * 60 * 60)
     mSession3 <- getSession (sesID session2) (sesToken session2) testCookieDomain
-    assertJust mSession3
+    assertJust'_ mSession3
 
     modifyTestTime $ secondsAfter (3 * 60 * 60)
     mSession4 <- getSession (sesID session2) (sesToken session2) testCookieDomain
-    assertNothing mSession4
+    assertNothing' mSession4
 
 testDefaultSessionTimeoutDelay :: TestEnv ()
 testDefaultSessionTimeoutDelay = do
@@ -186,19 +186,19 @@ testDefaultSessionTimeoutDelay = do
     -- Fast forward to 1 hour before session expires
     modifyTestTime (secondsAfter (defaultSessionTimeoutSecs - 60 * 60))
     mSession <- getSession (sesID session) (sesToken session) testCookieDomain
-    assertJust mSession
+    assertJust'_ mSession
 
   do
     -- Fast forward to 30 mins after original session expiry
     modifyTestTime (secondsAfter (90 * 60))
     mSession <- getSession (sesID session) (sesToken session) testCookieDomain
-    assertJust mSession
+    assertJust'_ mSession
 
   do
     -- Fast forward to 3 hour after original session expiry
     modifyTestTime (secondsAfter (((2 * 60) + 30) * 60))
     mSession <- getSession (sesID session) (sesToken session) testCookieDomain
-    assertNothing mSession
+    assertNothing' mSession
 
 testCustomSessionTimeoutDelay :: TestEnv ()
 testCustomSessionTimeoutDelay = do
@@ -219,17 +219,17 @@ testCustomSessionTimeoutDelay = do
   do
     modifyTestTime (secondsAfter $ 10 * 60)
     mSession <- getSession (sesID session) (sesToken session) testCookieDomain
-    assertJust mSession
+    assertJust'_ mSession
 
   do
     modifyTestTime (secondsAfter $ 10 * 60)
     mSession <- getSession (sesID session) (sesToken session) testCookieDomain
-    assertJust mSession
+    assertJust'_ mSession
 
   do
     modifyTestTime (secondsAfter $ 20 * 60)
     mSession <- getSession (sesID session) (sesToken session) testCookieDomain
-    assertNothing mSession
+    assertNothing' mSession
 
 testCustomSessionTimeoutInheritance :: TestEnv ()
 testCustomSessionTimeoutInheritance = do
@@ -285,7 +285,7 @@ testCustomSessionTimeoutInheritance = do
 testDocumentSessionTimeout :: TestEnv ()
 testDocumentSessionTimeout = do
   (user, userGroup) <- createTestUser
-  initGroupSettings <- assertJustAndExtract $ userGroup ^. #settings
+  initGroupSettings <- assertJust' $ userGroup ^. #settings
 
   assertEqual "initial document session timeout should be nothing"
               (initGroupSettings ^. #documentSessionTimeoutSecs)
@@ -405,13 +405,13 @@ insertNewSession uid = do
     session1  <- emptySession
     mSession2 <- updateSession session1 (sesID session1) (Just uid) Nothing
 
-    session2  <- assertJustAndExtract mSession2
+    session2  <- assertJust' mSession2
 
     let sessionId    = sesID session2
         sessionToken = sesToken session2
 
     mSession3 <- getSession sessionId sessionToken testCookieDomain
-    assertJustAndExtract mSession3
+    assertJust' mSession3
 
 addDocumentAndInsertToken :: TestEnv (User, Document, Context)
 addDocumentAndInsertToken = do
@@ -451,7 +451,7 @@ createTestUserAndGetId = view (_1 % #id) <$> createTestUser
 
 createTestUser :: TestEnv (User, UserGroup)
 createTestUser = do
-  ug   <- instantiateRandomUserGroup
+  ug   <- instantiateRandomFreeUserGroup
   user <- instantiateUser $ randomUserTemplate { email    = return "andrzej@scrive.com"
                                                , groupID  = return $ ug ^. #id
                                                , password = Just "password_8866"

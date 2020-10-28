@@ -12,15 +12,11 @@ module AdminOnly.UserAdminTab.UserAdminTab exposing
     , view
     )
 
-import AdminOnly.UserAdminTab.CreateUserModal as CreateUserModal exposing (Config(..))
 import Bootstrap.Button as Button
 import Bootstrap.Form as Form
 import Bootstrap.Form.Input as Input
-import Bootstrap.Grid as Grid
-import Bootstrap.Grid.Row as Row
 import Bootstrap.Table as Table
 import EnumExtra as Enum
-import FlashMessage
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (attribute, class, placeholder, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
@@ -44,8 +40,7 @@ type alias Page =
 
 
 type alias Model =
-    { createUserModal : CreateUserModal.Model
-    , page : Page
+    { page : Page
     , sUserList : Status (List User)
     , search : String
     , mPaginationTotal : Maybe Int
@@ -64,9 +59,6 @@ defaultSorting =
 
 type Msg
     = GotUserList (Result Http.Error ( Int, List User ))
-    | CreateUserModalMsg CreateUserModal.Msg
-    | UserCreatedCallback CreateUserModal.UserCreated
-    | CreateUserClicked
     | SetSearch String
     | FormSubmitted
     | TableRowClicked String
@@ -82,22 +74,14 @@ tabName =
 init : (Msg -> msg) -> Page -> Return msg Model
 init embed page =
     let
-        ( createUserModal, createUserModalCmd ) =
-            CreateUserModal.init CreateUserWithRootUserGroup
-
         model =
-            { createUserModal = createUserModal
-            , page = page
+            { page = page
             , sUserList = Loading
             , search = ""
             , mPaginationTotal = Nothing
             }
     in
-    return model <|
-        Cmd.batch
-            [ Cmd.map (embed << CreateUserModalMsg) createUserModalCmd
-            , Cmd.map embed <| getUsersCmd model
-            ]
+    return model <| Cmd.map embed <| getUsersCmd model
 
 
 getUsersCmd : Model -> Cmd Msg
@@ -158,34 +142,6 @@ update embed globals msg model =
 
                     Err _ ->
                         { model | sUserList = Failure, mPaginationTotal = Nothing }
-
-        CreateUserModalMsg createUserModalMsg ->
-            let
-                ( createUserModal2, cmd ) =
-                    CreateUserModal.update (embed << CreateUserModalMsg) (embed << UserCreatedCallback) globals createUserModalMsg model.createUserModal
-            in
-            return { model | createUserModal = createUserModal2 } cmd
-
-        UserCreatedCallback userCreated ->
-            return model <|
-                case userCreated of
-                    Just (Ok str) ->
-                        -- User created successfully
-                        Cmd.batch
-                            [ Cmd.map embed <| getUsersCmd model
-                            , globals.flashMessage <| FlashMessage.success str
-                            ]
-
-                    Just (Err str) ->
-                        -- Failed to create a user
-                        globals.flashMessage <| FlashMessage.error str
-
-                    Nothing ->
-                        -- No attempt was made to create a user
-                        Cmd.none
-
-        CreateUserClicked ->
-            singleton { model | createUserModal = CreateUserModal.show model.createUserModal }
 
         TableRowClicked uid ->
             return model <| globals.gotoUser uid
@@ -265,28 +221,19 @@ view : (Msg -> msg) -> Model -> Html msg
 view embed model =
     Html.map embed <|
         div []
-            [ Grid.row [ Row.betweenXs ]
-                [ Grid.col []
-                    [ Button.button [ Button.success, Button.attrs [ onClick CreateUserClicked ] ]
-                        [ text "Create user with empty company"
+            [ Form.formInline [ class "justify-content-end", onSubmit FormSubmitted ]
+                [ Input.text
+                    [ Input.attrs
+                        [ onInput SetSearch
+                        , value model.search
+                        , placeholder "Username, email or company name"
                         ]
                     ]
-                , Grid.col []
-                    [ Form.formInline [ class "justify-content-end", onSubmit FormSubmitted ]
-                        [ Input.text
-                            [ Input.attrs
-                                [ onInput SetSearch
-                                , value model.search
-                                , placeholder "Username, email or company name"
-                                ]
-                            ]
-                        , Button.button
-                            [ Button.secondary
-                            , Button.attrs [ attribute "type" "submit", class "ml-sm-2", value "submit" ]
-                            ]
-                            [ text "Search" ]
-                        ]
+                , Button.button
+                    [ Button.secondary
+                    , Button.attrs [ attribute "type" "submit", class "ml-sm-2", value "submit" ]
                     ]
+                    [ text "Search" ]
                 ]
             , div [ class "mt-3", class "container-fluid" ]
                 [ case model.sUserList of
@@ -303,7 +250,6 @@ view embed model =
                 model.page.paginationPageNum
                 model.mPaginationTotal
                 PaginationMsg
-            , CreateUserModal.view CreateUserModalMsg model.createUserModal
             ]
 
 

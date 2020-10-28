@@ -15,13 +15,15 @@ module Administration.AdministrationControl (
           , showAdminMainPage
           , jsonCompanies -- for tests
           , handleCompanyChange -- for tests
+          , handleCompanyCreate -- for tests
+          , CompanyCreateResult(..) -- for tests
           ) where
 
 import Data.Aeson.Types
 import Data.Functor.Invariant
 import Data.Int (Int16, Int32)
 import Data.Unjson
-import Happstack.Server hiding (dir, https, path, simpleHTTP)
+import Happstack.Server hiding (badRequest, dir, https, path, simpleHTTP)
 import Happstack.StaticRouting (Route, choice, dir, param, remainingPath)
 import Log
 import Text.JSON
@@ -50,6 +52,7 @@ import DB
 import DigitalSignatureMethod
 import Doc.Action (postDocumentClosedActions, postDocumentPendingChange)
 import Doc.API.V2.DocumentAccess
+import Doc.API.V2.Guards
 import Doc.API.V2.JSON.Document
 import Doc.API.V2.JSON.List
 import Doc.DocStateData
@@ -60,6 +63,7 @@ import Doc.Screenshot (Screenshot(..))
 import Doc.SignatoryLinkID
 import Doc.SignatoryScreenshots (SignatoryScreenshots(..))
 import EvidenceLog.Model
+import FeatureFlags.Model (defaultFeatures)
 import File.Model
 import File.Storage
 import File.Types
@@ -111,7 +115,6 @@ adminonlyRoutes :: Route (Kontra Response)
 adminonlyRoutes = onlySalesOrAdmin <$> choice
   [ hGet showAdminElmMainPage
   , (dir "page" . remainingPath GET) showAdminElmMainPage
-  , (dir "createuser" . hPost . toK0) handleCreateUser
   , (dir "userslist" . hGet . toK0) jsonUsersList
   , (dir "useradmin" . dir "details" . hGet . toK1) handleUserGetProfile
   , (dir "useradmin" . hPost . toK1) handleUserChange
@@ -129,11 +132,12 @@ adminonlyRoutes = onlySalesOrAdmin <$> choice
   , (dir "useradmin" . dir "shareablelinkstats" . dir "months" . hGet . toK1)
     $ handleAdminUserShareableLinksStats PartitionByMonth
   , (dir "useradmin" . dir "sendinviteagain" . hPost . toK0) sendInviteAgain
-  , (dir "companyadmin" . dir "details" . hGet . toK1) handleCompanyGetProfile
+  , (dir "companyadmin" . hPost . toK0) handleCompanyCreate
   , (dir "companyadmin" . hPost . toK1) handleCompanyChange
+  , (dir "companyadmin" . dir "details" . hGet . toK1) handleCompanyGetProfile
   , (dir "companyadmin" . dir "merge" . hPost . toK1) handleMergeToOtherCompany
   , (dir "companyadmin" . dir "branding") Company.adminRoutes
-  , (dir "companyadmin" . dir "users" . hPost . toK1) handlePostAdminCompanyUsers
+  , (dir "companyadmin" . dir "users" . hPost . toK1) handleCreateCompanyUser
   , (dir "companyaccounts" . hGet . toK1)
     UserGroupAccounts.handleUserGroupAccountsForAdminOnly
   , (dir "companyadmin" . dir "usagestats" . dir "days" . hGet . toK1)
@@ -513,32 +517,41 @@ handleCompanyChange ugid = onlySalesOrAdmin $ do
   mExternalTagOps       <- getFieldTags "companyexternaltags"
   mTryParentUserGroupID <- getOptionalField asValidUserGroupID "companyparentid"
 
-  let oldUG       = ugwpUG ugwp
-      setSettings = if fromMaybe (isNothing $ oldUG ^. #settings) mUGSettingsIsInherited
-        then set #settings Nothing
-        else set #settings . Just . ugSettingsChange $ ugwpSettings ugwp
-      setAddress = if fromMaybe (isNothing $ oldUG ^. #address) mUGAddressIsInherited
-        then set #address Nothing
-        else set #address . Just . ugAddressChange $ ugwpAddress ugwp
-      updateInternalTags = set #internalTags . updateTags (oldUG ^. #internalTags)
-      updateExternalTags = set #externalTags . updateTags (oldUG ^. #externalTags)
-      newUG =
-        set #parentGroupID mTryParentUserGroupID
-          . maybe identity (set #name)        mCompanyName
-          . maybe identity updateInternalTags mInternalTagOps
-          . maybe identity updateExternalTags mExternalTagOps
-          . setSettings
-          . setAddress
-          $ ugwpUG ugwp
+  let
+    oldUg       = ugwpUG ugwp
+    setSettings = if fromMaybe (isNothing $ oldUg ^. #settings) mUGSettingsIsInherited
+      then set #settings Nothing
+      else set #settings . Just . ugSettingsChange $ ugwpSettings ugwp
+    setAddress = if fromMaybe (isNothing $ oldUg ^. #address) mUGAddressIsInherited
+      then set #address Nothing
+      else set #address . Just . ugAddressChange $ ugwpAddress ugwp
+    -- Set invoicing to None and payment plan to inherit when moving
+    -- root user group (legacy user groups without billable flag).
+    setInvoicing = if isNothing (oldUg ^. #parentGroupID) && isJust mTryParentUserGroupID
+      then set #invoicing None
+      else identity
+    updateInternalTags = set #internalTags . updateTags (oldUg ^. #internalTags)
+    updateExternalTags = set #externalTags . updateTags (oldUg ^. #externalTags)
+    newUg =
+      set #parentGroupID mTryParentUserGroupID
+        . maybe identity (set #name)        mCompanyName
+        . maybe identity updateInternalTags mInternalTagOps
+        . maybe identity updateExternalTags mExternalTagOps
+        . setSettings
+        . setAddress
+        . setInvoicing
+        $ ugwpUG ugwp
+
+  guardUserGroupIsBillable oldUg newUg
 
   newSettings <-
     guardJust
     . listToMaybe
     . catMaybes
-    $ [newUG ^. #settings, ugwpSettings <$> ugwpOnlyParents ugwp]
+    $ [newUg ^. #settings, ugwpSettings <$> ugwpOnlyParents ugwp]
   logInfo "newsettings" $ object ["newsettings" .= showt newSettings]
   guardThatDataRetentionPolicyIsValid (newSettings ^. #dataRetentionPolicy) Nothing
-  dbUpdate $ UserGroupUpdate newUG
+  dbUpdate $ UserGroupUpdate newUg
   return ()
 
 getFieldTags :: Kontrakcja m => Text -> m (Maybe [TagUpdate])
@@ -552,36 +565,157 @@ getFieldTags fieldName = do
         logInfo "Error while parsing tags" $ object ["field" .= fieldName, "error" .= err]
         internalError
 
-handleCreateUser :: Kontrakcja m => m JSValue
-handleCreateUser = onlySalesOrAdmin $ do
-  email    <- T.filter (/= ' ') . T.toLower <$> guardJustM (getField "email")
-  fstname  <- guardJustM $ getField "fstname"
-  sndname  <- guardJustM $ getField "sndname"
-  lang     <- guardJustM $ (langFromCode =<<) <$> getField "lang"
-  auth     <- fromMaybe LoginAuthNative <$> getAuth "sysauth"
-  ugFolder <- dbUpdate . FolderCreate $ defaultFolder
-  ug       <-
-    dbUpdate
-    . UserGroupCreate
-    . set #homeFolderID (Just $ ugFolder ^. #id)
-    $ defaultUserGroup
+data CompanyCreateResult = CompanyCreateSuccess
+  { groupId :: UserGroupID
+  , mRootGroupId :: Maybe UserGroupID
+  }
+  deriving (Show)
 
-  muser <- createNewUserByAdmin email (fstname, sndname) (ug ^. #id, True) lang auth
-  freeDocumentsValidity <- (31 `daysAfter`) <$> currentTime
-  let freeDocumentsCount = 3
-      freeDocuments =
-        freeDocumentTokensFromValues freeDocumentsCount freeDocumentsValidity
-  dbUpdate $ UserGroupFreeDocumentTokensUpdate (ug ^. #id) freeDocuments
-  runJSONGenT $ case muser of
-    Nothing -> do
-      value "success" False
-      valueM "error_message" $ renderTemplate_ "flashMessageUserWithSameEmailExists"
-    Just _ -> do
-      value "success"       True
-      value "error_message" (Nothing :: Maybe String)
+instance ToJSON CompanyCreateResult where
+  toJSON CompanyCreateSuccess {..} = object
+    [ "success" .= True
+    , "user_group_id" .= groupId
+    , "root_user_group_id" .= mRootGroupId
+    , "error_message" .= (Nothing :: Maybe Text)
+    ]
 
-handlePostAdminCompanyUsers :: Kontrakcja m => UserGroupID -> m JSValue
-handlePostAdminCompanyUsers ugid = onlySalesOrAdmin $ do
+instance ToResp CompanyCreateResult
+
+-- | User group creation handler
+-- There are following cases which are allowed:
+--
+-- 1. Neither "user_group_parent_id" nor "user_group_child_id" are set and "payment_plan" is set to `free`.
+--    - We're creating only single user group with free payment plan without billable flag.
+-- 2. Neither "user_group_parent_id" nor "user_group_child_id" are set and "payment_plan" is set to anything else than `free`.
+--    - In this case, we are creating subscription user group structure.
+--      Root user group has billable flag, paid subscription type, invoicing set to Invoice
+--      and single child user group which is place for users.
+--      Child group has it's own feature flags (does not inherit) set same as for free account,
+--      inherits parent's subscription and invoicing is set to None.
+-- 3. Only "user_group_parent_id" is set.
+--    - We are just creating child user group. In case it's direct child of user group with
+--      billable flag, same restriction applies as in first case in regards to features.
+-- 4. Only "user_group_child_id" is set and "payment_plan" is set to anything else than `free`.
+--    - We are trying to add root user group with billable flag (upgrade of legacy/free user groups).
+--      Root user group is created and assigned as parent user group.
+--      Child user group's subscription is set to inherit and invoicing is set to None.
+--      Though in this case, we don't set feature flags as the child group already has explicit ones
+--      end we don't want to mess with those.
+handleCompanyCreate :: Kontrakcja m => m CompanyCreateResult
+handleCompanyCreate = onlySalesOrAdmin $ do
+  ugName       <- guardJustM $ getField "user_group_name"
+  mParentUgId  <- readField "user_group_parent_id"
+  mChildUgId   <- readField "user_group_child_id"
+  mPaymentPlan <- apiV2ParameterOptional
+    (ApiV2ParameterTextUnjson "payment_plan" unjsonDef)
+  (mRootUgId, ugId, logMsg) <- case (mParentUgId, mChildUgId, mPaymentPlan) of
+    (Nothing, Nothing, Nothing) ->
+      V2.apiError
+        $ requestFailed
+            "Either \"payment_plan\", \"user_group_parent_id\" or \"user_group_child_id\" must be present."
+    (Just _, Just _, _) ->
+      V2.apiError
+        $ requestFailed
+            "Both \"user_group_parent_id\" and \"user_group_child_id\" fields can't be present at the same time."
+    -- Case #1 of description - new free group
+    (Nothing, Nothing, Just FreePlan) -> do
+      freeUg <- createFreeUserGroup ugName
+      pure (Nothing, freeUg ^. #id, "Creating user group with free plan")
+    -- Case #2 of description - new paid group
+    (Nothing, Nothing, Just paymentPlan) -> do
+      parentUg <- createRootUserGroup ("ROOT - " <> ugName) paymentPlan
+      childUg  <- createChildGroup ugName parentUg
+      pure (Just $ parentUg ^. #id, childUg ^. #id, "Creating user group with paid plan")
+    -- Case #3 of description - new child group
+    (Just parentUgId, Nothing, Nothing) -> do
+      parentUg <- getUserGroup parentUgId
+      childUg  <- createChildGroup ugName parentUg
+      pure (Nothing, childUg ^. #id, "Creating child user group")
+    (Just _, Nothing, Just _) -> do
+      V2.apiError $ requestFailed
+        "\"payment_plan\" can't be present when \"user_group_parent_id\" field is set."
+    -- Case #4 of description - new paid root group for free child group
+    (Nothing, Just _, Just FreePlan) -> V2.apiError $ requestFailed
+      "\"payment_plan\" can't be \"free\" when \"user_group_child_id\" field is set."
+    (Nothing, Just childUgId, Just paymentPlan) -> do
+      parentUg <- createRootUserGroup ugName paymentPlan
+      childUg  <- updateChildGroup parentUg childUgId
+      pure (Just $ parentUg ^. #id, childUg ^. #id, "Upgrading to paid user group")
+    (Nothing, Just _, Nothing) ->
+      V2.apiError $ requestFailed "\"payment_plan\" field is missing."
+  logInfo logMsg $ object
+    [ "user_group_name" .= ugName
+    , "user_group_id" .= ugId
+    , "parent_user_group_id" .= mParentUgId
+    , "root_user_group_id" .= mRootUgId
+    , "payment_plan" .= fmap showt mPaymentPlan
+    ]
+  pure CompanyCreateSuccess { groupId = ugId, mRootGroupId = mRootUgId }
+  where
+    getUserGroup :: Kontrakcja m => UserGroupID -> m UserGroup
+    getUserGroup = guardJustM . dbQuery . UserGroupGet
+
+    getUserGroupWithParents :: Kontrakcja m => UserGroupID -> m UserGroupWithParents
+    getUserGroupWithParents = guardJustM . dbQuery . UserGroupGetWithParents
+
+    createRootUserGroup :: Kontrakcja m => Text -> PaymentPlan -> m UserGroup
+    createRootUserGroup ugName paymentPlan = do
+      ugFolder <- dbUpdate . FolderCreate $ defaultFolder
+      dbUpdate
+        . UserGroupCreate
+        . set #name         ugName
+        . set #homeFolderID (Just $ ugFolder ^. #id)
+        . set #isBillable   True
+        . set #invoicing    (Invoice paymentPlan)
+        . set #features (Just $ defaultFeatures paymentPlan)
+        $ defaultUserGroup
+
+    createFreeUserGroup :: Kontrakcja m => Text -> m UserGroup
+    createFreeUserGroup ugName = do
+      ugFolder <- dbUpdate . FolderCreate $ defaultFolder
+      ug       <-
+        dbUpdate
+        . UserGroupCreate
+        . set #name         ugName
+        . set #homeFolderID (Just $ ugFolder ^. #id)
+        $ defaultUserGroup
+      freeDocumentsValidity <- (31 `daysAfter`) <$> currentTime
+      let freeDocumentsCount = 3
+          freeDocuments =
+            freeDocumentTokensFromValues freeDocumentsCount freeDocumentsValidity
+      dbUpdate $ UserGroupFreeDocumentTokensUpdate (ug ^. #id) freeDocuments
+      pure ug
+
+    createChildGroup :: Kontrakcja m => Text -> UserGroup -> m UserGroup
+    createChildGroup ugName parentUg = do
+      rootUg <- fmap ugwpRoot . getUserGroupWithParents $ parentUg ^. #id
+      unless (rootUg ^. #isBillable) . V2.apiError $ requestFailed
+        "Can't create child user group, unless root user group is billable."
+      let setChildFeatures = if parentUg ^. #isBillable
+            then set #features (Just $ defaultFeatures FreePlan)
+            else identity
+      ugFolder <- dbUpdate . FolderCreate $ defaultFolder
+      dbUpdate
+        . UserGroupCreate
+        . set #name          ugName
+        . set #homeFolderID  (Just $ ugFolder ^. #id)
+        . set #parentGroupID (Just $ parentUg ^. #id)
+        . setChildFeatures
+        $ defaultChildUserGroup
+
+    updateChildGroup :: Kontrakcja m => UserGroup -> UserGroupID -> m UserGroup
+    updateChildGroup parentUg childUgId = do
+      childUg <- getUserGroup childUgId
+      when (childUg ^. #isBillable) . V2.apiError $ requestFailed
+        "Can't upgrade billable user group."
+
+      let newChildUg =
+            childUg & set #parentGroupID (Just $ parentUg ^. #id) & set #invoicing None
+      dbUpdate $ UserGroupUpdate newChildUg
+      pure newChildUg
+
+handleCreateCompanyUser :: Kontrakcja m => UserGroupID -> m JSValue
+handleCreateCompanyUser ugid = onlySalesOrAdmin $ do
   email   <- getCriticalField asValidEmail "email"
   fstname <- fromMaybe "" <$> getOptionalField asValidName "fstname"
   sndname <- fromMaybe "" <$> getOptionalField asValidName "sndname"
@@ -1070,7 +1204,11 @@ handleCompanyGetStructure ugid = onlySalesOrAdmin $ do
     ["user_group_structure" .= ugWithChildrenToJson (UserGroupWithChildren root children)]
   where
     ugWithChildrenToJson (UserGroupWithChildren ug children) = object
-      [ "group" .= object ["name" .= (ug ^. #name), identifier $ ug ^. #id]
+      [ "group" .= object
+        [ "name" .= (ug ^. #name)
+        , "is_billable" .= (ug ^. #isBillable)
+        , identifier $ ug ^. #id
+        ]
       , "children" .= map ugWithChildrenToJson children
       ]
 

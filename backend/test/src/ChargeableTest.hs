@@ -47,7 +47,7 @@ chargeableTest env = testGroup
 
 test_smsCounting_default :: TestEnv ()
 test_smsCounting_default = do
-  ugid <- view #id <$> instantiateRandomUserGroup
+  ugid <- view #id <$> instantiateRandomFreeUserGroup
   user <- instantiateUser $ randomUserTemplate { firstName = return "Bob"
                                                , lastName  = return "Blue"
                                                , email     = return "bob@blue.com"
@@ -76,7 +76,7 @@ test_smsCounting_default = do
 
 test_smsCounting_telia :: TestEnv ()
 test_smsCounting_telia = do
-  ugid <- view #id <$> instantiateRandomUserGroup
+  ugid <- view #id <$> instantiateRandomFreeUserGroup
   user <- instantiateUser $ randomUserTemplate { firstName = return "Bob"
                                                , lastName  = return "Blue"
                                                , email     = return "bob@blue.com"
@@ -105,7 +105,7 @@ test_smsCounting_telia = do
 
 test_startDocumentCharging :: TestEnv ()
 test_startDocumentCharging = do
-  ugid <- view #id <$> instantiateRandomUserGroup
+  ugid <- view #id <$> instantiateRandomFreeUserGroup
   user <- instantiateUser $ randomUserTemplate { firstName = return "Bob"
                                                , lastName  = return "Blue"
                                                , email     = return "bob@blue.com"

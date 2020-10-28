@@ -42,8 +42,8 @@ import Utils exposing (..)
 
 type alias Model =
     { sUserGroup : Status UserGroup
-    , origParentID : Maybe String
-    , sNewParentName : Status String
+    , mOrigParentID : Maybe String
+    , sNewParentHint : Status (Result NewParentError NewParentSuccess)
     , mMergeUserGroupModal : Maybe MergeUserGroupModal.Model
     , mDeletionRequest : Maybe DeletionRequest.State
     }
@@ -75,6 +75,17 @@ type alias Range =
     }
 
 
+type NewParentError
+    = RecursiveStructure
+    | RootIsNotBillable
+
+
+type alias NewParentSuccess =
+    { name : String
+    , warning : Maybe String
+    }
+
+
 tabName : String
 tabName =
     "details"
@@ -85,8 +96,8 @@ init embed ugid =
     let
         model =
             { sUserGroup = Loading
-            , origParentID = Nothing
-            , sNewParentName = Failure
+            , mOrigParentID = Nothing
+            , sNewParentHint = Failure
             , mMergeUserGroupModal = Nothing
             , mDeletionRequest = Nothing
             }
@@ -123,8 +134,8 @@ update embed globals msg model =
                     return
                         { model
                             | sUserGroup = Success userGroup
-                            , origParentID = userGroup.parentID
-                            , sNewParentName = Loading
+                            , mOrigParentID = userGroup.parentID
+                            , sNewParentHint = Loading
                             , mMergeUserGroupModal = Just mergeModal
                             , mDeletionRequest = Just deletionRequest
                         }
@@ -184,7 +195,7 @@ update embed globals msg model =
             if isInteger newParentID then
                 let
                     model2 =
-                        { model1 | sNewParentName = Loading }
+                        { model1 | sNewParentHint = Loading }
                 in
                 return model2 <| Cmd.map embed <| Cmd.getUserGroup GotParentUserGroup newParentID
 
@@ -203,10 +214,31 @@ update embed globals msg model =
         GotParentUserGroup response ->
             case response of
                 Err _ ->
-                    singleton { model | sNewParentName = Failure }
+                    singleton { model | sNewParentHint = Failure }
 
-                Ok userGroup ->
-                    singleton { model | sNewParentName = Success userGroup.name }
+                Ok parentGroup ->
+                    let
+                        isRecursive currentGroup =
+                            parentGroup.id == currentGroup.id || L.any (\parentUserGroup -> parentUserGroup.id == currentGroup.id) parentGroup.parentGroupPath
+
+                        hint =
+                            model.sUserGroup
+                                |> statusMap
+                                    (\currentGroup ->
+                                        if isRecursive currentGroup then
+                                            Err RecursiveStructure
+
+                                        else if not parentGroup.rootIsBillable then
+                                            Err RootIsNotBillable
+
+                                        else if model.mOrigParentID == Nothing then
+                                            Ok <| NewParentSuccess parentGroup.name <| Just "Invoicing type for this group will be set to None."
+
+                                        else
+                                            Ok <| NewParentSuccess parentGroup.name Nothing
+                                    )
+                    in
+                    singleton { model | sNewParentHint = hint }
 
         SubmitForm ->
             case fromStatus model.sUserGroup of
@@ -397,28 +429,64 @@ viewUserGroup model ug address settings =
         formCheckboxRowM label help val toMsg attrs =
             formRow labelColAttrs inputColAttrs label help <| formCheckbox val toMsg attrs
 
-        ( newParentIDIsValid, newParentIDInputValidity, newParentIDFeedback ) =
-            if model.origParentID == ug.parentID then
+        ( newParentIdIsValid, newParentIdInputValidity, newParentIdFeedback ) =
+            if ug.isBillable then
+                ( True, [ Input.disabled True ], [ Form.help [] [ text "Can't move billable user group." ] ] )
+
+            else if model.mOrigParentID == ug.parentID then
                 ( True, [], [] )
 
             else
                 case M.map isInteger ug.parentID of
                     Nothing ->
-                        ( True, [ Input.success ], [ Form.validFeedback [] [ text "No parent company." ] ] )
+                        if ug.isBillable then
+                            ( True, [ Input.success ], [ Form.validFeedback [] [ text "No parent user group." ] ] )
+
+                        else
+                            ( False
+                            , [ Input.danger ]
+                            , [ Form.invalidFeedback []
+                                    [ text "User group can't become root without billable flag. Use "
+                                    , Html.i [] [ text "Upgrade to billable company" ]
+                                    , text " button in the structure tab."
+                                    ]
+                              ]
+                            )
 
                     Just False ->
                         ( False, [ Input.danger ], [ Form.invalidFeedback [] [ text "Company ID can only contain numbers." ] ] )
 
                     Just True ->
-                        case model.sNewParentName of
+                        case model.sNewParentHint of
                             Loading ->
-                                ( False, [], [ Form.help [] [ text "Loading company ..." ] ] )
+                                ( False, [], [ Form.help [] [ text "Loading user group ..." ] ] )
 
                             Failure ->
-                                ( False, [ Input.danger ], [ Form.invalidFeedback [] [ text "Company ID does not exist." ] ] )
+                                ( False, [ Input.danger ], [ Form.invalidFeedback [] [ text "User group does not exist." ] ] )
 
-                            Success userGroupName ->
-                                ( True, [ Input.success ], [ Form.validFeedback [] [ text <| "Company with name: " ++ userGroupName ] ] )
+                            Success (Err errorType) ->
+                                let
+                                    errorMsg =
+                                        case errorType of
+                                            RecursiveStructure ->
+                                                "Recursive user group structure is not allowed."
+
+                                            RootIsNotBillable ->
+                                                "Root of destination user group is not billable."
+                                in
+                                ( False, [ Input.danger ], [ Form.invalidFeedback [] [ text errorMsg ] ] )
+
+                            Success (Ok newParent) ->
+                                let
+                                    warning =
+                                        case newParent.warning of
+                                            Just msg ->
+                                                Html.div [ class "text-secondary" ] [ text msg ]
+
+                                            Nothing ->
+                                                text ""
+                                in
+                                ( True, [ Input.success ], [ Form.validFeedback [] [ text <| "User group with name: \"" ++ newParent.name ++ "\"", warning ] ] )
 
         docTimeoutRange =
             Just (Range 1 365)
@@ -445,9 +513,9 @@ viewUserGroup model ug address settings =
                             , onInput SetParentID
                             ]
                         ]
-                            ++ newParentIDInputValidity
+                            ++ newParentIdInputValidity
                     ]
-                        ++ newParentIDFeedback
+                        ++ newParentIdFeedback
                 , Form.col [] [ Form.helpInline [] [ text "Leave is empty for Scrive. SF is 9197237133460633368. Only Partner Manager is allowed to make changes in this field." ] ]
                 ]
             , Form.row []
@@ -658,7 +726,7 @@ viewUserGroup model ug address settings =
                 , Button.button
                     [ Button.success
                     , Button.attrs [ class "ml-sm-2", onClick SubmitForm ]
-                    , Button.disabled <| not newParentIDIsValid
+                    , Button.disabled <| not newParentIdIsValid
                     ]
                     [ text "Save" ]
                 ]

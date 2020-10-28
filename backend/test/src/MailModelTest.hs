@@ -29,7 +29,7 @@ testMailAttachments = do
 
   mid <- dbUpdate $ CreateEmail (token, sender, to, reply_to, title, content, attachments)
   mmail <- dbQuery $ GetEmail mid token
-  assertJust mmail
+  assertJust'_ mmail
   case mmail of
     Nothing   -> return ()
     Just mail -> do

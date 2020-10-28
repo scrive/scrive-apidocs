@@ -16,6 +16,8 @@ module Doc.API.V2.Guards (
 , guardThatUserIsAuthor
 , guardUserMayImpersonateUserGroupForEid
 , guardThatUserHasActionPermission
+-- * User group guards
+, guardUserGroupIsBillable
 -- * Signatory guards
 , guardGetSignatoryFromIdForDocument
 , guardSignatoryNeedsToIdentifyToView
@@ -41,6 +43,7 @@ module Doc.API.V2.Guards (
 ) where
 
 import Control.Conditional (whenM)
+import Control.Monad.Trans.Maybe
 import Data.Either (rights)
 import Data.List.NonEmpty (NonEmpty((:|)))
 import qualified Data.ByteString.Char8 as BS
@@ -73,6 +76,8 @@ import Folder.Types
 import InputValidation
 import Kontra
 import User.Model
+import UserGroup.Model
+import UserGroup.Types
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 
@@ -747,3 +752,35 @@ guardNotInFlow documentId = do
     ActionNotPermitted
     403
     "This action is forbidden on a document which is managed by Scrive Flow"
+
+
+guardUserGroupIsBillable :: Kontrakcja m => UserGroup -> UserGroup -> m ()
+guardUserGroupIsBillable oldUg newUg = do
+  mNewParentUgRoot <- runMaybeT $ do
+    parentUgid <- MaybeT . pure $ newUg ^. #parentGroupID
+    apiGuardJustM (userGroupNotFound parentUgid) . dbQuery $ UserGroupGetWithParents
+      parentUgid
+  guardFlagDisabled
+  guardFlagOnMove $ fmap ugwpRoot mNewParentUgRoot
+  where
+    guardFlagDisabled =
+      let disabledFlag = oldUg ^. #isBillable && not (newUg ^. #isBillable)
+      in  when disabledFlag . apiError $ requestFailed "Billable flag can't be disabled"
+
+    guardFlagOnMove mNewParentUgRoot = do
+      when (mOldParentUgid /= mNewParentUgid) moveGuards
+      where
+        moveGuards = do
+          -- Can't move billable user groups, they will always stay root.
+          when (oldUg ^. #isBillable) . apiError $ requestFailed
+            "Can't move billable user group"
+
+          when (fmap (view #isBillable) mNewParentUgRoot == Just False)
+            . apiError
+            $ requestFailed "New parent root group isn't billable"
+
+          when (isNothing mNewParentUgid) . apiError $ requestFailed
+            "Non-root user group can't become root"
+
+        mOldParentUgid = oldUg ^. #parentGroupID
+        mNewParentUgid = newUg ^. #parentGroupID

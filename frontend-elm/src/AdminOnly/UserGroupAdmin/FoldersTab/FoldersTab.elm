@@ -120,9 +120,11 @@ setUserGroupID embed ugid model =
         cmd =
             -- Prevent reloading the user group (and its home folder) when navigating between tabs.
             -- The user may have activated another folder so we want to persist that.
-            ite (model.ugid == ugid)
+            if model.ugid == ugid then
                 Cmd.none
-                (Cmd.map embed <| Cmd.getUserGroup GotUserGroup ugid)
+
+            else
+                Cmd.map embed <| Cmd.getUserGroup GotUserGroup ugid
     in
     return { model | ugid = ugid } cmd
 

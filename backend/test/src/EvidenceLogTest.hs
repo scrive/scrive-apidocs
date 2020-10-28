@@ -141,7 +141,6 @@ evidenceLogTemplatesWellDefined = do
             case getStringTemplate (T.unpack tn) ts of
               Nothing -> do
                 assertFailure $ "Cannot find template name " ++ show tn
-                return []
               Just st -> do
                 -- NOTE: checkTemplateDeep in HStringTemplates 8.3 is not
                 -- reliable. It can miss fields when ($if$) is used. Bug

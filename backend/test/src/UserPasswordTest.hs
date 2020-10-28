@@ -37,5 +37,5 @@ testPasswordMaybeVerify = do
   p <- createPassword s
   let mpass =
         maybeMkPassword (Just $ pwdHash p) (Just $ pwdSalt p) (Just $ pwdAlgorithm p)
-  assertJust mpass
+  assertJust'_ mpass
   assert $ maybeVerifyPassword mpass s

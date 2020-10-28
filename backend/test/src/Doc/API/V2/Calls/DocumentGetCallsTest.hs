@@ -305,7 +305,7 @@ testDocApiV2GetQRCode = do
 
 testDocApiV2GetByAdmin :: TestEnv ()
 testDocApiV2GetByAdmin = do
-  ug <- instantiateRandomUserGroup
+  ug <- instantiateRandomFreeUserGroup
   let ugid = ug ^. #id
   author    <- instantiateUser $ randomUserTemplate { groupID = return ugid }
   ctxauthor <- mkContextWithUser defaultLang author
@@ -323,7 +323,7 @@ testDocApiV2GetByAdmin = do
 
 testDocApiV2GetShared :: TestEnv ()
 testDocApiV2GetShared = do
-  ug <- instantiateRandomUserGroup
+  ug <- instantiateRandomFreeUserGroup
   let ugid = ug ^. #id
   author    <- instantiateUser $ randomUserTemplate { groupID = return ugid }
   ctxauthor <- mkContextWithUser defaultLang author
@@ -594,7 +594,9 @@ testDocApiV2FilesFull = do
 
 testDocApiV2FolderList :: TestEnv ()
 testDocApiV2FolderList = do
-  adminA <- instantiateUser $ randomUserTemplate { isCompanyAdmin = True }
+  (_, childUg) <- instantiateRandomPaidUserGroup
+  adminA       <- instantiateUser
+    $ randomUserTemplate { isCompanyAdmin = True, groupID = pure $ childUg ^. #id }
   adminB <- instantiateUser $ randomUserTemplate { isCompanyAdmin = True }
   let setUseFolderListCall = #settings % _Just % #useFolderListCalls .~ True
   ugA <- setUseFolderListCall <$> (dbQuery . UserGroupGetByUserID $ adminA ^. #id)

@@ -146,7 +146,7 @@ testDocApiV2NewFromTemplate = do
 
 testDocApiV2NewFromTemplateShared :: TestEnv ()
 testDocApiV2NewFromTemplateShared = do
-  ug <- instantiateRandomUserGroup
+  ug <- instantiateRandomFreeUserGroup
   let ugid = ug ^. #id
   author    <- instantiateUser $ randomUserTemplate { groupID = return ugid }
   ctxauthor <- mkContextWithUser defaultLang author
@@ -637,7 +637,7 @@ testDocApiV2SetAutoReminder = do
     (docApiV2SetAutoReminder did)
     200
   -- FIXME setting this doesn't update the auto remind time
-  -- immediately, bug in core?  assertJust auto_remind_time
+  -- immediately, bug in core?  assertJust'_ auto_remind_time
 
 testDocApiV2Clone :: TestEnv ()
 testDocApiV2Clone = do
@@ -966,7 +966,7 @@ testDocApiV2DiscardShareableLink = replicateM_ 10 $ do
   void $ testRequestHelper ctx POST [] (docApiV2DiscardShareableLink (documentid doc)) 202
 
   doc' <- randomQuery . GetDocumentByDocumentID $ documentid doc
-  assertNothing $ documentshareablelinkhash doc'
+  assertNothing' $ documentshareablelinkhash doc'
 
 testDocApiV2AddImage :: TestEnv ()
 testDocApiV2AddImage = do
@@ -1104,7 +1104,7 @@ testDocApiV2AddEvidenceLogEvent = do
 
   lg <- dbQuery $ GetEvidenceLog did
   let rejectEvent e = evType e == Current CustomEventEvidence
-  assertJust $ find rejectEvent lg
+  assertJust'_ $ find rejectEvent lg
 
   return ()
 
@@ -1116,7 +1116,7 @@ testDocUpdateImpersonateEID = do
   did <- getMockDocId <$> testDocApiV2New' ctx
 
   -- User group to impersonate
-  ug  <- instantiateRandomUserGroup
+  ug  <- instantiateRandomFreeUserGroup
   let ugid = ug ^. #id
 
   let update =
@@ -1149,7 +1149,7 @@ testDocApiV2StartImpersonateEID = do
   did <- getMockDocId <$> testDocApiV2New' ctx
 
   -- User group to impersonate
-  ug  <- instantiateRandomUserGroup
+  ug  <- instantiateRandomFreeUserGroup
   let ugid = ug ^. #id
 
   -- grant impersonate role
@@ -1197,7 +1197,7 @@ testDocApiV2NewFromTemplateImpersonateEID = do
   did <- getMockDocId <$> testDocApiV2New' ctx
 
   -- User group to impersonate
-  ug  <- instantiateRandomUserGroup
+  ug  <- instantiateRandomFreeUserGroup
   let ugid = ug ^. #id
 
   -- grant impersonate role

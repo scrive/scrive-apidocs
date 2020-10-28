@@ -164,6 +164,7 @@ companyJSONAdminOnly mDeletionRequest ugwp = do
       mInheritedAddress     = ugwpAddress <$> ugwpOnlyParents ugwp
       mInheritedSettings    = ugwpSettings <$> ugwpOnlyParents ugwp
       ugParentPath          = maybe [] ugwpToList . ugwpOnlyParents $ ugwp
+      ugRoot                = ugwpRoot ugwp
       ugSettingsIsInherited = isNothing $ ug ^. #settings
       ugAddressIsInherited  = isNothing $ ug ^. #address
   runJSONGen $ do
@@ -186,6 +187,8 @@ companyJSONAdminOnly mDeletionRequest ugwp = do
       value "group_name" $ parent ^. #name
 
     value "companyhomefolderid" $ ug ^. #homeFolderID
+    value "companyisbillable" $ ug ^. #isBillable
+    value "companyrootisbillable" $ ugRoot ^. #isBillable
 
     whenJust mDeletionRequest $ value "deletionrequest"
 

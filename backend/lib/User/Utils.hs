@@ -17,6 +17,8 @@ import Log
 
 import AccessControl.Model
 import AccessControl.Types (AccessRole)
+import API.V2
+import API.V2.Errors
 import DB
 import Folder.Model
 import InternalResponse
@@ -154,20 +156,28 @@ moveUserToUserGroupWithDocuments user targetUserGroupId = do
     Nothing -> return ()
 
 moveUserToUserGroup :: Kontrakcja m => UserID -> UserGroupID -> m FolderID
-moveUserToUserGroup uid newugid =
-  (view #id <$>) <$> dbQuery (FolderGetUserGroupHome newugid) >>= \case
-    Nothing         -> internalError
-    Just newugfdrid -> do
-      void . dbUpdate $ SetUserUserGroup uid newugid
-      void . dbUpdate $ SetUserCompanyAdmin uid False
-      let newhomefdr = set #parentID (Just newugfdrid) defaultFolder
-      muser        <- dbQuery . GetUserByID $ uid
-      newhomefdrid <- view #id <$> dbUpdate (FolderCreate newhomefdr)
-      logInfo "Changing user home folder id" $ object
-        [ "user_id" .= uid
-        , "folder_id_new" .= newhomefdrid
-        , "folder_id_old" .= ((^. #homeFolderID) <$> muser)
-        , "change_source" .= ("moveUserToUserGroup" :: Text)
-        ]
-      void . dbUpdate . SetUserHomeFolder uid $ newhomefdrid
-      return newhomefdrid
+moveUserToUserGroup uid newugid = do
+  ug <- guardJustM . dbQuery $ UserGroupGet newugid
+  when (ug ^. #isBillable) . apiError $ requestFailed
+    "Can't move user into billable user group."
+  userMoved <- dbUpdate $ SetUserUserGroup uid newugid
+  unless userMoved $ do
+    logInfo "Could not move user to user group, query updated zero rows." $ object
+      [ "user_id" .= uid
+      , "user_group_new" .= object ["id" .= newugid, "is_billable" .= (ug ^. #isBillable)]
+      , "change_source" .= ("moveUserToUserGroup" :: Text)
+      ]
+    internalError
+  void . dbUpdate $ SetUserCompanyAdmin uid False
+  newUgFolderId <- fmap (view #id) . guardJustM . dbQuery $ FolderGetUserGroupHome newugid
+  let newHomeFolder = set #parentID (Just newUgFolderId) defaultFolder
+  muser           <- dbQuery . GetUserByID $ uid
+  newHomeFolderId <- view #id <$> dbUpdate (FolderCreate newHomeFolder)
+  logInfo "Changing user home folder id" $ object
+    [ "user_id" .= uid
+    , "folder_id_new" .= newHomeFolderId
+    , "folder_id_old" .= ((^. #homeFolderID) <$> muser)
+    , "change_source" .= ("moveUserToUserGroup" :: Text)
+    ]
+  void . dbUpdate . SetUserHomeFolder uid $ newHomeFolderId
+  return newHomeFolderId

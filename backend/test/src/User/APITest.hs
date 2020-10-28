@@ -378,7 +378,7 @@ testUserSetDataRetentionPolicy = do
 
 testUserSetDataRetentionPolicyOnlyIfAsStrict :: TestEnv ()
 testUserSetDataRetentionPolicyOnlyIfAsStrict = do
-  ug   <- instantiateRandomUserGroup
+  ug   <- instantiateRandomFreeUserGroup
   user <- instantiateUser $ randomUserTemplate { firstName      = return "Bob"
                                                , lastName       = return "Blue"
                                                , email          = return "bob@email.tld"

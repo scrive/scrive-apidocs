@@ -46,12 +46,12 @@ instance Unjson PaymentPlan where
   unjsonDef = SimpleUnjsonDef "Payment plan" consume produce
     where
       consume :: A.Value -> Result PaymentPlan
-      consume (A.String "free") = return FreePlan
-      consume (A.String "one") = return OnePlan
-      consume (A.String "team") = return TeamPlan
+      consume (A.String "free"      ) = return FreePlan
+      consume (A.String "one"       ) = return OnePlan
+      consume (A.String "team"      ) = return TeamPlan
       consume (A.String "enterprise") = return EnterprisePlan
-      consume (A.String "trial") = return TrialPlan
-      consume _ = fail "Invalid payment plan"
+      consume (A.String "trial"     ) = return TrialPlan
+      consume value                   = fail $ "Invalid payment plan: " <> show value
 
       produce :: PaymentPlan -> A.Value
       produce FreePlan       = "free"

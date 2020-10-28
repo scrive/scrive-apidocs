@@ -51,7 +51,7 @@ companyBrandingTests env = testGroup
 
 testFetchCompanyBranding :: TestEnv ()
 testFetchCompanyBranding = do
-  ugid <- view #id <$> instantiateRandomUserGroup
+  ugid <- view #id <$> instantiateRandomFreeUserGroup
   user <- instantiateUser
     $ randomUserTemplate { groupID = return ugid, isCompanyAdmin = True }
   ctx          <- mkContextWithUser defaultLang user
@@ -78,7 +78,7 @@ testFetchDomainThemes = do
 
 testUpdateCompanyTheme :: TestEnv ()
 testUpdateCompanyTheme = do
-  ug   <- instantiateRandomUserGroup
+  ug   <- instantiateRandomFreeUserGroup
   user <- instantiateUser
     $ randomUserTemplate { isCompanyAdmin = True, groupID = return $ ug ^. #id }
   ctx       <- mkContextWithUser defaultLang user
@@ -157,7 +157,7 @@ testUpdateCompanyTheme = do
 
 testDeleteCompanyTheme :: TestEnv ()
 testDeleteCompanyTheme = do
-  ug   <- instantiateRandomUserGroup
+  ug   <- instantiateRandomFreeUserGroup
   user <- instantiateUser
     $ randomUserTemplate { isCompanyAdmin = True, groupID = return $ ug ^. #id }
   ctx       <- mkContextWithUser defaultLang user
@@ -172,7 +172,7 @@ testDeleteCompanyTheme = do
 
 testNormalUserCantChangeOrDeleteTheme :: TestEnv ()
 testNormalUserCantChangeOrDeleteTheme = do
-  ug         <- instantiateRandomUserGroup
+  ug         <- instantiateRandomFreeUserGroup
   user1      <- instantiateUser $ randomUserTemplate { groupID = return $ ug ^. #id }
   True       <- dbUpdate $ SetUserCompanyAdmin (user1 ^. #id) False
   Just user2 <- dbQuery $ GetUserByID (user1 ^. #id)
@@ -209,7 +209,7 @@ testNormalUserCantChangeOrDeleteTheme = do
 
 testChangeCompanyUI :: TestEnv ()
 testChangeCompanyUI = do
-  ug   <- instantiateRandomUserGroup
+  ug   <- instantiateRandomFreeUserGroup
   ugwp <- dbQuery . UserGroupGetWithParentsByUG $ ug
   user <- instantiateUser
     $ randomUserTemplate { isCompanyAdmin = True, groupID = return $ ug ^. #id }
@@ -238,7 +238,7 @@ testChangeCompanyUI = do
 
 testNormalUseCantChangeCompanyUI :: TestEnv ()
 testNormalUseCantChangeCompanyUI = do
-  ug         <- instantiateRandomUserGroup
+  ug         <- instantiateRandomFreeUserGroup
   ugwp       <- dbQuery . UserGroupGetWithParentsByUG $ ug
   user1      <- instantiateUser $ randomUserTemplate { groupID = return $ ug ^. #id }
   True       <- dbUpdate $ SetUserCompanyAdmin (user1 ^. #id) False
@@ -272,7 +272,7 @@ testNormalUseCantChangeCompanyUI = do
 
 testBrandingCacheChangesIfOneOfThemesIsSetToDefault :: TestEnv ()
 testBrandingCacheChangesIfOneOfThemesIsSetToDefault = do
-  ug            <- instantiateRandomUserGroup
+  ug            <- instantiateRandomFreeUserGroup
   ugwp          <- dbQuery . UserGroupGetWithParentsByUG $ ug
   ctx           <- mkContext defaultLang
 

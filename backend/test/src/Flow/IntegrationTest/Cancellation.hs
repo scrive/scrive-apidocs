@@ -103,7 +103,7 @@ createFlowInstance1 author doc1 doc2 = do
 doSign :: Document -> SignatoryLink -> GetInstance -> UserName -> TestEnv ()
 doSign doc sigLink flowInstance templateUserName = do
   signatoryFlowLink <-
-    assertJust' (show templateUserName <> "'s access link should be present")
+    assertJust (show templateUserName <> "'s access link should be present")
     $      (flowInstance ^. #accessLinks)
     Map.!? templateUserName
 

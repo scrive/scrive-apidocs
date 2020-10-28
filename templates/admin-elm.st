@@ -18,6 +18,7 @@ adminElmMain=$doctype()$
     </body>
     <script>
     window.cdnBaseUrl="$cdnbaseurl$"
+    window.isAdmin=$if(admin)$true$else$false$endif$
     </script>
     <script src="$cdnbaseurl$/elm-assets/adminonly-$versioncode$.js" crossorigin="anonymous"></script>
   $htmlclosingtag()$

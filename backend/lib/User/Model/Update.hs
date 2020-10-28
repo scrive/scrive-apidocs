@@ -44,7 +44,6 @@ import User.Password
 import User.Types.SignupMethod
 import User.Types.User
 import User.UserID
-import UserGroup.Model
 import UserGroup.Types
 import Util.HasSomeUserInfo
 
@@ -247,13 +246,13 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetSignupMethod Bool where
 
 data SetUserUserGroup = SetUserUserGroup UserID UserGroupID
 instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserUserGroup Bool where
-  -- also set the new user_group company
-  dbUpdate (SetUserUserGroup uid ugid) = dbQuery (UserGroupGet ugid) >>= \case
-    Nothing -> return False
-    Just ug -> runQuery01 . sqlUpdate "users" $ do
-      sqlSet "user_group_id" $ ug ^. #id
-      sqlWhereEq "id" uid
-      sqlWhereIsNULL "deleted"
+  dbUpdate (SetUserUserGroup uid ugid) = runQuery01 . sqlUpdate "users" $ do
+    sqlSet "user_group_id" ugid
+    sqlFrom "user_groups"
+    sqlWhereEq "users.id" uid
+    sqlWhereIsNULL "users.deleted"
+    sqlWhereEq "user_groups.id"          ugid
+    sqlWhereEq "user_groups.is_billable" False
 
 data SetUserGroup = SetUserGroup UserID (Maybe UserGroupID)
 instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserGroup Bool where

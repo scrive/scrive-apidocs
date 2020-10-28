@@ -20,7 +20,7 @@ featureFlagsTest env = testGroup
 
 testUpdateFeatureFlagsWorks :: TestEnv ()
 testUpdateFeatureFlagsWorks = do
-  ug <- instantiateRandomUserGroup
+  ug <- instantiateRandomFreeUserGroup
   replicateM_ 100 $ do
     (fs :: Features) <- rand 10 arbitrary
     dbUpdate . UserGroupUpdate $ set #features (Just fs) ug
@@ -29,7 +29,7 @@ testUpdateFeatureFlagsWorks = do
 
 testNewCompanyFeatureFlagDefaults :: TestEnv ()
 testNewCompanyFeatureFlagDefaults = do
-  ug <- instantiateRandomUserGroup
+  ug <- instantiateRandomFreeUserGroup
   let fs = fromJust $ ug ^. #features
   checkNewAccountFlags (fAdminUsers fs)
   checkNewAccountFlags (fRegularUsers fs)

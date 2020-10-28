@@ -133,11 +133,11 @@ testSingleCallback = do
       $ Callback receiverAddress V1
 
     authorFlowLink <-
-      assertJust' "author's access link should be present"
+      assertJust "author's access link should be present"
       $      (startedInstance ^. #accessLinks)
       Map.!? "author"
     signatoryFlowLink <-
-      assertJust' "signatory's access link should be present"
+      assertJust "signatory's access link should be present"
       $      (startedInstance ^. #accessLinks)
       Map.!? "signatory"
 

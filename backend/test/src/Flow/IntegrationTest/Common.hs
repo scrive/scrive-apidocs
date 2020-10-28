@@ -20,7 +20,6 @@ import qualified Data.Map as Map
 import qualified Data.Sequence as Seq
 import qualified Data.Text as Text
 import qualified Servant.Client as Servant
-import qualified Test.HUnit as T
 
 import Auth.Session
 import Context.Internal
@@ -33,6 +32,7 @@ import Flow.TestUtil
 import Session.Model
 import Session.Types
 import TestEnvSt.Internal (flowPort)
+import TestingUtil (assertJust)
 import TestKontra
 
 mkEnvForUser :: TestEnv ClientEnv
@@ -50,14 +50,14 @@ authenticateContext :: ClientEnv -> Context -> TestEnv Context
 authenticateContext ClientEnv {..} context = do
   TestEnvSt {..} <- ask
   cookies        <-
-    assertJust' "cookie jar not present" cookieJar
+    assertJust "cookie jar not present" cookieJar
     >>= fmap (fmap toTransformCookie . destroyCookieJar)
     .   liftIO
     .   readTVarIO
-  (SessionCookieInfo {..}, _) <- assertJust' "authentication cookies are not set"
+  (SessionCookieInfo {..}, _) <- assertJust "authentication cookies are not set"
     $ readAuthCookies cookies
   session <- getSession cookieSessionID cookieSessionToken flowTestCookieDomain
-    >>= assertJust' "can't create kontrakcja session"
+    >>= assertJust "can't create kontrakcja session"
   muser    <- getUserFromSession session
   mpaduser <- getPadUserFromSession session
 
@@ -66,10 +66,6 @@ authenticateContext ClientEnv {..} context = do
                  , maybeUser    = muser
                  , maybePadUser = mpaduser
                  }
-
-assertJust' :: MonadIO m => String -> Maybe a -> m a
-assertJust' _   (Just v) = pure v
-assertJust' msg Nothing  = liftIO $ T.assertFailure msg
 
 toTransformCookie :: Cookie -> (BSC.ByteString, BSC.ByteString)
 toTransformCookie Cookie {..} = (cookie_name, cookie_value)
@@ -103,7 +99,7 @@ createClientEnvFromFlowInstance :: UserName -> GetInstance -> TestEnv ClientEnv
 createClientEnvFromFlowInstance username flowInstance = do
   userEnv  <- mkEnvForUser
 
-  flowLink <- assertJust' "user's access link should be present"
+  flowLink <- assertJust "user's access link should be present"
     $ Map.lookup username (flowInstance ^. #accessLinks)
 
   void

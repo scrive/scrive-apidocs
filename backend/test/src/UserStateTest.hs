@@ -76,8 +76,17 @@ userStateTests env = testGroup
   , testThat "UserGroupGetUsers/UserGroupGetUsersIncludeDeleted works"
              env
              test_userGroupGetUsers
-  , testThat "SetUserUserGroup works" env test_setUserCompany
-  , testThat "DeleteUser works"       env test_deleteUser
+  , testGroup
+    "SetUserUserGroup"
+    [ testThat "SetUserUserGroup works on free company" env test_setUserCompanyFree
+    , testThat "SetUserUserGroup works on child of paid company"
+               env
+               test_setUserCompanyPaidChild
+    , testThat "SetUserUserGroup fails on root of paid company"
+               env
+               test_setUserCompanyPaidRoot
+    ]
+  , testThat "DeleteUser works" env test_deleteUser
   , testGroup
     "SetUserInfo"
     [ testThat "SetUserInfo works"                   env test_setUserInfo
@@ -330,18 +339,34 @@ test_userShareableLinkStatisticsByGroup = do
               (T.pack slusTemplateTitle)
   assertEqual "Statistics are correct" 2 $ dsDocumentsClosed slusDocumentStats
 
-test_setUserCompany :: TestEnv ()
-test_setUserCompany = do
-  uid <- fmap (view #id) . instantiateUser $ randomUserTemplate
-    { firstName = return "Andrzej"
-    , lastName  = return "Rybczak"
-    , email     = return "andrzej@skrivapa.se"
-    }
-  ugid <- view #id <$> dbUpdate (UserGroupCreate defaultUserGroup)
+test_setUserCompanyFree :: TestEnv ()
+test_setUserCompanyFree = do
+  uid  <- view #id <$> instantiateRandomUser
+  ugid <- view #id <$> instantiateRandomFreeUserGroup
   res  <- dbUpdate $ SetUserUserGroup uid ugid
   assertBool "Company was correctly set" res
   Just user <- dbQuery $ GetUserByID uid
   assertBool "Returned user has proper companyid" $ user ^. #groupID == ugid
+
+test_setUserCompanyPaidChild :: TestEnv ()
+test_setUserCompanyPaidChild = do
+  uid  <- view #id <$> instantiateRandomUser
+  ugid <- view (_2 % #id) <$> instantiateRandomPaidUserGroup
+  res  <- dbUpdate $ SetUserUserGroup uid ugid
+  assertBool "Company was correctly set" res
+  Just user <- dbQuery $ GetUserByID uid
+  assertBool "Returned user has proper companyid" $ user ^. #groupID == ugid
+
+test_setUserCompanyPaidRoot :: TestEnv ()
+test_setUserCompanyPaidRoot = do
+  user <- instantiateRandomUser
+  ugid <- view (_1 % #id) <$> instantiateRandomPaidUserGroup
+  let uid     = user ^. #id
+      ugidOld = user ^. #groupID
+  res <- dbUpdate $ SetUserUserGroup uid ugid
+  assertBool "Company was not set" $ not res
+  Just user' <- dbQuery $ GetUserByID uid
+  assertEqual "Returned user has proper companyid" ugidOld $ user' ^. #groupID
 
 test_deleteUser :: TestEnv ()
 test_deleteUser = do

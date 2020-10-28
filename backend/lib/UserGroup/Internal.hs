@@ -121,6 +121,7 @@ data UserGroup = UserGroup
   , features      :: Maybe Features
   , internalTags  :: S.Set Tag
   , externalTags  :: S.Set Tag
+  , isBillable :: Bool
   } deriving (Show, Eq)
 
 data UserGroupRoot = UserGroupRoot
@@ -134,6 +135,7 @@ data UserGroupRoot = UserGroupRoot
   , features      :: Features
   , internalTags  :: S.Set Tag
   , externalTags  :: S.Set Tag
+  , isBillable :: Bool
   } deriving (Show, Eq)
 
 -- UserGroup list is ordered from Leaf to Child of Root)

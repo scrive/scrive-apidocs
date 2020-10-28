@@ -1345,3 +1345,19 @@ createTableUserGroupDeletionLog = Migration
             ]
           }
   }
+
+userGroupAddBillableFlag :: MonadDB m => Migration m
+userGroupAddBillableFlag = Migration
+  { mgrTableName = tableName
+  , mgrFrom      = 7
+  , mgrAction    = StandardMigration . runQuery_ $ sqlAlterTable
+                     tableName
+                     [ sqlAddColumn $ tblColumn { colName     = "is_billable"
+                                                , colType     = BoolT
+                                                , colNullable = False
+                                                , colDefault  = Just "false"
+                                                }
+                     ]
+  }
+  where tableName = "user_groups"
+

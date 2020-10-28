@@ -281,7 +281,7 @@ update embed globals msg model =
         StructureTabMsg tabMsg ->
             let
                 ( newStructureTab, cmd ) =
-                    maybeUpdate (StructureTab.update tabMsg) model.mStructureTab
+                    maybeUpdate (StructureTab.update (embed << StructureTabMsg) globals tabMsg) model.mStructureTab
             in
             return { model | mStructureTab = newStructureTab } cmd
 

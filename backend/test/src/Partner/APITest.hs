@@ -792,7 +792,7 @@ testHelperPartnerCompanyUserCreate ctx partnerUgID company_ugid = do
 -- API expect for its handlers.
 testJSONCtxWithPartnerGroupID :: TestEnv (Context, UserGroupID)
 testJSONCtxWithPartnerGroupID = do
-  partnerAdminUserGroup <- instantiateRandomUserGroup
+  partnerAdminUserGroup <- instantiateRandomFreeUserGroup
   partnerAdminUser      <- instantiateUser $ randomUserTemplate
     { groupID        = return $ partnerAdminUserGroup ^. #id
     , isCompanyAdmin = True

@@ -2,7 +2,7 @@ module HtmlTest (htmlTests) where
 
 import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
-import Test.HUnit (Assertion, assertBool, assertFailure)
+import Test.HUnit (Assertion)
 import Text.Blaze (toMarkup)
 import Text.Blaze.Renderer.Pretty (renderMarkup)
 import Text.StringTemplates.TemplatesLoader (renderTemplateMain)
@@ -11,6 +11,7 @@ import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 
 import Templates
+import TestingUtil
 import TestKontra
 import User.Lang
 
@@ -43,18 +44,14 @@ testValidXml :: Assertion
 testValidXml = do
   ts <- getAllTemplates
   mapM_ assertTemplateIsValidXML . filter isIncluded $ ts
-  assertSuccess
 
 assertTemplateIsValidXML :: (Text, Text) -> Assertion
-assertTemplateIsValidXML t = case parseTemplateAsXML t of
-  Left  msg -> assertFailure $ T.unpack msg
-  Right _   -> assertSuccess
+assertTemplateIsValidXML = assertRight . parseTemplateAsXML
 
 testNoUnnecessaryDoubleDivs :: Assertion
 testNoUnnecessaryDoubleDivs = do
   templates <- getAllTemplates
   mapM_ assertNoUnnecessaryDoubleDivs $ filter isIncluded templates
-  assertSuccess
 
 testNoNestedP :: Assertion
 testNoNestedP = do
@@ -63,7 +60,6 @@ testNoNestedP = do
   forM_ allLangs $ \lang -> do
     let templates = localizedVersion lang langtemplates
     assertNoNestedP alltemplatenames templates
-  assertSuccess
 
 assertNoNestedP :: [Text] -> KontrakcjaTemplates -> Assertion
 assertNoNestedP tnames templates = do
@@ -72,17 +68,16 @@ assertNoNestedP tnames templates = do
     case parseStringAsXML (n, removeScripts . removeDocTypeDeclaration $ T.pack t) of
       Left  msg -> assertFailure $ T.unpack msg
       Right doc -> checkXMLForNestedP n (NodeElement $ documentRoot doc)
-  assertSuccess
 
 checkXMLForNestedP :: Text -> Node -> Assertion
-checkXMLForNestedP templatename elt = if isPAndHasP elt
-  then assertFailure $ T.unpack
-    (  "nested <p> tags in template "
-    <> templatename
-    <> ":\n"
-    <> (T.pack . renderMarkup . toMarkup $ elt)
-    )
-  else assertSuccess
+checkXMLForNestedP templatename elt = assertBool msg (not isPAndHasP elt)
+  where
+    msg = T.unpack
+      (  "nested <p> tags in template "
+      <> templatename
+      <> ":\n"
+      <> (T.pack . renderMarkup . toMarkup $ elt)
+      )
 
 isPOrHasP :: Node -> Bool
 isPOrHasP (NodeElement (Element tag _attrs children)) =
@@ -114,7 +109,6 @@ checkXMLForUnnecessaryDoubleDivs templatename e@(NodeElement (Element _ _ childr
           )
         else do
           mapM_ (checkXMLForUnnecessaryDoubleDivs templatename) children
-          assertSuccess
   where
     isDivElem :: Node -> Bool
     isDivElem (NodeElement (Element n _ _)) = (T.toLower . nameLocalName $ n) == "div"
@@ -206,5 +200,3 @@ clearTemplating' ts TemplateCode ('$' : xs) = clearTemplating' ts NotTemplateCod
 clearTemplating' ts TemplateCode (_   : xs) = clearTemplating' ts TemplateCode xs
 clearTemplating' ts tcs          (x   : xs) = x : clearTemplating' ts tcs xs
 
-assertSuccess :: Assertion
-assertSuccess = assertBool "not success?!" True

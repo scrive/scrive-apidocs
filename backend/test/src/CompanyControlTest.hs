@@ -37,7 +37,7 @@ companyControlTests env = testGroup
 
 test_handleGetCompanyJSON :: TestEnv ()
 test_handleGetCompanyJSON = do
-  ug   <- instantiateRandomUserGroup
+  ug   <- instantiateRandomFreeUserGroup
   user <- instantiateUser $ randomUserTemplate { firstName      = return "Andrzej"
                                                , lastName       = return "Rybczak"
                                                , email = return "andrzej@skrivapa.se"
@@ -92,7 +92,7 @@ test_handleGetCompanyJSON = do
 test_settingUIWithHandleChangeCompanyBranding :: TestEnv ()
 test_settingUIWithHandleChangeCompanyBranding = do
 
-  ug   <- instantiateRandomUserGroup
+  ug   <- instantiateRandomFreeUserGroup
   user <- instantiateUser $ randomUserTemplate { firstName      = return "Andrzej"
                                                , lastName       = return "Rybczak"
                                                , email = return "andrzej@skrivapa.se"
@@ -201,7 +201,7 @@ test_settingUIWithHandleChangeCompanyBranding = do
 test_settingUIWithHandleChangeCompanyBrandingRespectsThemeOwnership :: TestEnv ()
 test_settingUIWithHandleChangeCompanyBrandingRespectsThemeOwnership = do
 
-  ug   <- instantiateRandomUserGroup
+  ug   <- instantiateRandomFreeUserGroup
   user <- instantiateUser $ randomUserTemplate { firstName      = return "Andrzej"
                                                , lastName       = return "Rybczak"
                                                , email = return "andrzej@skrivapa.se"
@@ -234,7 +234,7 @@ test_settingUIWithHandleChangeCompanyBrandingRespectsThemeOwnership = do
               Nothing
 
   -- Create theme for other company
-  otherUg      <- instantiateRandomUserGroup
+  otherUg      <- instantiateRandomFreeUserGroup
   someTheme    <- dbQuery $ GetTheme (ctx ^. #brandedDomain % #mailTheme)
   otherUgTheme <- dbUpdate $ InsertNewThemeForUserGroup (otherUg ^. #id) someTheme
 

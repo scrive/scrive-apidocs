@@ -12,12 +12,18 @@ module AdminOnly.UserGroupAdmin.UserGroupAdminTab exposing
     , view
     )
 
+import AdminOnly.Types.UserGroup.Cmd exposing (UserGroupCreated)
+import AdminOnly.UserGroupAdmin.CreateUserGroupModal as CreateUserGroupModal
 import Bootstrap.Button as Button
 import Bootstrap.Form as Form
 import Bootstrap.Form.Input as Input
 import Bootstrap.Form.Select as Select
+import Bootstrap.Grid as Grid
+import Bootstrap.Grid.Col as Col
+import Bootstrap.Grid.Row as Row
 import Bootstrap.Table as Table
 import Enum exposing (Enum, findEnumValue, makeEnum)
+import FlashMessage
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (attribute, class, method, placeholder, selected, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
@@ -52,6 +58,7 @@ type alias Model =
     , userGroupList : UserGroupListState
     , search : String
     , mPaginationTotal : Maybe Int
+    , createUserGroupModal : CreateUserGroupModal.Model
     }
 
 
@@ -65,6 +72,10 @@ type Msg
     = GotUserGroupList (Result Http.Error ( Int, List UserGroup ))
     | SetSearch String
     | SetFilter String
+    | CreatePaidUserGroupClicked
+    | CreateFreeUserGroupClicked
+    | CreateUserGroupMsg CreateUserGroupModal.Msg
+    | CreateUserGroupGotResponse UserGroupCreated
     | FormSubmitted
     | TableRowClicked String
     | PaginationMsg Int
@@ -83,6 +94,7 @@ init embed page =
             , userGroupList = Loading
             , search = ""
             , mPaginationTotal = Nothing
+            , createUserGroupModal = CreateUserGroupModal.init
             }
     in
     return model <| Cmd.map embed <| getUserGroupsCmd model
@@ -144,7 +156,7 @@ pageFromFilterSearch mFilterStr mSearch mPaginationPageNum =
 
 
 update : (Msg -> msg) -> Globals msg -> Msg -> Model -> Return msg Model
-update _ globals msg model =
+update embed globals msg model =
     let
         page =
             model.page
@@ -169,6 +181,39 @@ update _ globals msg model =
                 -- we do not initiate the search from here, because it will be
                 -- triggered by the Url change
                 globals.setPageUrlFromModel
+
+        CreatePaidUserGroupClicked ->
+            let
+                modal =
+                    CreateUserGroupModal.showWithConfig CreateUserGroupModal.CreatePaidUserGroup
+            in
+            singleton { model | createUserGroupModal = modal }
+
+        CreateFreeUserGroupClicked ->
+            let
+                modal =
+                    CreateUserGroupModal.showWithConfig CreateUserGroupModal.CreateFreeUserGroup
+            in
+            singleton { model | createUserGroupModal = modal }
+
+        CreateUserGroupMsg modalMsg ->
+            let
+                ( modalModel, modalCmd ) =
+                    CreateUserGroupModal.update (embed << CreateUserGroupMsg) (embed << CreateUserGroupGotResponse) globals modalMsg model.createUserGroupModal
+            in
+            return { model | createUserGroupModal = modalModel } modalCmd
+
+        CreateUserGroupGotResponse result ->
+            return model <|
+                case result of
+                    Ok response ->
+                        Cmd.batch
+                            [ globals.flashMessage <| FlashMessage.success <| "User group was created"
+                            , globals.gotoUserGroupUsers <| response.userGroupId
+                            ]
+
+                    Err err ->
+                        globals.flashMessage <| FlashMessage.error <| "Failed to create user group: " ++ err
 
         GotUserGroupList result ->
             singleton <|
@@ -230,39 +275,59 @@ pageFromModel model =
     Just model.page
 
 
-view : (Msg -> msg) -> Model -> Html msg
-view embed model =
+view : (Msg -> msg) -> Globals msg -> Model -> Html msg
+view embed globals model =
     let
         filter =
             M.withDefault WithNonFreePricePlan <| model.page.mFilter
+
+        onlyAdmin elem =
+            if globals.userRole == AdminUserRole then
+                elem
+
+            else
+                text ""
     in
     Html.map embed <|
         div []
-            [ Form.formInline [ class "justify-content-end", method "get", onSubmit FormSubmitted ]
-                [ Select.select [ Select.onChange <| SetFilter ] <|
-                    L.map
-                        (\f ->
-                            Select.item
-                                [ value <| encodeFilter f
-                                , selected <| f == filter
+            [ Grid.row [ Row.betweenXs ]
+                [ Grid.col []
+                    [ Button.button [ Button.success, Button.attrs [ onClick CreatePaidUserGroupClicked, class "mr-2" ] ]
+                        [ text "Create paid company"
+                        ]
+                    , onlyAdmin <|
+                        Button.button [ Button.success, Button.attrs [ onClick CreateFreeUserGroupClicked ] ]
+                            [ text "Create free company"
+                            ]
+                    ]
+                , Grid.col [ Col.mdAuto ]
+                    [ Form.formInline [ class "justify-content-end", method "get", onSubmit FormSubmitted ]
+                        [ Select.select [ Select.onChange <| SetFilter ] <|
+                            L.map
+                                (\f ->
+                                    Select.item
+                                        [ value <| encodeFilter f
+                                        , selected <| f == filter
+                                        ]
+                                        [ text <| textFromFilter f ]
+                                )
+                            <|
+                                allFilters
+                        , Input.text
+                            [ Input.attrs
+                                [ onInput SetSearch
+                                , value model.search
+                                , class "ml-sm-2"
+                                , placeholder "Username, email or company name"
                                 ]
-                                [ text <| textFromFilter f ]
-                        )
-                    <|
-                        allFilters
-                , Input.text
-                    [ Input.attrs
-                        [ onInput SetSearch
-                        , value model.search
-                        , class "ml-sm-2"
-                        , placeholder "Username, email or company name"
+                            ]
+                        , Button.button
+                            [ Button.secondary
+                            , Button.attrs [ attribute "type" "submit", class "ml-sm-2", value "submit" ]
+                            ]
+                            [ text "Search" ]
                         ]
                     ]
-                , Button.button
-                    [ Button.secondary
-                    , Button.attrs [ attribute "type" "submit", class "ml-sm-2", value "submit" ]
-                    ]
-                    [ text "Search" ]
                 ]
             , div [ class "mt-3" ]
                 [ case model.userGroupList of
@@ -279,6 +344,7 @@ view embed model =
                 model.page.paginationPageNum
                 model.mPaginationTotal
                 PaginationMsg
+            , CreateUserGroupModal.view CreateUserGroupMsg model.createUserGroupModal
             ]
 
 

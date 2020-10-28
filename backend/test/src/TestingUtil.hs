@@ -18,7 +18,8 @@ module TestingUtil
   , UserGroupTemplate(..)
   , randomUserGroupTemplate
   , instantiateUserGroup
-  , instantiateRandomUserGroup
+  , instantiateRandomFreeUserGroup
+  , instantiateRandomPaidUserGroup
   , UserTemplate(..)
   , randomUserTemplate
   , instantiateRandomPadesUser
@@ -48,14 +49,19 @@ module TestingUtil
   , assertionPredicate
   , assertSuccess
   , assertJust
-  , assertJustAndExtract
+  , assertJust_
+  , assertJust'
+  , assertJust'_
+  , assertNothing
+  , assertNothing'
   , assertRight
   , assertLeft
-  , assertNothing
   , assertNotEqual
   , assertEqualJson
   , assertRaisesInternalError
+  , assertRaises400
   , assertRaises404
+  , assertRaisesApiErrorType
   , assertRaisesDBException
   , assertRaisesKontra
   , assertSQLCount
@@ -114,6 +120,7 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Text as T
 import qualified Test.HUnit as T
 
+import API.V2.Errors (APIError(APIError), APIErrorType)
 import BrandedDomain.BrandedDomain
 import BrandedDomain.BrandedDomainID
 import BrandedDomain.Model
@@ -271,29 +278,31 @@ genMaybeUnicodeString = oneof [pure Nothing, Just <$> genUnicodeString]
 
 instance Arbitrary UserGroup where
   arbitrary =
-    UserGroup emptyUserGroupID Nothing
-      <$> arbitraryName
-      <*> pure Nothing
-      <*> arbitrary
-      <*> arbitrary
-      <*> arbitrary
-      <*> arbitrary
-      <*> arbitrary
-      <*> arbitrary
-      <*> arbitrary
+    UserGroup emptyUserGroupID Nothing -- id, parent
+      <$> arbitraryName -- name
+      <*> pure Nothing -- home folder id
+      <*> arbitrary -- address
+      <*> arbitrary -- settings
+      <*> arbitrary -- invoicing
+      <*> arbitrary -- ui
+      <*> arbitrary -- features
+      <*> arbitrary -- internal tags
+      <*> arbitrary -- external tags
+      <*> pure False -- billable flag
 
 instance Arbitrary UserGroupRoot where
   arbitrary =
-    UserGroupRoot emptyUserGroupID
-      <$> arbitraryUnicodeText
-      <*> pure Nothing
-      <*> arbitrary
-      <*> arbitrary
-      <*> arbitrary
-      <*> arbitrary
-      <*> arbitrary
-      <*> arbitrary
-      <*> arbitrary
+    UserGroupRoot emptyUserGroupID -- id
+      <$> arbitraryUnicodeText -- name
+      <*> pure Nothing -- home folder id
+      <*> arbitrary -- address
+      <*> arbitrary -- settings
+      <*> arbitrary -- payment plan
+      <*> arbitrary -- ui
+      <*> arbitrary -- features
+      <*> arbitrary -- internal tags
+      <*> arbitrary -- external tags
+      <*> pure True -- billable flag
 
 instance Arbitrary DataRetentionPolicy where
   arbitrary =
@@ -976,6 +985,7 @@ data UserGroupTemplate m = UserGroupTemplate
   , features :: Maybe Features
   , internalTags :: m (Set Tag)
   , externalTags :: m (Set Tag)
+  , isBillable :: Bool
   }
 
 -- | `randomUserGroupTemplate` represents 'sane defaults' for use with
@@ -1000,12 +1010,27 @@ randomUserGroupTemplate = UserGroupTemplate
   , features          = defaultUserGroup ^. #features
   , internalTags      = rand 10 arbitrary
   , externalTags      = rand 10 arbitrary
+  , isBillable        = False
   }
 
-instantiateRandomUserGroup
+instantiateRandomFreeUserGroup
   :: (MonadFail m, CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
   => m UserGroup
-instantiateRandomUserGroup = instantiateUserGroup randomUserGroupTemplate
+instantiateRandomFreeUserGroup = instantiateUserGroup randomUserGroupTemplate
+
+instantiateRandomPaidUserGroup
+  :: (MonadFail m, CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
+  => m (UserGroupRoot, UserGroup)
+instantiateRandomPaidUserGroup = do
+  paymentPlan <- rand 27 $ elements [EnterprisePlan, TeamPlan, OnePlan, TrialPlan]
+  rootUg      <-
+    ( instantiateUserGroup
+      $ randomUserGroupTemplate { isBillable = True, invoicing = Invoice paymentPlan }
+      )
+      >>= (either fail pure . ugrFromUG)
+  childUg <- instantiateUserGroup
+    $ randomUserGroupTemplate { parentGroupID = Just $ rootUg ^. #id }
+  pure (rootUg, childUg)
 
 -- | To be used together with `randomUserGroupTemplate`, as in
 -- `instantiateUserGroup $ randomUserGroupTemplate {..}`. Generates an instance
@@ -1049,7 +1074,7 @@ data UserTemplate m = UserTemplate
 -- | `randomUserTemplate` represents 'sane defaults' for use with
 -- `instantiateUser`. An instance of this template has random name and email; no
 -- password, phone or personal number set; is a non-admin member of a freshly
--- created (with `instantiateRandomUserGroup`) user group and has a home folder
+-- created (with `instantiateRandomFreeUserGroup`) user group and has a home folder
 -- that is a sub-folder of the user group home folder.
 --
 -- To create a user with specific features, update the corresponding fields in
@@ -1081,7 +1106,7 @@ randomUserTemplate = UserTemplate
   , phone              = ""
   , lang               = defaultLang
   , associatedDomainID = view #id <$> dbQuery GetMainBrandedDomain
-  , groupID            = view #id <$> instantiateRandomUserGroup
+  , groupID            = view #id <$> instantiateRandomFreeUserGroup
   , homeFolderID       = \groupHomeFolderID ->
                            fmap (Just . view #id) . dbUpdate . FolderCreate $ set
                              #parentID
@@ -1524,7 +1549,7 @@ assertApproxEqual :: (Num a, Ord a, MonadIO m) => String -> a -> a -> a -> m ()
 assertApproxEqual message expected epsilon actual =
   assertBool message $ (actual <= expected + epsilon) && (actual > expected - epsilon)
 
-assertFailure :: MonadIO m => String -> m ()
+assertFailure :: MonadIO m => String -> m a
 assertFailure = liftIO . T.assertFailure
 
 assertString :: MonadIO m => String -> m ()
@@ -1535,19 +1560,34 @@ assertionPredicate = liftIO . T.assertionPredicate
 
 -- Our asserts.
 
+-- | Only serves as counter-part to assertFailure in `if-then-else`, `case`
+--   and patern matching constructions. Does nothing, should not exist.
 assertSuccess :: MonadIO m => m ()
-assertSuccess = assertBool "not success?!" True
+assertSuccess = pure ()
 
-assertJust :: MonadIO m => Maybe a -> m ()
-assertJust (Just _) = assertSuccess
-assertJust Nothing  = assertFailure "Should have returned Just but returned Nothing"
+-- | Asserts that value is Just and returns the value or fails otherwise.
+assertJust :: MonadIO m => String -> Maybe a -> m a
+assertJust msg = maybe (assertFailure msg) pure
 
-assertJustAndExtract :: MonadIO m => Maybe a -> m a
-assertJustAndExtract (Just x) = do
-  assertSuccess
-  return x
-assertJustAndExtract Nothing =
-  liftIO $ T.assertFailure "Should have returned Just but returned Nothing"
+-- | Same as assertJust but discards the result.
+assertJust_ :: MonadIO m => String -> Maybe a -> m ()
+assertJust_ msg = void . assertJust msg
+
+-- | Same as assertJust but with default assertion message.
+assertJust' :: MonadIO m => Maybe a -> m a
+assertJust' = assertJust "Should have returned Just but returned Nothing"
+
+-- | Same as assertJust' but discards the result.
+assertJust'_ :: MonadIO m => Maybe a -> m ()
+assertJust'_ = void . assertJust'
+
+-- | Asserts that value is Nothing or fails otherwise.
+assertNothing :: MonadIO m => String -> Maybe a -> m ()
+assertNothing msg = maybe (pure ()) . const $ assertFailure msg
+
+-- | Same as assertNothing but with default assertion message.
+assertNothing' :: MonadIO m => Maybe a -> m ()
+assertNothing' = assertNothing "Should have returned Nothing but returned Just"
 
 assertRight :: (Show a, MonadIO m) => Either a b -> m ()
 assertRight (Right _) = assertSuccess
@@ -1557,10 +1597,6 @@ assertRight (Left a) =
 assertLeft :: MonadIO m => Either a b -> m ()
 assertLeft (Left _) = assertSuccess
 assertLeft _        = assertFailure "Should have returned Left but returned Right"
-
-assertNothing :: MonadIO m => Maybe a -> m ()
-assertNothing Nothing  = assertSuccess
-assertNothing (Just _) = assertFailure "Should have returned Nothing but returned Just"
 
 assertNotEqual :: (Eq a, Show a, MonadIO m) => String -> a -> a -> m ()
 assertNotEqual msg expected got = unless (expected /= got) $ do
@@ -1581,23 +1617,40 @@ assertEqualJson msg expected got = unless (expected == got) $ do
     <> ["", "Steps to go from the value we got to the expected one:"]
     <> map ((" * " <>) . show) (A.patchOperations $ A.diff got expected)
 
-assertRaisesInternalError :: (Show v, MonadIO m, MonadMask m) => m v -> m ()
-assertRaisesInternalError a = catchJust
-  (\case
-    KE.InternalError _ -> Just ()
-    _                  -> Nothing
-  )
-  (a >>= assertFailure . ("Expecting InternalError but got " <>) . show)
-  return
+assertRaisesWithPredicate
+  :: (Exception e, Show a, MonadIO m, MonadMask m)
+  => String
+  -> (e -> Maybe ())
+  -> m a
+  -> m ()
+assertRaisesWithPredicate errorName predicate action = catchJust predicate action' return
+  where
+    action' =
+      action
+        >>= assertFailure
+        .   (("Expecting " <> errorName <> " error but got value ") <>)
+        .   show
 
-assertRaises404 :: (Show v, MonadIO m, MonadMask m) => m v -> m ()
-assertRaises404 a = catchJust
-  (\case
-    KE.Respond404 -> Just ()
-    _             -> Nothing
-  )
-  (a >>= assertFailure . ("Expecting Respond404 but got " <>) . show)
-  return
+assertRaisesInternalError :: (Show a, MonadIO m, MonadMask m) => m a -> m ()
+assertRaisesInternalError = assertRaisesWithPredicate "InternalError" $ \case
+  KE.InternalError _ -> Just ()
+  _                  -> Nothing
+
+assertRaises400 :: (Show a, MonadIO m, MonadMask m) => m a -> m ()
+assertRaises400 = assertRaisesWithPredicate "(RespondWithCustomHttpCode 400 _)" $ \case
+  KE.RespondWithCustomHttpCode 400 _ -> Just ()
+  _ -> Nothing
+
+assertRaises404 :: (Show a, MonadIO m, MonadMask m) => m a -> m ()
+assertRaises404 = assertRaisesWithPredicate "Respond404" $ \case
+  KE.Respond404 -> Just ()
+  _             -> Nothing
+
+assertRaisesApiErrorType
+  :: (MonadIO m, MonadMask m, Show a) => APIErrorType -> m a -> m ()
+assertRaisesApiErrorType errorType =
+  assertRaisesKontra (\(APIError errorType' _ _) -> errorType == errorType')
+
 
 assertRaisesDBException :: (Show v, MonadIO m, MonadMask m) => m v -> m ()
 assertRaisesDBException a =

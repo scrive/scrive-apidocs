@@ -312,7 +312,7 @@ updatePage : (Msg -> msg) -> Globals msg -> Page -> Model -> Return msg Model
 updatePage embed globals page model =
     case page of
         Home Default ->
-            return model globals.gotoUserAdminTab
+            return model globals.gotoUserGroupAdminTab
 
         Home (UserAdminTab tabPage) ->
             let
@@ -424,8 +424,8 @@ updatePage embed globals page model =
                 subCmd
 
 
-view : (Msg -> msg) -> Model -> Html msg
-view embed model =
+view : (Msg -> msg) -> Globals msg -> Model -> Html msg
+view embed globals model =
     case model.page of
         UserAdmin _ ->
             model.mUserAdmin
@@ -450,22 +450,22 @@ view embed model =
                 |> Tab.useHash True
                 |> Tab.items
                     [ Tab.item
+                        { id = UserGroupAdminTab.tabName
+                        , link = Tab.link [ href "/adminonly/page/companyadmin" ] [ text "Company admin" ]
+                        , pane =
+                            Tab.pane [ Spacing.mt3 ] <|
+                                [ model.mUserGroupAdminTab
+                                    |> M.map (UserGroupAdminTab.view (embed << UserGroupAdminTabMsg) globals)
+                                    |> M.withDefault viewError
+                                ]
+                        }
+                    , Tab.item
                         { id = UserAdminTab.tabName
                         , link = Tab.link [ href "/adminonly/page/salesuseradmin" ] [ text "Sales user admin" ]
                         , pane =
                             Tab.pane [ Spacing.mt3 ] <|
                                 [ model.mUserAdminTab
                                     |> M.map (UserAdminTab.view <| embed << UserAdminTabMsg)
-                                    |> M.withDefault viewError
-                                ]
-                        }
-                    , Tab.item
-                        { id = UserGroupAdminTab.tabName
-                        , link = Tab.link [ href "/adminonly/page/companyadmin" ] [ text "Company admin" ]
-                        , pane =
-                            Tab.pane [ Spacing.mt3 ] <|
-                                [ model.mUserGroupAdminTab
-                                    |> M.map (UserGroupAdminTab.view <| embed << UserGroupAdminTabMsg)
                                     |> M.withDefault viewError
                                 ]
                         }

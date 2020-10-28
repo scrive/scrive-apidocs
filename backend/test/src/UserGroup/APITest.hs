@@ -356,7 +356,7 @@ testGodModeUserCanCreateChildUserGroupWithoutPermissions = do
                                                , email     = return emailAddress
                                                }
   ctx <- setUser user <$> mkContext defaultLang
-  ug  <- instantiateRandomUserGroup
+  ug  <- instantiateRandomFreeUserGroup
   req <- mkRequest POST [("usergroup", inText . T.pack $ jsonWithParentUG (ug ^. #id))]
   res <- fst <$> runTestKontra req ctx userGroupApiV2Create
   assertEqual "admin user can create root UserGroup" 200 $ rsCode res
@@ -371,7 +371,7 @@ testSalesUserCanCreateChildUserGroupWithoutPermissions = do
                                                , email     = return emailAddress
                                                }
   ctx <- setUser user <$> mkContext defaultLang
-  ug  <- instantiateRandomUserGroup
+  ug  <- instantiateRandomFreeUserGroup
   req <- mkRequest POST [("usergroup", inText . T.pack $ jsonWithParentUG (ug ^. #id))]
   res <- fst <$> runTestKontra req ctx userGroupApiV2Create
   assertEqual "sales user can create root UserGroup" 200 $ rsCode res
@@ -533,7 +533,7 @@ testGodModeUserCanViewUserGroupWithoutPermissions = do
                                                , lastName  = return "the Flatulent"
                                                , email     = return emailAddress
                                                }
-  ug <- instantiateRandomUserGroup
+  ug <- instantiateRandomFreeUserGroup
   let ugid = ug ^. #id
   ctx <- setUser user <$> mkContext defaultLang
   req <- mkRequest GET []
@@ -549,7 +549,7 @@ testSalesUserCanViewUserGroupWithoutPermissions = do
                                                , lastName  = return "Desiato"
                                                , email     = return emailAddress
                                                }
-  ug <- instantiateRandomUserGroup
+  ug <- instantiateRandomFreeUserGroup
   let ugid = ug ^. #id
   ctx <- setUser user <$> mkContext defaultLang
   req <- mkRequest GET []
@@ -823,7 +823,7 @@ testGodModeUserCanViewUserGroupAddressWithoutPermissions = do
                                                , lastName  = return "the Flatulent"
                                                , email     = return emailAddress
                                                }
-  ug <- instantiateRandomUserGroup
+  ug <- instantiateRandomFreeUserGroup
   let ugid = ug ^. #id
   ctx <- setUser user <$> mkContext defaultLang
   req <- mkRequest GET []
@@ -840,7 +840,7 @@ testSalesUserCanViewUserGroupAddressWithoutPermissions = do
     , lastName  = return "Desiato"
     , email     = return "hotblack.desiato@scrive.com"
     }
-  ug <- instantiateRandomUserGroup
+  ug <- instantiateRandomFreeUserGroup
   let ugid = ug ^. #id
   ctx <- setUser user <$> mkContext defaultLang
   req <- mkRequest GET []
@@ -1139,7 +1139,7 @@ testGodModeUserCanViewUserGroupSettingsWithoutPermissions = do
                                                , lastName  = return "the Flatulent"
                                                , email     = return emailAddress
                                                }
-  ug <- instantiateRandomUserGroup
+  ug <- instantiateRandomFreeUserGroup
   let ugid = ug ^. #id
   ctx <- setUser user <$> mkContext defaultLang
   req <- mkRequest GET []
@@ -1156,7 +1156,7 @@ testSalesUserCanViewUserGroupSettingsWithoutPermissions = do
     , lastName  = return "Desiato"
     , email     = return "hotblack.desiato@scrive.com"
     }
-  ug <- instantiateRandomUserGroup
+  ug <- instantiateRandomFreeUserGroup
   let ugid = ug ^. #id
   ctx <- setUser user <$> mkContext defaultLang
   req <- mkRequest GET []
@@ -1389,7 +1389,7 @@ testUserCanCreateTagsOnRootUserGroup = do
 
 testUserCanCreateTagsOnChildUserGroup :: TestEnv ()
 testUserCanCreateTagsOnChildUserGroup = do
-  ug   <- instantiateRandomUserGroup
+  ug   <- instantiateRandomFreeUserGroup
   user <- instantiateUser $ randomUserTemplate { email = return emailAddress }
   let inputUg = object
         [ "tags" .= toJSON inputTags
@@ -1439,7 +1439,7 @@ testUserCanUpdateTags = do
 
 testUserCanViewTags :: TestEnv ()
 testUserCanViewTags = do
-  ug   <- instantiateRandomUserGroup
+  ug   <- instantiateRandomFreeUserGroup
   user <- instantiateUser $ randomUserTemplate { groupID = return $ ug ^. #id }
   let ugid = ug ^. #id
   void . dbUpdate . AccessControlCreateForUser (user ^. #id) $ UserGroupAdminAR ugid

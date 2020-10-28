@@ -43,6 +43,7 @@ module UserGroup.Types
   , SEBankIDSigningProviderOverride(..)
   ) where
 
+import Data.Either.Combinators
 import qualified Data.Set as S
 
 import DataRetentionPolicy
@@ -84,6 +85,7 @@ defaultUserGroup = ugFromUGRoot $ UserGroupRoot { id           = emptyUserGroupI
                                                 , features     = defaultFeatures FreePlan
                                                 , internalTags = S.empty
                                                 , externalTags = S.empty
+                                                , isBillable   = False
                                                 }
 
 defaultChildUserGroup :: UserGroup
@@ -98,6 +100,7 @@ defaultChildUserGroup = UserGroup { id            = emptyUserGroupID
                                   , features      = Nothing
                                   , internalTags  = S.empty
                                   , externalTags  = S.empty
+                                  , isBillable    = False
                                   }
 
 
@@ -114,9 +117,10 @@ fetchUserGroup
      , Maybe (Composite FeatureFlags)
      , CompositeArray1 Tag
      , CompositeArray1 Tag
+     , Bool
      )  -- for regular users
   -> UserGroup
-fetchUserGroup (id, parentGroupID, name, homeFolderID, cinvoicing, cinfos, caddresses, cuis, cAdminFeatureFlags, cRegularFeatureFlags, CompositeArray1 iTags, CompositeArray1 eTags)
+fetchUserGroup (id, parentGroupID, name, homeFolderID, cinvoicing, cinfos, caddresses, cuis, cAdminFeatureFlags, cRegularFeatureFlags, CompositeArray1 iTags, CompositeArray1 eTags, isBillable)
   = UserGroup
     { settings     = unComposite <$> cinfos
     , invoicing    = unComposite cinvoicing
@@ -127,31 +131,34 @@ fetchUserGroup (id, parentGroupID, name, homeFolderID, cinvoicing, cinfos, caddr
       <*> (unComposite <$> cRegularFeatureFlags)
     , internalTags = S.fromList iTags
     , externalTags = S.fromList eTags
+    , isBillable   = isBillable
     , ..
     }
 
 -- USER GROUP ROOT
 
-ugrFromUG :: UserGroup -> Maybe UserGroupRoot
+ugrFromUG :: UserGroup -> Either String UserGroupRoot
 ugrFromUG ug = do
   -- the root of usergroup tree must have Invoice, Settings, Address, UI
   -- and Feature Flags
   paymentPlan <- case ug ^. #invoicing of
-    None        -> Nothing
-    BillItem _  -> Nothing         -- the root of usergroup tree must have:
-    Invoice  pp -> Just pp         --   Invoice
-  settings <- ug ^. #settings  --   Settings
-  address  <- ug ^. #address   --   Address
-  features <- ug ^. #features  --   Features
-  ui       <- ug ^. #ui        --   UI (aka user group branding)
+    -- the root of usergroup tree must have invoicing set to Invoice:
+    Invoice pp -> Right pp
+    _          -> Left "Invoicing has to be set to Invoice"
+  settings <- maybeToRight "User group doesn't have settings record" $ ug ^. #settings  --   Settings
+  address  <- maybeToRight "User group doesn't have address record" $ ug ^. #address   --   Address
+  features <- maybeToRight "User group doesn't have features record" $ ug ^. #features  --   Features
+  ui       <- maybeToRight "User group doesn't have UI/branding record" $ ug ^. #ui        --   UI (aka user group branding)
   return $ UserGroupRoot
     { id           = ug ^. #id
     , name         = ug ^. #name
     , homeFolderID = ug ^. #homeFolderID
     , internalTags = ug ^. #internalTags
     , externalTags = ug ^. #externalTags
+    , isBillable   = ug ^. #isBillable
     , ..
     }
+
 
 ugFromUGRoot :: UserGroupRoot -> UserGroup
 ugFromUGRoot ugr = UserGroup { id            = ugr ^. #id
@@ -165,6 +172,7 @@ ugFromUGRoot ugr = UserGroup { id            = ugr ^. #id
                              , features      = Just $ ugr ^. #features
                              , internalTags  = ugr ^. #internalTags
                              , externalTags  = ugr ^. #externalTags
+                             , isBillable    = ugr ^. #isBillable
                              }
 
 -- USER GROUP WITH PARENTS
@@ -218,6 +226,7 @@ ugwpFeatures = snd . ugwpInherit (^. #features) (^. #features)
 ugwpFeaturesWithID :: UserGroupWithParents -> (UserGroupID, Features)
 ugwpFeaturesWithID = ugwpInherit (^. #features) (^. #features)
 
+-- | Transforms UserGroupWithParents into the list with bottom to top ordering (root UserGroup is last).
 ugwpToList :: UserGroupWithParents -> [UserGroup]
 ugwpToList (ug_root, ug_children_path) = ug_children_path ++ [ugFromUGRoot ug_root]
 
