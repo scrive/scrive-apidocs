@@ -1143,8 +1143,6 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
              || this.dkNemIDCPRAuthenticationToView()
              || this.dkNemIDPIDAuthenticationToView()
              || this.dkNemIDCVRAuthenticationToView()
-             || this.dkNemIDCPRAuthenticationToSign()
-             || this.dkNemIDCVRAuthenticationToSign()
              || (this.views() && this.seBankIDAuthenticationToViewArchived())
              || (this.views() && this.noBankIDAuthenticationToViewArchived())
              || (this.views() && this.dkNemIDCPRAuthenticationToViewArchived())

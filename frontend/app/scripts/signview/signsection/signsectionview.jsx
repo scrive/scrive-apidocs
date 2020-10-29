@@ -987,6 +987,7 @@ var Task = require("../navigation/task");
               }}
             />
           }
+
           {/* if */ this.isOnStep("eid-dknemid-auth") &&
             <SignDKNemIDAuth
               model={this.props.model}
@@ -997,16 +998,18 @@ var Task = require("../navigation/task");
               onReject={this.handleSetStep("reject")}
               onForward={this.handleSetStep("forward")}
               onSign={function () {
-                doc.takeSigningScreenshot(function () {
-                  if (sig.dkNemIDCVRAuthenticationToSign()) {
-                    self.setStep("eid-dknemid-auth-choose");
-                  } else {
-                    self.setState({signingButtonBlocked: true});
-                    self.handleDKNemIDAuth(function () {
-                      self.setState({signingButtonBlocked: false});
-                    }, null);
-                  }
-                });
+                if (!self.state.signingButtonBlocked) {
+                  doc.takeSigningScreenshot(function () {
+                    if (sig.dkNemIDCVRAuthenticationToSign()) {
+                      self.setStep("eid-dknemid-auth-choose");
+                    } else {
+                      self.setState({signingButtonBlocked: true});
+                      self.handleDKNemIDAuth(function () {
+                        self.setState({signingButtonBlocked: false});
+                      }, null);
+                    }
+                  });
+                }
               }}
             />
           }
@@ -1014,15 +1017,13 @@ var Task = require("../navigation/task");
             <SignDKNemIDAuthProcess
               model={this.props.model}
               iframeUrl={this.state.iframeUrl}
-              onBack={this.handleSetStep("eid-dknemid-auth")}
+              onCancel={this.handleSetStep("eid-dknemid-auth")}
               />
           }
           {/* if */ this.isOnStep("eid-dknemid-auth-choose") &&
             <SignDKNemIDAuthChoose
               model={this.props.model}
-              canSign={this.canSignDocument()}
-              onReject={this.handleSetStep("reject")}
-              onForward={this.handleSetStep("forward")}
+              onCancel={this.handleSetStep("eid-dknemid-auth")}
               onChoice={function (dkNemIDCVRMethod) {
                 if (!self.state.signingButtonBlocked) {
                   self.setState({signingButtonBlocked: true});

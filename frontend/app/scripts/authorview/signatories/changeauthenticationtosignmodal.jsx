@@ -149,11 +149,19 @@ var Modal = require("../../common/modal");
           );
         }
       } else if (this.isNewAuthenticationDKNemIDCPR()) {
-        // Since we don't allow to enter CPR before signing, it has to be non-empty and valid
-        return !new SSNForDKNemIDValidation().validateData(authvalue);
+        if (this.signatory().dkNemIDCPRAuthenticationToView()) {
+          return !new SSNForDKNemIDValidation().validateData(authvalue);
+        } else {
+          return !(new SSNForDKNemIDValidation().validateData(authvalue)
+              || new EmptyValidation().validateData(authvalue));
+        }
       } else if (this.isNewAuthenticationDKNemIDCVR()) {
-        // Since we don't allow to enter CVR before signing, it has to be non-empty and valid
-        return !new CVRForDKNemIDValidation().validateData(authvalue);
+        if (this.signatory().dkNemIDCVRAuthenticationToView()) {
+          return !new CVRForDKNemIDValidation().validateData(authvalue);
+        } else {
+          return !(new CVRForDKNemIDValidation().validateData(authvalue)
+            || new EmptyValidation().validateData(authvalue));
+        }
       } else if (this.isNewAuthenticationFITupas()) {
         // If FI Tupas to view is set, then SSN needs to be valid and not empty
         if (this.signatory().authenticationToView() === "fi_tupas") {

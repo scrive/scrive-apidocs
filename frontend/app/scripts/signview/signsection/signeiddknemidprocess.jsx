@@ -12,7 +12,7 @@ var classNames = require("classnames");
   module.exports = React.createClass({
     propTypes: {
       model: React.PropTypes.instanceOf(Backbone.Model).isRequired,
-      onBack: React.PropTypes.func.isRequired,
+      onCancel: React.PropTypes.func.isRequired,
       iframeUrl: React.PropTypes.string.isRequired
     },
 
@@ -21,10 +21,11 @@ var classNames = require("classnames");
         type: "success",
         content: localization.signDKNemIDCanceled
       });
-      this.props.onBack();
+      this.props.onCancel();
     },
 
     render: function () {
+      var self = this;
       var divClass = classNames({
         "col-xs-6": !ViewSize.isSmall(),
         "col-xs-12": ViewSize.isSmall(),
@@ -56,7 +57,7 @@ var classNames = require("classnames");
                 <Button
                   text={localization.cancel}
                   className="transparent-button button-block"
-                  onClick={this.onCancel}
+                  onClick={self.onCancel}
                 />
               </div>
             </div>

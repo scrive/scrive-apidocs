@@ -423,16 +423,6 @@ guardCanSetAuthenticationToSignForSignatoryWithValue slid newAuthToSign mSSN mMo
           -> apiError
             $ signatoryStateError
                 "You provided an empty authentication value, needs a value for authentication to view"
-          | newAuthToSign
-            `elem` [ LegacyDKNemIDAuthenticationToSign
-                   , DKNemIDCPRAuthenticationToSign
-                   , DKNemIDCVRAuthenticationToSign
-                   ]
-          ->
-            -- TODO: remove that statement when NemID allows to enter CPR/CVR before signing
-             apiError
-            $ signatoryStateError
-                "You provided an empty authentication value, but NemID CPR/CVR needs needs a value for authentication to sign"
           | otherwise
           -> return ()
         Bad -> do

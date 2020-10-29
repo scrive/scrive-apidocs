@@ -11,7 +11,7 @@ var classNames = require("classnames");
 
     propTypes: {
       model: React.PropTypes.instanceOf(Backbone.Model).isRequired,
-      onBack: React.PropTypes.func.isRequired,
+      onCancel: React.PropTypes.func.isRequired,
       onChoice: React.PropTypes.func.isRequired
     },
 
@@ -64,7 +64,7 @@ var classNames = require("classnames");
             <Button
               text={localization.cancel}
               className="transparent-button button-block"
-              onClick={this.props.onBack}
+              onClick={this.props.onCancel}
             />
           </div>
         </div>

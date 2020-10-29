@@ -174,7 +174,7 @@ var SignLegalAgreement = require("./signlegalagreement");
             id={randomFragment.toString()}
             href={("#" + randomFragment)}
             className={buttonClass}
-            onClick={function () { self.props.onSign(); }}
+            onClick={function () { if (self.props.canSign) { self.props.onSign(); } }}
             text={localization.process.signbuttontext}
           />
           {/* if */ canHaveForwardButton &&

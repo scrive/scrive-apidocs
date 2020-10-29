@@ -7,7 +7,9 @@ var Button = require("../../../common/button");
 var DanishIdentifyModel = require("./danishidentifymodel");
   module.exports = React.createClass({
     propTypes: {
-      model: React.PropTypes.instanceOf(DanishIdentifyModel).isRequired
+      model: React.PropTypes.instanceOf(DanishIdentifyModel).isRequired,
+      onBack: React.PropTypes.func.isRequired,
+      onChoice: React.PropTypes.func.isRequired
     },
 
     onChoice: function (cvrAuthMethod) {
