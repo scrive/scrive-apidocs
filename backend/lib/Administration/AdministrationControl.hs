@@ -112,65 +112,120 @@ import qualified Data.ByteString.RFC2397 as RFC2397
 import qualified UserGroupAccounts.UserGroupAccountsControl as UserGroupAccounts
 
 adminonlyRoutes :: Route (Kontra Response)
-adminonlyRoutes = onlySalesOrAdmin <$> choice
-  [ hGet showAdminElmMainPage
-  , (dir "page" . remainingPath GET) showAdminElmMainPage
-  , (dir "userslist" . hGet . toK0) jsonUsersList
-  , (dir "useradmin" . dir "details" . hGet . toK1) handleUserGetProfile
-  , (dir "useradmin" . hPost . toK1) handleUserChange
-  , (dir "useradmin" . dir "changepassword" . hPost . toK1) handleUserPasswordChange
-  , (dir "useradmin" . dir "deleteinvite" . hPost . toK2) handleDeleteInvite
-  , (dir "useradmin" . dir "delete" . hPost . toK1) handleDeleteUser
-  , (dir "useradmin" . dir "move" . hPost . toK1) handleMoveUserToDifferentCompany
-  , (dir "useradmin" . dir "disable2fa" . hPost . toK1) handleDisable2FAForUser
-  , (dir "useradmin" . dir "usagestats" . dir "days" . hGet . toK1)
-    handleAdminUserUsageStatsDays
-  , (dir "useradmin" . dir "usagestats" . dir "months" . hGet . toK1)
-    handleAdminUserUsageStatsMonths
-  , (dir "useradmin" . dir "shareablelinkstats" . dir "days" . hGet . toK1)
-    $ handleAdminUserShareableLinksStats PartitionByDay
-  , (dir "useradmin" . dir "shareablelinkstats" . dir "months" . hGet . toK1)
-    $ handleAdminUserShareableLinksStats PartitionByMonth
-  , (dir "useradmin" . dir "sendinviteagain" . hPost . toK0) sendInviteAgain
-  , (dir "companyadmin" . hPost . toK0) handleCompanyCreate
-  , (dir "companyadmin" . hPost . toK1) handleCompanyChange
-  , (dir "companyadmin" . dir "details" . hGet . toK1) handleCompanyGetProfile
-  , (dir "companyadmin" . dir "merge" . hPost . toK1) handleMergeToOtherCompany
-  , (dir "companyadmin" . dir "branding") Company.adminRoutes
-  , (dir "companyadmin" . dir "users" . hPost . toK1) handleCreateCompanyUser
-  , (dir "companyaccounts" . hGet . toK1)
-    UserGroupAccounts.handleUserGroupAccountsForAdminOnly
-  , (dir "companyadmin" . dir "usagestats" . dir "days" . hGet . toK1)
-    handleAdminCompanyUsageStatsDays
-  , (dir "companyadmin" . dir "usagestats" . dir "months" . hGet . toK1)
-    handleAdminCompanyUsageStatsMonths
-  , (dir "companyadmin" . dir "shareablelinkstats" . dir "days" . hGet . toK1)
-    $ handleAdminCompanyShareableLinksStats PartitionByDay
-  , (dir "companyadmin" . dir "shareablelinkstats" . dir "months" . hGet . toK1)
-    $ handleAdminCompanyShareableLinksStats PartitionByMonth
-  , (dir "companyadmin" . dir "getsubscription" . hGet . toK1)
-    handleCompanyGetSubscription
-  , (dir "companyadmin" . dir "updatesubscription" . hPost . toK1)
-    handleCompanyUpdateSubscription
-  , (dir "companyadmin" . dir "getstructure" . hGet . toK1) handleCompanyGetStructure
-  , (dir "companyadmin" . dir "requestdeletion" . hPost . toK1)
-    handleRequestUserGroupDeletion
-  , (dir "companyadmin" . dir "signoffdeletion" . hPost . toK1)
-    handleSignOffUserGroupDeletion
-  , (dir "companyadmin" . dir "canceldeletion" . hPost . toK1)
-    handleCancelUserGroupDeletion
-  , (dir "documentslist" . hGet . toK0) jsonDocuments
-  , (dir "companies" . hGet . toK0) jsonCompanies
-  , (dir "brandeddomainslist" . hGet . toK0) jsonBrandedDomainsList
-  , (dir "brandeddomain" . dir "create" . hPost . toK0) createBrandedDomain
-  , (dir "brandeddomain" . dir "details" . hGet . toK1) jsonBrandedDomain
-  , (dir "brandeddomain" . dir "details" . dir "change" . hPost . toK1)
-    updateBrandedDomain
-  , (dir "brandeddomain" . dir "themes" . hGet . toK1) handleGetThemesForDomain
-  , (dir "brandeddomain" . dir "newtheme" . hPost . toK2) handleNewThemeForDomain
-  , (dir "brandeddomain" . dir "updatetheme" . hPost . toK2) handleUpdateThemeForDomain
-  , (dir "brandeddomain" . dir "deletetheme" . hPost . toK2) handleDeleteThemeForDomain
-  ]
+adminonlyRoutes = onlySalesOrAdmin <$> choice [htmlRoutes, jsonRoutes]
+  where
+    htmlRoutes = choice
+      [hGet showAdminElmMainPage, (dir "page" . remainingPath GET) showAdminElmMainPage]
+    jsonRoutes = choice
+      [ (dir "userslist" . hGet . toApiV2K0 V2.Ok) jsonUsersList
+      , (dir "useradmin" . dir "details" . hGet . toApiV2K1 V2.Ok) handleUserGetProfile
+      , (dir "useradmin" . hPost . toApiV2K1 V2.Ok) handleUserChange
+      , (dir "useradmin" . dir "changepassword" . hPost . toApiV2K1 V2.Ok)
+        handleUserPasswordChange
+      , (dir "useradmin" . dir "deleteinvite" . hPost . toApiV2K2 V2.Ok)
+        handleDeleteInvite
+      , (dir "useradmin" . dir "delete" . hPost . toApiV2K1 V2.Ok) handleDeleteUser
+      , (dir "useradmin" . dir "move" . hPost . toApiV2K1 V2.Ok)
+        handleMoveUserToDifferentCompany
+      , (dir "useradmin" . dir "disable2fa" . hPost . toApiV2K1 V2.Ok)
+        handleDisable2FAForUser
+      , (dir "useradmin" . dir "usagestats" . dir "days" . hGet . toApiV2K1 V2.Ok)
+        handleAdminUserUsageStatsDays
+      , (dir "useradmin" . dir "usagestats" . dir "months" . hGet . toApiV2K1 V2.Ok)
+        handleAdminUserUsageStatsMonths
+      , (dir "useradmin" . dir "shareablelinkstats" . dir "days" . hGet . toApiV2K1 V2.Ok)
+        $ handleAdminUserShareableLinksStats PartitionByDay
+      , ( dir "useradmin"
+        . dir "shareablelinkstats"
+        . dir "months"
+        . hGet
+        . toApiV2K1 V2.Ok
+        )
+        $ handleAdminUserShareableLinksStats PartitionByMonth
+      , (dir "useradmin" . dir "sendinviteagain" . hPost . toK0 . toApiV2K0 V2.Ok)
+        sendInviteAgain
+      , (dir "companyadmin" . hPost . toK0 . toApiV2K0 V2.Created) handleCompanyCreate
+      , (dir "companyadmin" . hPost . toApiV2K1 V2.Ok) handleCompanyChange
+      , (dir "companyadmin" . dir "details" . hGet . toApiV2K1 V2.Ok)
+        handleCompanyGetProfile
+      , (dir "companyadmin" . dir "merge" . hPost . toApiV2K1 V2.Ok)
+        handleMergeToOtherCompany
+      , (dir "companyadmin" . dir "branding") Company.adminRoutes
+      , (dir "companyadmin" . dir "users" . hPost . toApiV2K1 V2.Created)
+        handleCreateCompanyUser
+      , (dir "companyaccounts" . hGet . toApiV2K1 V2.Ok)
+        UserGroupAccounts.handleUserGroupAccountsForAdminOnly
+      , (dir "companyadmin" . dir "usagestats" . dir "days" . hGet . toApiV2K1 V2.Ok)
+        handleAdminCompanyUsageStatsDays
+      , (dir "companyadmin" . dir "usagestats" . dir "months" . hGet . toApiV2K1 V2.Ok)
+        handleAdminCompanyUsageStatsMonths
+      , ( dir "companyadmin"
+        . dir "shareablelinkstats"
+        . dir "days"
+        . hGet
+        . toApiV2K1 V2.Ok
+        )
+        $ handleAdminCompanyShareableLinksStats PartitionByDay
+      , ( dir "companyadmin"
+        . dir "shareablelinkstats"
+        . dir "months"
+        . hGet
+        . toApiV2K1 V2.Ok
+        )
+        $ handleAdminCompanyShareableLinksStats PartitionByMonth
+      , (dir "companyadmin" . dir "getsubscription" . hGet . toApiV2K1 V2.Ok)
+        handleCompanyGetSubscription
+      , (dir "companyadmin" . dir "updatesubscription" . hPost . toApiV2K1 V2.Ok)
+        handleCompanyUpdateSubscription
+      , (dir "companyadmin" . dir "getstructure" . hGet . toApiV2K1 V2.Ok)
+        handleCompanyGetStructure
+      , (dir "companyadmin" . dir "requestdeletion" . hPost . toApiV2K1 V2.Created)
+        handleRequestUserGroupDeletion
+      , (dir "companyadmin" . dir "signoffdeletion" . hPost . toApiV2K1 V2.Ok)
+        handleSignOffUserGroupDeletion
+      , (dir "companyadmin" . dir "canceldeletion" . hPost . toApiV2K1 V2.Ok)
+        handleCancelUserGroupDeletion
+      , (dir "documentslist" . hGet . toK0 . toApiV2K0 V2.Ok) jsonDocuments
+      , (dir "companies" . hGet . toK0 . toApiV2K0 V2.Ok) jsonCompanies
+      , (dir "brandeddomainslist" . hGet . toK0 . toApiV2K0 V2.Ok) jsonBrandedDomainsList
+      , (dir "brandeddomain" . dir "create" . hPost . toK0 . toApiV2K0 V2.Ok)
+        createBrandedDomain
+      , (dir "brandeddomain" . dir "details" . hGet . toApiV2K1 V2.Ok) jsonBrandedDomain
+      , (dir "brandeddomain" . dir "details" . dir "change" . hPost . toApiV2K1 V2.Ok)
+        updateBrandedDomain
+      , (dir "brandeddomain" . dir "themes" . hGet . toApiV2K1 V2.Ok)
+        handleGetThemesForDomain
+      , (dir "brandeddomain" . dir "newtheme" . hPost . toApiV2K2 V2.Created)
+        handleNewThemeForDomain
+      , (dir "brandeddomain" . dir "updatetheme" . hPost . toApiV2K2 V2.Ok)
+        handleUpdateThemeForDomain
+      , (dir "brandeddomain" . dir "deletetheme" . hPost . toApiV2K2 V2.Ok)
+        handleDeleteThemeForDomain
+      ]
+
+    toApiV2K0
+      :: (Kontrakcja m, V2.ToAPIResponse a)
+      => (a -> V2.APIResponse a)
+      -> m a
+      -> m Response
+    toApiV2K0 apiResponse handler = V2.api (apiResponse <$> handler)
+
+    toApiV2K1
+      :: (Kontrakcja m, V2.ToAPIResponse b)
+      => (b -> V2.APIResponse b)
+      -> (a -> m b)
+      -> a
+      -> m Response
+    toApiV2K1 apiResponse handler a = V2.api (apiResponse <$> handler a)
+
+    toApiV2K2
+      :: (Kontrakcja m, V2.ToAPIResponse c)
+      => (c -> V2.APIResponse c)
+      -> (a -> b -> m c)
+      -> a
+      -> b
+      -> m Response
+    toApiV2K2 apiResponse handler a b = V2.api (apiResponse <$> handler a b)
 
 adminonlyOldRoutes :: Route (Kontra Response)
 adminonlyOldRoutes = onlySalesOrAdmin <$> choice
@@ -579,7 +634,7 @@ instance ToJSON CompanyCreateResult where
     , "error_message" .= (Nothing :: Maybe Text)
     ]
 
-instance ToResp CompanyCreateResult
+instance V2.ToAPIResponse CompanyCreateResult
 
 -- | User group creation handler
 -- There are following cases which are allowed:
@@ -603,9 +658,9 @@ instance ToResp CompanyCreateResult
 --      end we don't want to mess with those.
 handleCompanyCreate :: Kontrakcja m => m CompanyCreateResult
 handleCompanyCreate = onlySalesOrAdmin $ do
-  ugName       <- guardJustM $ getField "user_group_name"
-  mParentUgId  <- readField "user_group_parent_id"
-  mChildUgId   <- readField "user_group_child_id"
+  ugName       <- apiV2ParameterObligatory $ ApiV2ParameterText "user_group_name"
+  mParentUgId  <- apiV2ParameterOptional $ ApiV2ParameterRead "user_group_parent_id"
+  mChildUgId   <- apiV2ParameterOptional $ ApiV2ParameterRead "user_group_child_id"
   mPaymentPlan <- apiV2ParameterOptional
     (ApiV2ParameterTextUnjson "payment_plan" unjsonDef)
   (mRootUgId, ugId, logMsg) <- case (mParentUgId, mChildUgId, mPaymentPlan) of

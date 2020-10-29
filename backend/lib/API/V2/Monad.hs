@@ -1,4 +1,5 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
+{-# LANGUAGE DefaultSignatures #-}
 module API.V2.Monad (
   -- * Response types
     APIResponse(..)
@@ -40,6 +41,8 @@ data APIResponse a = Ok a | Created a | Accepted a
 -- Define what we can respond from an API call
 class ToAPIResponse a where
   toAPIResponse :: a -> Response
+  default toAPIResponse :: A.ToJSON a => a -> Response
+  toAPIResponse = toAPIResponse . A.toJSON
 
 instance ToAPIResponse Response where
   toAPIResponse = identity

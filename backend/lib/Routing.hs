@@ -1,4 +1,3 @@
-{-# LANGUAGE DefaultSignatures #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Routing
@@ -49,8 +48,6 @@ import Utils.HTTP
 
 class ToResp a where
   toResp :: a -> Kontra Response
-  default toResp :: A.ToJSON a => a -> Kontra Response
-  toResp = simpleAesonResponse . A.toJSON
 
 instance ToResp Response where
   toResp = return
