@@ -15,7 +15,8 @@ import API.V2.Errors
 import API.V2.MonadUtils
 import AppView
 import DB
-import Doc.DocStateQuery
+import Doc.Model.Query
+import EID.EIDService.Conf
 import EID.EIDService.Model (eidServiceConf)
 import EID.EIDService.Types hiding (EIDServiceTransactionFromDB(..))
 import Flow.EID.Authentication
@@ -24,9 +25,10 @@ import Flow.EID.EIDService.Provider
 import Flow.EID.EIDService.Types
 import Flow.Id
 import Flow.Model
+import Flow.Model.InstanceSession
 import Flow.Model.Types
+import Flow.Model.Types.Internal
 import Flow.Names
-import Flow.Utils
 import Happstack.Fields
 import Kontra hiding (InternalError)
 import MinutesTime
@@ -34,6 +36,7 @@ import Routing
 import Session.Model
 import Templates (renderTextTemplate)
 import Util.MonadUtils
+import qualified Context.Internal as Context
 
 eidServiceRoutes :: Route (Kontra Response)
 eidServiceRoutes = choice
@@ -56,9 +59,13 @@ startEIDServiceTransaction
   -> LocalUserName
   -> m Value
 startEIDServiceTransaction provider instanceId (LocalUserName userName) = do
-  let providerName = toEIDServiceProviderName provider
-  logInfo_ $ "EID Service transaction start - for " <> providerName
+  logInfo "EID Service transaction start" $ object
+    [ "instance_id" .= instanceId
+    , "instance_user" .= userName
+    , "provider" .= toEIDServiceProviderName provider
+    ]
 
+  guardSessionInstance instanceId userName
   fullInstance <- fromJust <$> selectFullInstance instanceId
   uac          <- fromMaybeM throwNoAuthentication
     $ selectUserAuthenticationConfiguration instanceId userName
@@ -71,11 +78,9 @@ startEIDServiceTransaction provider instanceId (LocalUserName userName) = do
     userName
     (authenticationKind, authenticationConfig)
   when maxFailuresExceeded
-    $ Kontra.unauthorized "Maximum number of authentication attempts exceeeded."
+    $ Kontra.unauthorized "Maximum number of authentication attempts exceeded."
 
-  (did, slid)        <- findFirstSignatoryLink instanceId userName
-  (doc, _   )        <- getDocumentAndSignatoryForEIDAuth did slid -- also access guard
-  conf               <- eidServiceConf doc
+  conf               <- getEidServiceConfiguration instanceId
   (tid, val, status) <- beginEIDServiceTransaction conf
                                                    provider
                                                    authenticationKind
@@ -111,18 +116,49 @@ redirectEndpointFromEIDServiceTransaction
   -> m Response
 redirectEndpointFromEIDServiceTransaction provider instanceId (LocalUserName userName) =
   do
-    logInfo_ "EID Service transaction check"
-    -- TODO nicer logging
-    logInfo_ $ "InstanceId: " <> showt instanceId
-    logInfo_ $ "User name: " <> showt userName
-    (did, slid) <- findFirstSignatoryLink instanceId userName
-    (doc, _   ) <- getDocumentAndSignatoryForEIDAuth did slid
-    conf        <- eidServiceConf doc
-    ad          <- getAnalyticsData
-    ctx         <- getContext
-    rd          <- guardJustM $ getField "redirect"
-    mts         <- completeEIDServiceAuthTransaction conf provider instanceId userName
+    logInfo "EID Service transaction check" $ object
+      [ "instance_id" .= instanceId
+      , "instance_user" .= userName
+      , "provider" .= toEIDServiceProviderName provider
+      ]
+
+    guardSessionInstance instanceId userName
+    conf <- getEidServiceConfiguration instanceId
+
+    ad   <- getAnalyticsData
+    ctx  <- getContext
+    rd   <- guardJustM $ getField "redirect"
+    mts  <- completeEIDServiceAuthTransaction conf provider instanceId userName
     (simpleHtmlResponse =<<) . renderTextTemplate "postEIDAuthRedirect" $ do
       F.value "redirect" rd
       F.value "incorrect_data" (mts == Just EIDServiceTransactionStatusCompleteAndFailed)
       standardPageFields ctx Nothing ad
+
+guardSessionInstance :: Kontrakcja m => InstanceId -> UserName -> m ()
+guardSessionInstance instanceId' userName' = do
+  (Context.sessionID <$> getContext) >>= selectInstanceSession >>= \case
+    Nothing -> apiError $ APIError
+      { errorType     = InvalidAuthorization
+      , errorHttpCode = 401
+      , errorMessage  = "Use access link to authenticate first."
+      }
+    Just InstanceSession {..} -> do
+      when (instanceId /= instanceId')
+        . apiError
+        $ serverError
+            "Flow instance parameter does not match the session data. Please update the session by using the correct Flow access link and try again."
+      when (userName /= userName')
+        . apiError
+        $ serverError
+            "Flow user name parameter does not match the session data. Please update the session by using the correct Flow access link and try again."
+
+getEidServiceConfiguration :: Kontrakcja m => InstanceId -> m EIDServiceConf
+getEidServiceConfiguration instanceId = do
+  mDocumentId <- listToMaybe <$> selectDocumentIdsByInstanceId instanceId
+  documentId  <- case mDocumentId of
+    Nothing ->
+      apiError $ serverError "Flow instance doesn't have any documents assigned."
+    Just documentId -> pure documentId
+
+  document <- dbQuery $ GetDocumentByDocumentID documentId
+  eidServiceConf document

@@ -47,16 +47,8 @@ def test_one_document_process(method, allowed_document_types, author, base_url, 
         "user1": {
             "id_type": "email",
             "id": user_email,
-            "auth_to_view": {
-                "provider": "onfido",
-                "method": method,
-                "allowed_document_types": allowed_document_types,
-                "max_failures": 1
-            },
-            "auth_to_view_archived": {
-                "provider": "sms_pin",
-                "max_failures": 2
-            }
+            "auth_to_view": None,
+            "auth_to_view_archived": None,
         }
     }
     key_values = {

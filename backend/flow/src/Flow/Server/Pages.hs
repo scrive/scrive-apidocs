@@ -1,6 +1,6 @@
 module Flow.Server.Pages where
 
-import Control.Monad.Catch (MonadMask, MonadThrow)
+import Control.Monad.Catch (MonadThrow)
 import Control.Monad.Extra (fromMaybeM)
 import Control.Monad.Reader (ask)
 import Database.PostgreSQL.PQTypes
@@ -26,7 +26,6 @@ import Doc.DocControl
 import Doc.Model.Query
 import Doc.Tokens.Model
 import Doc.Types.SignatoryLink (AuthenticationKind)
-import EID.Authentication.Model hiding (AuthenticationProvider)
 import EID.EIDService.Types
 import Flow.Aggregator (failureStageName)
 import Flow.Core.Type.AuthenticationConfiguration
@@ -98,12 +97,6 @@ instanceOverviewMagicHash instanceId userName hash mCookies mHost isSecure = do
         , addAuthCookieHeaders (isSecure == Secure) (newSessionCookieInfo, newXToken)
         )
 
-  -- TODO: Move this to instanceOverview after auth to view check.
-  -- Otherwise the user will be able to visit the signview before authenticating
-  -- if they happen to know the doc id and slid.
-  slids <- Model.selectSignatoryIdsByInstanceUser instanceId userName
-  mapM_ (addDocumentSession bd sessionId) slids
-
   -- The Flow user's access token has been verified so insert an "instance session"
   -- which is used for cookie authentication in subsequent calls.
   Model.upsertInstanceSession sessionId instanceId userName
@@ -116,15 +109,6 @@ instanceOverviewMagicHash instanceId userName hash mCookies mHost isSecure = do
         Just sessionCookie -> AuthModel.authenticateSession (sessionCookie, Nothing) (cookieDomain mHost)
         Nothing       -> pure Nothing
     redirectUrl = mkInstanceOverviewUrl instanceId userName
-    addDocumentSession bd sid slid = do
-      doc <- dbQuery $ GetDocumentBySignatoryLinkID slid -- Throws SomeDBExtraException
-      case checkBeforeAddingDocumentSession doc slid of
-        Just err -> do
-          logInfo_ $ "Unable to add document session: " <> showt err
-          case err of
-            DocumentNotAccessibleBySignatories _ -> throwProcessFailedHTML bd
-            _ -> throwUnableToAddDocumentSessionHTML bd
-        Nothing -> dbUpdate $ AddDocumentSession sid slid
 
 instanceOverview
   :: InstanceUserHTML -> InstanceId -> UserName -> Maybe Host -> IsSecure -> AppM Html
@@ -212,29 +196,25 @@ instanceOverview (InstanceUserHTML InstanceUser {..}) instanceId' _ mHost isSecu
 
   case mIdentifyViewVars of
     Just identifyViewVars -> return $ Html.renderIdentifyView identifyViewVars
-    Nothing               -> return $ Html.renderInstanceOverview instanceOverviewVars
+    Nothing               -> do
+        -- We have to add documents session after user was authenticated by in
+        -- the identify view.
+        -- Adding document session seams to be idempotent, so we can call it
+        -- every time.
+      slids <- Model.selectSignatoryIdsByInstanceUser instanceId userName
+      mapM_ (addDocumentSession bd sessionId) slids
 
-participantNeedsToIdentifyToView
-  :: (MonadDB m, MonadThrow m, MonadMask m)
-  => (AuthenticationKind, AuthenticationConfiguration)
-  -> InstanceId
-  -> UserName
-  -> SessionID
-  -> m Bool
-participantNeedsToIdentifyToView (authenticationKind, authenticationConfig) instanceId userName sid
-  = do
-    let authProvider = provider authenticationConfig
-    mAuthInDb <- selectFlowEidAuthentication instanceId userName authenticationKind sid
-    case mAuthInDb of
-      Nothing -> do
-        return True
-      Just authInDb -> return . not . authProviderMatchesAuth authProvider $ authInDb
-
+      return $ Html.renderInstanceOverview instanceOverviewVars
   where
-    authProviderMatchesAuth SmsOtp EIDServiceSmsOtpAuthentication_{} = True
-    authProviderMatchesAuth SmsOtp     _ = False
-    authProviderMatchesAuth (Onfido _) EIDServiceOnfidoAuthentication_{} = True
-    authProviderMatchesAuth (Onfido _) _ = False
+    addDocumentSession bd sid slid = do
+      doc <- dbQuery $ GetDocumentBySignatoryLinkID slid -- Throws SomeDBExtraException
+      case checkBeforeAddingDocumentSession doc slid of
+        Just err -> do
+          logInfo_ $ "Unable to add document session: " <> showt err
+          case err of
+            DocumentNotAccessibleBySignatories _ -> throwProcessFailedHTML bd
+            _ -> throwUnableToAddDocumentSessionHTML bd
+        Nothing -> dbUpdate $ AddDocumentSession sid slid
 
 mkIdentifyViewAppConfig
   :: (MonadDB m, MonadThrow m)

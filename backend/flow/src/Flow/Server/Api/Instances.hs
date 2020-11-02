@@ -27,6 +27,7 @@ import Doc.SignatoryLinkID (SignatoryLinkID)
 import Flow.ActionConsumers
 import Flow.Aggregator as Aggregator
 import Flow.Core.Type.Url
+import Flow.EID.Authentication (participantNeedsToIdentifyToView)
 import Flow.Engine
 import Flow.Error
 import Flow.Guards
@@ -283,7 +284,7 @@ rejectInstance InstanceUser { instanceId = userInstanceId, userName } targetInst
 
 getInstanceView
   :: InstanceUser -> InstanceId -> Maybe Host -> IsSecure -> AppM GetInstanceView
-getInstanceView user@InstanceUser { instanceId = userInstanceId, userName } targetInstanceId mHost isSecure
+getInstanceView user@InstanceUser { instanceId = userInstanceId, userName, sessionId } targetInstanceId mHost isSecure
   = do
     logInfo "Getting instance view"
       $ object ["instance_id" .= targetInstanceId, "instance_user" .= user]
@@ -299,7 +300,21 @@ getInstanceView user@InstanceUser { instanceId = userInstanceId, userName } targ
     fullInstance <-
       fromMaybeM throwInstanceNotFoundError . Model.selectFullInstance $ userInstanceId
     let aggrState = instanceToAggregator fullInstance
-    tongue <- decodeHighTongueM $ fullInstance ^. #template % #process
+    tongue          <- decodeHighTongueM $ fullInstance ^. #template % #process
+
+
+    mUserAuthConfig <- Model.selectUserAuthenticationConfiguration userInstanceId userName
+    let mAuthKindAndConfig =
+          mUserAuthConfig >>= getAuthenticationKindAndConfiguration fullInstance
+    case mAuthKindAndConfig of
+      Just (authenticationKind, authenticationConfig) -> do
+        needsToIdentify <- participantNeedsToIdentifyToView
+          (authenticationKind, authenticationConfig)
+          userInstanceId
+          userName
+          sessionId
+        when needsToIdentify $ throwAuthenticationError AdditionalAuthenticationNeeded
+      Nothing -> pure ()
 
     -- Document state
     -- TODO Flow: This works because there is at most one event per document

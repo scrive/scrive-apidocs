@@ -65,6 +65,13 @@ def get(session, url, **kwargs):
     handle_response(url, resp)
     return resp
 
+def get_expect(code, session, url, **kwargs):
+    resp = session.get(url, **kwargs)
+    if resp.status_code != code:
+        print_response("Call " + url, resp)
+        assert False
+    return resp
+
 
 def create_session(base_url, email, password):
     session = requests.Session()

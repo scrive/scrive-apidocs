@@ -53,6 +53,8 @@ data AuthError
   | XTokenMissingError
   | SessionCookieOrXTokenInvalidError
   | AccessControlError
+  | AdditionalAuthenticationNeeded
+  | RejectForbiddenError
   | InvalidInstanceAccessTokenError
 
 instance Show AuthError where
@@ -66,6 +68,8 @@ instance Show AuthError where
     SessionCookieOrXTokenInvalidError ->
       "The provided session cookie and/or xtoken header are invalid"
     AccessControlError -> "You do not have permission to perform the requested action"
+    RejectForbiddenError            -> "You are not allowed to reject the flow instance"
+    AdditionalAuthenticationNeeded  -> "Additional authentication required"
     InvalidInstanceAccessTokenError -> "This invitation link is invalid"
 
 makeJSONError :: FlowError -> ServerError

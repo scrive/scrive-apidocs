@@ -4,6 +4,7 @@ module Flow.EID.Authentication
     , updateFlowEidAuthentication
     , insertAuthenticationFailure
     , checkAuthMaxFailuresExceeded
+    , participantNeedsToIdentifyToView
     )
   where
 
@@ -91,3 +92,24 @@ checkAuthMaxFailuresExceeded
 checkAuthMaxFailuresExceeded instanceId userName (authKind, authConfig) = do
   numFailures <- countAuthenticationFailures instanceId userName authKind
   pure $ fromIntegral numFailures > authConfig ^. #maxFailures
+
+participantNeedsToIdentifyToView
+  :: (MonadDB m, MonadThrow m, MonadMask m)
+  => (AuthenticationKind, AuthenticationConfiguration)
+  -> InstanceId
+  -> UserName
+  -> SessionID
+  -> m Bool
+participantNeedsToIdentifyToView (authenticationKind, authenticationConfig) instanceId userName sid
+  = do
+    let authProvider = provider authenticationConfig
+    mAuthInDb <- selectFlowEidAuthentication instanceId userName authenticationKind sid
+    case mAuthInDb of
+      Nothing -> do
+        return True
+      Just authInDb -> return . not . authProviderMatchesAuth authProvider $ authInDb
+  where
+    authProviderMatchesAuth SmsOtp EIDServiceSmsOtpAuthentication_{} = True
+    authProviderMatchesAuth SmsOtp     _ = False
+    authProviderMatchesAuth (Onfido _) EIDServiceOnfidoAuthentication_{} = True
+    authProviderMatchesAuth (Onfido _) _ = False
