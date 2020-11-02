@@ -23,6 +23,8 @@ initdb --pgdata "$db_path" --locale "en_US.UTF-8"
 
 supervisord -c "$supervisor_config"
 
+killall postgres fakes3 || true
+
 supervisorctl -c "$supervisor_config" start postgres fakes3
 
 if [[ ! -v PDFTOOLS_CONFIG ]]
