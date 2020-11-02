@@ -7,6 +7,7 @@ import re
 from fixtures import *
 
 
+@pytest.mark.skip(reason="authentication tests are not deployed on any environemnt yet")
 def test_additional_authentication(author, base_url, flow_path):
     process = """
     dsl-version: "0.2.0"
