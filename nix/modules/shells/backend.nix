@@ -33,6 +33,7 @@ let
     pkgs.nodejs
     pkgs.xmlsec
     pkgs.gnuplot
+    pkgs.killall
     pkgs.openjdk
     pkgs.pngquant
     pkgs.qrencode
