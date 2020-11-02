@@ -24,6 +24,9 @@ initdb --pgdata "$db_path" --locale "en_US.UTF-8"
 
 supervisord -c "$supervisor_config"
 
+pkill fakes3 || true
+pkill postgres || true
+
 supervisorctl -c "$supervisor_config" start postgres fakes3
 
 supervisorctl -c "$supervisor_config" status postgres fakes3

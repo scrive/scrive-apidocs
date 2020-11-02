@@ -32,8 +32,8 @@ let
     pkgs.mupdf
     pkgs.nodejs
     pkgs.xmlsec
+    pkgs.procps
     pkgs.gnuplot
-    pkgs.killall
     pkgs.openjdk
     pkgs.pngquant
     pkgs.qrencode

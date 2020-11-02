@@ -29,6 +29,7 @@ let
     pkgs.mupdf
     pkgs.nodejs
     pkgs.xmlsec
+    pkgs.procps
     pkgs.libxml2
     pkgs.gnuplot
     pkgs.openjdk

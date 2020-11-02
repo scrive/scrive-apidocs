@@ -8,6 +8,7 @@ nixpkgs.mkShell {
 
   buildInputs = [
     pkgs.jq
+    pkgs.procps
     pkgs.postgresql
     pkgs.glibcLocales
 
