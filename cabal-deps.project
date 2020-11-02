@@ -35,5 +35,6 @@ source-repository-package
     tag: b1073ad169e963c23ab06bd0003f8052345eaec7
     --sha256: 0790n5r2n304jdz590bs47wirqfgscj1p70260zw95iklb2laydj
 
-allow-newer: servant-docs:lens
-             servant:QuickCheck
+allow-newer: base-noprelude:base
+             servant-blaze:servant
+             unliftio-core:base

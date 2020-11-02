@@ -208,8 +208,7 @@ testFailure = do
         runAggregatorStep event initialAggregatorState compiled
   receivedEvents @?= []
   result @?= Right (StateChange [Reject])
-  let (result, _nextState2@AggregatorState {..}) =
-        runAggregatorStep event nextState compiled
+  let (result, _nextState2) = runAggregatorStep event nextState compiled
   result @?= Left UnknownStage
   where
     event :: EventInfo

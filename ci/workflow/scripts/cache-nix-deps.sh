@@ -1,27 +1,60 @@
 #!/usr/bin/env bash
 
-set -eux
+set -euxo pipefail
 
-# This is set to nix-collect-garbage to clean up Nix store
-# after each shell cache is pushed, to prevent self hosted
-# runner on AWS Fargate from running out of disk space.
 nix_collect_garbage=${nix_collect_garbage:-true}
 
 $nix_collect_garbage
 df -h
 
-nix_deps=$(nix-build --no-out-link nix/releases/nix-deps.nix)
-mkdir -p result
-( cd result && tar xzf $nix_deps/kontrakcja-nix.tar.gz )
+ghc_versions=(
+  "ghc88"
+  "ghc810"
+)
 
-nix-shell -j4 -A $1 result/release.nix --run true
+ghc_builds=(
+  "shell-deps"
+  "lint-shell"
+  "dist-shell"
+  "backend-shell"
+  "frontend-shell"
+  "selenium-shell"
+  "detect-unused-shell"
+  "manual-backend-shell"
+  "kontrakcja-frontend"
+)
 
-instance=$(nix-instantiate -A $1 result/release.nix)
+other_builds=(
+  "new-frontend"
+  "haskell-plans"
+)
 
-nix-store --query --references --include-outputs $instance \
-    | xargs nix-store --query --requisites \
-    | cachix push scrive
+nix_deps_archive=$(nix-build --no-out-link nix/releases/nix-deps.nix)
+nix_deps=$(mktemp -d -t kontrakcja-nix-XXXX)
+( cd $nix_deps && tar xzf $nix_deps_archive/kontrakcja-nix.tar.gz )
 
-rm -rf result
+function cache_deps {
+  nix-shell -j4 -A $1 $nix_deps/release.nix --run true
+  instance=$(nix-instantiate -A "$1" $nix_deps/release.nix)
+  nix-store -qR --include-outputs $instance \
+      | xargs nix-store --query --requisites \
+      | cachix push scrive
+}
+
+for ghc_version in "${ghc_versions[@]}"
+do
+  for ghc_build in "${ghc_builds[@]}"
+  do
+    cache_deps "$ghc_version.$ghc_build"
+  done
+done
+
+
+for build in "${other_builds[@]}"
+do
+  cache_deps "$build"
+done
+
+rm -rf $nix_deps
 $nix_collect_garbage
 df -h

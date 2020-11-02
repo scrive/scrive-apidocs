@@ -57,7 +57,7 @@ collectVariables HighTongue {..} = foldl' toVariables mempty stages
       in  FlowVariables (fromList notifyUsers) mempty messages mempty
 
     unexpect :: Expect -> FlowVariables
-    unexpect ReceivedData {..} = mempty
+    unexpect ReceivedData{} = mempty
     unexpect ApprovedBy {..} =
       FlowVariables (fromList expectUsers) (fromList expectDocuments) mempty
         $ associate Approver expectUsers expectDocuments

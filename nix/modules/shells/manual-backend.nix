@@ -26,6 +26,7 @@ let
     pkgs.icu
     pkgs.curl
     pkgs.zbar
+    pkgs.zlib
     pkgs.mupdf
     pkgs.nodejs
     pkgs.xmlsec

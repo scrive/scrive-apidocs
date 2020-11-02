@@ -24,7 +24,7 @@ phMetricsURL :: PlanhatConf -> String
 phMetricsURL PlanhatConf {..} = planhatBaseURL </> planhatTenantID </> "dimensiondata"
 
 mkPlanhatRequest :: PlanhatConf -> (PlanhatConf -> String) -> JSON.Value -> Request
-mkPlanhatRequest phConf@PlanhatConf {..} phURL reqJSON =
+mkPlanhatRequest phConf phURL reqJSON =
   let
     timeout =
       responseTimeoutMicro

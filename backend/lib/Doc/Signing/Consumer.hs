@@ -525,7 +525,7 @@ handleNets
 handleNets mNetsSignConf ds@DocumentSigning {..} now = do
   logInfo_ "Collecting operation for Nets signing"
 
-  conf@NetsSignConfig {..} <- whenNothing mNetsSignConf $ do
+  conf <- whenNothing mNetsSignConf $ do
     noConfigurationWarning "Nets Esigning" -- log a warning rather than raising an error as documentSigning is called from cron
     throwE $ Failed Remove
 

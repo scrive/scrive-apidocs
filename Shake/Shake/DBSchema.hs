@@ -8,7 +8,7 @@ import Control.Applicative ((<|>), many)
 import Data.Aeson
 import Data.Attoparsec.Text
 import Data.Maybe
-import Development.Shake hiding ((*>))
+import Development.Shake
 import Development.Shake.FilePath
 import System.Directory
 import System.Exit (ExitCode(..))

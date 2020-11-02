@@ -64,10 +64,10 @@ nixpkgs.stdenv.mkDerivation {
     mkdir -p $out
 
     cp -r ${kontrakcja} $out/kontrakcja
-
     cp -r ${hlint} $out/hlint
     cp -r ${brittany} $out/brittany
     cp -r ${apply-refact} $out/apply-refact
     cp -r ${cabal-install} $out/cabal-install
   '';
+
 }

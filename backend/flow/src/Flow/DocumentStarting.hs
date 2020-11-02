@@ -35,7 +35,7 @@ kontraActions user docId = do
   docApiV2Start docId
 
 emptyKontrakcjaRequestFromAccount :: Account -> IO Request
-emptyKontrakcjaRequestFromAccount Account {..} = do
+emptyKontrakcjaRequestFromAccount _account = do
   rqBody       <- newMVar $ Body BS.empty
   rqInputsBody <- newMVar []
 

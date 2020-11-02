@@ -199,7 +199,7 @@ testMany workspaceRoot (allargs, ts) = do
   (errs, lr) <- mkLogRunner "test" testLogConfig
   mapM_ T.putStrLn errs
 
-  tconf@TestConf {..} <- readConfig putStrLn (workspaceRoot </> "kontrakcja_test.conf")
+  tconf <- readConfig putStrLn (workspaceRoot </> "kontrakcja_test.conf")
 
   withLogger lr $ \runLogger -> testMany' tconf (allargs, ts) runLogger rng
 

@@ -152,33 +152,33 @@ oracleHelpRule = do
     explainVar "SHAKE_BUILD_TEST_CONF_PATH" "Path to kontrakcja_test.conf file to use"
     showVarVal testconf
 
-    devBuild <- askOracleWith (BuildDev ()) True
+    devBuild <- askOracle (BuildDev ())
     explainVar "SHAKE_BUILD_DEV" "If not empty, will not run clean bulid"
     showVarVal (show devBuild)
 
-    testCoverage <- askOracleWith (BuildTestCoverage ()) True
+    testCoverage <- askOracle (BuildTestCoverage ())
     explainVar "SHAKE_BUILD_TEST_COVERAGE"
                "If not empty, will create a coverage report from server tests"
     showVarVal (show testCoverage)
 
-    cabalFlags <- askOracleWith (BuildCabalConfigureOptions ()) ""
+    cabalFlags <- askOracle (BuildCabalConfigureOptions ())
     explainVar "SHAKE_BUILD_CABAL_CONFIGURE_OPTS "
                "Custom flags to pass to 'cabal configure'"
     showVarVal cabalFlags
 
     putNormal ""
 
-    tc <- askOracleWith (TeamCity ()) True
+    tc <- askOracle (TeamCity ())
     explainVar "TEAMCITY_VERSION" "Used to determine if run by TeamCity CI"
     showVarVal (show tc)
 
-    tcDBCS <- askOracleWith (TeamCityBuildDBConnString ()) ""
+    tcDBCS <- askOracle (TeamCityBuildDBConnString ())
     explainVar "BUILD_DB_ADMIN_CONN_STRING"
       $  "Postgres connection string for admin access to the"
       ++ " isolated per-build DB. Doesn't include the DB name."
     showVarVal (show tcDBCS)
 
-    tcDB <- askOracleWith (TeamCityBuildDBName ()) ""
+    tcDB <- askOracle (TeamCityBuildDBName ())
     explainVar "BUILD_DB_NAME"
       $  "Name of the isolated per-build DB."
       ++ " Normally consists of a prefix and a build number."
@@ -204,10 +204,10 @@ oracleHelpRule = do
 
     putNormal ""
 
-    ghc <- askOracleWith (GhcVersion ()) ""
+    ghc <- askOracle (GhcVersion ())
     explainVar "GHC version" ghc
 
-    sourceRoot <- askOracleWith (SourceRoot ()) ""
+    sourceRoot <- askOracle (SourceRoot ())
     explainVar "SourceRoot" sourceRoot
 
     putNormal ""

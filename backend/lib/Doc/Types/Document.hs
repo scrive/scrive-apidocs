@@ -625,6 +625,6 @@ documentpreviewfile doc = case documentfile doc of
   Just (ClosedFile DigitallySignedFile {..}) -> fileid digitallySignedFile
   -- We preview the input file in the case of Verimi QES documents where not all
   -- signatories have signed, to avoid confusion.
-  Just PendingVerimiQesFile {..} -> maybe (unsafeFileID 0) fileid $ documentinputfile doc
+  Just PendingVerimiQesFile{} -> maybe (unsafeFileID 0) fileid $ documentinputfile doc
   Just ClosedVerimiQesFile {..} -> fileid mainfileWithQesSignatures
   Nothing -> unsafeFileID 0

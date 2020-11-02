@@ -1,7 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 module Flow.IntegrationTest.Failure where
 
-import Control.Monad.Reader.Class
 import Happstack.Server hiding (Cookie(..), Request(..), resp)
 import Network.HTTP.Types (statusCode)
 import Servant.Client (responseStatusCode)
@@ -24,7 +23,6 @@ import Flow.OrphanTestInstances ()
 import Flow.Process.Internal
 import Flow.Routes.Api
 import Flow.TestUtil
-import TestEnvSt.Internal (flowPort)
 import TestingUtil hiding (assertLeft, assertRight)
 import TestKontra
 import User.Lang
@@ -50,9 +48,8 @@ stages:
 
 testRejectedDocumentCausesProcessFailure :: TestEnv ()
 testRejectedDocumentCausesProcessFailure = do
-  TestEnvSt {..} <- ask
-  user           <- instantiateRandomUser
-  oauth          <- getToken (user ^. #id)
+  user  <- instantiateRandomUser
+  oauth <- getToken (user ^. #id)
   let ac = mkApiClient (Left oauth)
 
   -- Prepare a document with two signatories (one of them is the author).
@@ -129,7 +126,7 @@ testInstanceFailureReusedDocument :: TestEnv ()
 testInstanceFailureReusedDocument = do
   user  <- instantiateRandomUser
   oauth <- getToken (user ^. #id)
-  let ac@ApiClient {..} = mkApiClient (Left oauth)
+  let ac = mkApiClient (Left oauth)
 
   doc1 <- addRandomDocument (rdaDefault user)
     { rdaStatuses    = OneOf [Preparation]
@@ -179,7 +176,7 @@ testInstanceNotificationMethodFailure :: TestEnv ()
 testInstanceNotificationMethodFailure = do
   user  <- instantiateRandomUser
   oauth <- getToken (user ^. #id)
-  let ac@ApiClient {..} = mkApiClient (Left oauth)
+  let ac = mkApiClient (Left oauth)
 
   doc1 <- addRandomDocument (rdaDefault user)
     { rdaStatuses    = OneOf [Preparation]

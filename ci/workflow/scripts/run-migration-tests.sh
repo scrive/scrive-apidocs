@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -eux
+set -euxo pipefail
 
 mkdir -p workspace
 
@@ -41,6 +41,14 @@ createdb -h "$db_path" kontrakcja_test
 # Use kontrakcja_test db for both kontrakcja-migrate and kontrakcja-test
 sed -i "s/dbname='kontrakcja'/dbname='kontrakcja_test'/g" kontrakcja.conf
 
-( cd workspace/base-branch && cabal run kontrakcja-migrate )
+master_migrate=$(nix-build -A ghc88.kontrakcja-project.kontrakcja.components.exes.kontrakcja-migrate workspace/base-branch/release.nix)
+
+cabal configure --disable-optimization --enable-tests
+
+cabal build kontrakcja-migrate
+cabal build kontrakcja-test
+
+$master_migrate/bin/kontrakcja-migrate
+
 cabal run kontrakcja-migrate
 cabal run kontrakcja-test

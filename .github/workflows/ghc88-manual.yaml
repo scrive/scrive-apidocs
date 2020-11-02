@@ -30,10 +30,9 @@ jobs:
       - name: "Cache ~/.cabal"
         uses: "actions/cache@v2"
         with:
-          key: "${{ runner.os }}-cabal-${{ hashFiles('cabal.project.freeze') }}-2"
+          key: "${{ runner.os }}-cabal-ghc88-${{ hashFiles('cabal.project.freeze') }}-1"
           path: "~/.cabal"
-          restore-keys: |
-            ${{ runner.os }}-cabal-${{ hashFiles('cabal.project.freeze') }}-2
+          restore-keys: "${{ runner.os }}-cabal-ghc88-${{ hashFiles('cabal.project.freeze') }}-1"
       - name: Build Kontrakcja
         run: |
           nix-shell -A ghc88.manual-backend-shell release.nix --run \

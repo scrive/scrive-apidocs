@@ -4,12 +4,16 @@
 let
   args = { inherit checkMaterialization; };
 
-  ghc86 = import ./ghc86.nix args;
   ghc88 = import ./ghc88.nix args;
+  ghc810 = import ./ghc810.nix args;
 
   new-frontend = import ./new-frontend.nix;
+  haskell-plans = import ./plan.nix;
 in
-{ inherit ghc86 ghc88
+{ inherit
+    ghc88
+    ghc810
     new-frontend
+    haskell-plans
   ;
 }

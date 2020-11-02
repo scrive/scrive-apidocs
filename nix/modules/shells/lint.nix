@@ -10,15 +10,14 @@ let
   inherit (haskell-deps.exes)
     hlint brittany apply-refact;
 
-  ghc = haskell-nix.pkgs.haskell-nix.haskellPackages.ghcWithPackages (ps: []);
-
   sort-imports = kontrakcja-project.kontrakcja.components.exes.sort_imports;
   kontrakcja-shake = kontrakcja-project.kontrakcja-shake.components.exes.kontrakcja-shake;
 in
-nixpkgs.mkShell {
+kontrakcja-project.shellFor {
+  packages = hsPkgs: [ ];
+
   buildInputs = [
     git
-    ghc
     hlint
     nodejs
     brittany
@@ -30,6 +29,8 @@ nixpkgs.mkShell {
     nodePackages.less
     nodePackages.grunt-cli
   ];
+
+  withHoogle = false;
 
   shellHook = ''
     export LANG=''${LANG:-en_US.UTF-8}

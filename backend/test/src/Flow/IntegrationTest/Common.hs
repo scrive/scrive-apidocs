@@ -48,8 +48,7 @@ setCookieJar jar env = env { cookieJar = Just jar }
 
 authenticateContext :: ClientEnv -> Context -> TestEnv Context
 authenticateContext ClientEnv {..} context = do
-  TestEnvSt {..} <- ask
-  cookies        <-
+  cookies <-
     assertJust "cookie jar not present" cookieJar
     >>= fmap (fmap toTransformCookie . destroyCookieJar)
     .   liftIO

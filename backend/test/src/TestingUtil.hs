@@ -1655,7 +1655,7 @@ assertRaisesApiErrorType errorType =
 assertRaisesDBException :: (Show v, MonadIO m, MonadMask m) => m v -> m ()
 assertRaisesDBException a =
   (a >>= (\v -> assertFailure $ "Expecting db exception but got " <> show v))
-    `catches` [Handler $ \_e@DBException {..} -> return ()]
+    `catches` [Handler $ \_e@DBException{} -> return ()]
 
 assertRaisesKontra
   :: forall e v m

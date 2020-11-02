@@ -331,7 +331,7 @@ serverOldBuildRules opt exeDynamic cabalFile = do
 
   "_build/cabal-install-deps" %>>> do
     sourceRoot <- askOracle (SourceRoot ())
-    void $ askOracleWith (GhcVersion ()) ""
+    void $ askOracle (GhcVersion ())
     need
       [ "cabal.config"
       , sourceRoot </> "kontrakcja.cabal"
@@ -371,7 +371,7 @@ serverOldBuildRules opt exeDynamic cabalFile = do
     need ["cabal.config", sourceRoot </> "kontrakcja.cabal", "_build/cabal-install-deps"]
     tc           <- askOracle (TeamCity ())
     testCoverage <- askOracle (BuildTestCoverage ())
-    cabalFlags   <- askOracleWith (BuildCabalConfigureOptions ()) ""
+    cabalFlags   <- askOracle (BuildCabalConfigureOptions ())
     if tc || testCoverage || (not . null) cabalFlags
       then need ["_build/cabal-configure-with-flags"]
       else cmd Shell "cabal configure --enable-tests"

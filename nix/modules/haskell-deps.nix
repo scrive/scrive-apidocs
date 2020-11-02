@@ -35,7 +35,8 @@ let
   brittany = haskell-nix-pkgs.hackage-project {
     inherit checkMaterialization;
 
-    compiler-nix-name = ghc-version;
+    # Hardcode GHC version as it is only supported GHC 8.8
+    compiler-nix-name = "ghc884";
     index-state = hackage-index-state;
 
     name = "brittany";
@@ -48,8 +49,7 @@ let
   apply-refact = haskell-nix-pkgs.hackage-project {
     inherit checkMaterialization;
 
-    # Hardcode GHC version as it is only supported GHC 8.8 onward
-    compiler-nix-name = "ghc884";
+    compiler-nix-name = ghc-version;
     index-state = hackage-index-state;
 
     name = "apply-refact";

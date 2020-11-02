@@ -1,0 +1,66 @@
+# DO NOT EDIT MANUALLY. Workflow generated from workflow/scripts/generate-workflow.sh.
+jobs:
+  backend-tests:
+    runs-on:
+      - linux
+      - self-hosted
+      - build-runner
+    steps:
+      - name: Checkout Code
+        uses: "actions/checkout@v2"
+      - name: Setup Nix
+        run: |
+          ./ci/workflow/scripts/setup-nix.sh
+      - name: Setup Cachix
+        run: |
+          if ! type cachix
+          then
+            nix-env -iA cachix -f https://cachix.org/api/v1/install
+          fi
+          
+          cachix authtoken ${{ secrets.CACHIX_AUTH_TOKEN }}
+          cachix use scrive
+      - env:
+          SSH_KEY_PDFTOOLS: "${{ secrets.SSH_KEY_PDFTOOLS }}"
+        name: Setup SSH
+        run: "./ci/workflow/scripts/setup-ssh.sh"
+      - name: Load Nix Shell
+        run: |
+          nix-shell -j4 -A ghc810.backend-shell release.nix --run true
+      - name: Build Kontrakcja
+        run: |
+          nix-shell -A ghc810.backend-shell release.nix --run \
+            "cabal update; cabal configure --enable-tests --disable-optimization; cabal build all"
+        timeout-minutes: 180
+      - env:
+          PDFTOOLS_CONFIG: "${{ secrets.PDFTOOLS_CONFIG }}"
+        name: Run Backend Tests
+        run: |
+          nix-shell -A ghc810.backend-shell release.nix --run \
+            "./ci/workflow/scripts/run-backend-tests.sh"
+        timeout-minutes: 180
+      - name: Build Haddock
+        run: |
+          nix-shell -A ghc810.backend-shell release.nix --run \
+            "cabal haddock all"
+      - if: "${{ always() }}"
+        name: Upload Logs
+        uses: "actions/upload-artifact@v2"
+        with:
+          name: logs
+          path: logs
+name: "GHC 8.10 Backend Tests (Nix)"
+on:
+  pull_request:
+    paths:
+      - "**.hs"
+      - "**.cabal"
+      - cabal.project.freeze
+      - "texts/**"
+      - "nix/**"
+  push:
+    branches:
+      - master
+      - staging
+      - production
+      - nix

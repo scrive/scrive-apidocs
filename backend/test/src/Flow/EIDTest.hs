@@ -1,7 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 module Flow.EIDTest (tests) where
 
-import Control.Monad.Reader.Class
 import Test.Framework
 import Text.RawString.QQ
 import qualified Data.Map as Map
@@ -17,7 +16,6 @@ import Flow.OrphanTestInstances ()
 import Flow.Process.Internal
 import Flow.Routes.Api
 import Flow.TestUtil
-import TestEnvSt.Internal (flowPort)
 import TestingUtil hiding (assertLeft, assertRight)
 import TestKontra
 import Util.HasSomeUserInfo
@@ -41,9 +39,8 @@ stages:
 
 testAuthenticationConfiguration :: TestEnv ()
 testAuthenticationConfiguration = do
-  TestEnvSt {..} <- ask
-  user           <- instantiateRandomUser
-  oauth          <- getToken (user ^. #id)
+  user  <- instantiateRandomUser
+  oauth <- getToken (user ^. #id)
   let ac = mkApiClient (Left oauth)
 
   -- Prepare a document with two signatories (one of them is the author).

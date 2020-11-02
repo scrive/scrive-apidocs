@@ -1,6 +1,6 @@
 # DO NOT EDIT MANUALLY. Workflow generated from workflow/scripts/generate-workflow.sh.
 jobs:
-  cache-new-frontend-deps:
+  cache-nix-deps:
     runs-on:
       - linux
       - self-hosted
@@ -29,54 +29,10 @@ jobs:
       - env:
           CACHIX_SIGNING_KEY: "${{ secrets.CACHIX_SIGNING_KEY }}"
           nix_collect_garbage: 'true'
-        name: Cache Nix Frontend Deps
-        run: |
-          ./ci/workflow/scripts/cache-nix-deps.sh new-frontend
-        timeout-minutes: 360
-  cache-nix-deps:
-    runs-on:
-      - linux
-      - self-hosted
-      - build-runner
-    steps:
-      - name: Checkout Code
-        uses: "actions/checkout@v2"
-      - name: Setup Nix
-        run: |
-          ./ci/workflow/scripts/setup-nix.sh
-      - name: Setup Cachix
-        run: |
-          if ! type cachix
-          then
-            nix-env -iA cachix -f https://cachix.org/api/v1/install
-          fi
-          
-          cachix authtoken ${{ secrets.CACHIX_AUTH_TOKEN }}
-          cachix use scrive
-      - env:
-          SSH_KEY_PDFTOOLS: "${{ secrets.SSH_KEY_PDFTOOLS }}"
-        name: Setup SSH
-        run: "./ci/workflow/scripts/setup-ssh.sh"
-      - env:
-          CACHIX_SIGNING_KEY: "${{ secrets.CACHIX_SIGNING_KEY }}"
-          nix_collect_garbage: 'true'
         name: Cache Nix Deps
         run: |
-          ./ci/workflow/scripts/cache-nix-deps.sh ${{ matrix.nix-shell }}
+          ./ci/workflow/scripts/cache-nix-deps.sh
         timeout-minutes: 360
-    strategy:
-      matrix:
-        nix-shell:
-          - ghc88.lint-shell
-          - ghc88.dist-shell
-          - ghc88.backend-shell
-          - ghc88.frontend-shell
-          - ghc88.selenium-shell
-          - ghc88.detect-unused-shell
-          - ghc88.manual-backend-shell
-          - ghc88.kontrakcja-frontend
-          - ghc86.backend-shell
-          - ghc86.manual-backend-shell
 name: Cache Nix Dependencies
 on:
   pull_request:
@@ -85,11 +41,11 @@ on:
       - nix
     paths:
       - "nix/**"
-      - "**.cabal"
+      - cabal.project.freeze
   push:
     branches:
       - master
       - nix
     paths:
       - "nix/**"
-      - "**.cabal"
+      - cabal.project.freeze

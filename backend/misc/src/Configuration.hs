@@ -140,6 +140,7 @@ showNiceYamlParseException filepath parseException = case parseException of
       ++ problem
       ++ " "
       ++ context
+  Yaml.MultipleDocuments      -> filepath ++ ": multiple documents"
   Yaml.AesonException      ex -> filepath ++ ": " ++ ex
   Yaml.OtherParseException ex -> filepath ++ ": " ++ show ex
   Yaml.NonStringKey        _  -> "non-string keys are not supported"

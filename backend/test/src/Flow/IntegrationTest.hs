@@ -370,7 +370,7 @@ testUnmatchedViewersAreIgnored = do
   user  <- instantiateRandomUser
   oauth <- getToken (user ^. #id)
 
-  let ac@ApiClient {..} = mkApiClient (Left oauth)
+  let ac = mkApiClient (Left oauth)
 
   doc1 <- addRandomDocument $ randomDocumentWithRoles user RSC_IsViewer RSC_IsSignatory
 
@@ -396,7 +396,7 @@ testUnmatchedSignatoriesAreNotAllowed = do
   user  <- instantiateRandomUser
   oauth <- getToken (user ^. #id)
 
-  let ac@ApiClient {..} = mkApiClient (Left oauth)
+  let ac = mkApiClient (Left oauth)
 
   doc1 <- addRandomDocument $ randomDocumentWithRoles user RSC_IsSignatory RSC_IsSignatory
 

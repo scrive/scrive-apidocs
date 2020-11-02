@@ -13,43 +13,7 @@ let Json = ../type/Json.dhall
 
 let cache-nix-deps = Job.Job ::
     { runs-on = default-runner
-    , strategy = Some
-        { matrix = toMap
-            { nix-shell =
-                [ "ghc88.lint-shell"
-                , "ghc88.dist-shell"
-                , "ghc88.backend-shell"
-                , "ghc88.frontend-shell"
-                , "ghc88.selenium-shell"
-                , "ghc88.detect-unused-shell"
-                , "ghc88.manual-backend-shell"
-                , "ghc88.kontrakcja-frontend"
-                , "ghc86.backend-shell"
-                , "ghc86.manual-backend-shell"
-                ]
-            }
-        }
-    , steps = setupSteps.setup-steps #
-      [ Step ::
-          { name = "Cache Nix Deps"
-          , timeout-minutes = Some 360
-          , env = Some (toMap
-              { CACHIX_SIGNING_KEY = "\${{ secrets.CACHIX_SIGNING_KEY }}"
-              , nix_collect_garbage =
-                  if config.nix-collect-garbage
-                  then "nix-collect-garbage"
-                  else "true"
-              })
-          , run = Some ''
-              ./ci/workflow/scripts/cache-nix-deps.sh ''${{ matrix.nix-shell }}
-              ''
-          }
-      ]
-    }
-
-let cache-new-frontend-deps = Job.Job ::
-  { runs-on = default-runner
-  , steps =
+    , steps =
       [ setupSteps.checkout-step
       , setupSteps.nix-step
       , setupSteps.cachix-step
@@ -63,7 +27,7 @@ let cache-new-frontend-deps = Job.Job ::
           , run = Some "./ci/workflow/scripts/setup-ssh-frontend.sh"
           }
       , Step ::
-          { name = "Cache Nix Frontend Deps"
+          { name = "Cache Nix Deps"
           , timeout-minutes = Some 360
           , env = Some (toMap
               { CACHIX_SIGNING_KEY = "\${{ secrets.CACHIX_SIGNING_KEY }}"
@@ -73,26 +37,25 @@ let cache-new-frontend-deps = Job.Job ::
                   else "true"
               })
           , run = Some ''
-              ./ci/workflow/scripts/cache-nix-deps.sh new-frontend
+              ./ci/workflow/scripts/cache-nix-deps.sh
               ''
           }
       ]
-  }
+    }
 in
 Workflow.Workflow ::
   { name = "Cache Nix Dependencies"
   , on = Some Workflow.Triggers ::
       { push = Some Workflow.BranchSpec ::
           { branches = Some [ "master", "nix" ]
-          , paths = Some [ "nix/**", "**.cabal" ]
+          , paths = Some [ "nix/**", "cabal.project.freeze" ]
           }
         , pull_request = Some Workflow.BranchSpec ::
           { branches = Some [ "master", "nix" ]
-          , paths = Some [ "nix/**", "**.cabal" ]
+          , paths = Some [ "nix/**", "cabal.project.freeze" ]
           }
       }
   , jobs = toMap
       { cache-nix-deps = cache-nix-deps
-      , cache-new-frontend-deps = cache-new-frontend-deps
       }
   }

@@ -10,7 +10,6 @@ where
 import Control.Concurrent.Async.Lifted
 import Control.Concurrent.Lifted
 import Control.Monad.Base
-import Control.Monad.Reader.Class
 import Data.Aeson hiding (Success)
 import Database.PostgreSQL.Consumers
 import Happstack.Server hiding (Cookie(..), Request(..), resp)
@@ -43,7 +42,6 @@ import Flow.OrphanTestInstances ()
 import Flow.Process.Internal
 import Flow.Routes.Api hiding (Completed)
 import Flow.TestUtil
-import TestEnvSt.Internal (flowPort)
 import TestingUtil hiding (assertLeft, assertRight)
 import TestKontra
 import User.Lang
@@ -72,17 +70,14 @@ testSingleCallback = do
   -- Try to think of creating some functions which would reduced the
   -- boilerplate.
   (startedInstance, receivedPayloads) <- withTestCallbackProcessor $ do
-    TestEnvSt {..} <- ask
     -- Prepare flow process author.
-    user           <- instantiateRandomUser
+    user <- instantiateRandomUser
     let authorEmail = getEmail user
 
     -- Prepare flow authentication sessions.
     oauth <- getToken (user ^. #id)
 
-    let ApiClient {..}            = mkApiClient (Left oauth)
-    let ParticipantApiClient {..} = mkParticipantApiClient (Nothing, Nothing)
-    let PageClient {..}           = mkPageClient (Nothing, Nothing)
+    let ApiClient {..} = mkApiClient (Left oauth)
 
     -- Prepare document with two signatories (one of them is author).
     -- Consent module is disable so we don't need to care about it when signing.

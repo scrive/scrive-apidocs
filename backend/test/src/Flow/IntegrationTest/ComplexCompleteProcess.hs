@@ -1,7 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 module Flow.IntegrationTest.ComplexCompleteProcess where
 
-import Control.Monad.Reader.Class
 import Happstack.Server hiding (Cookie(..), Request(..), resp)
 import Optics hiding (mapping)
 import Servant.Client
@@ -30,7 +29,6 @@ import Flow.Process.Internal
 import Flow.Routes.Api
 import Flow.TestUtil
 import MinutesTime
-import TestEnvSt.Internal (flowPort)
 import TestingUtil hiding (assertLeft, assertRight)
 import TestKontra
 import User.Lang
@@ -57,9 +55,8 @@ stages:
 
 testComplexFlowProcess :: TestEnv ()
 testComplexFlowProcess = do
-  TestEnvSt {..} <- ask
   -- Prepare flow process author.
-  user           <- instantiateRandomUser
+  user <- instantiateRandomUser
   let authorEmail = getEmail user
 
   -- Prepare flow authentication sessions.
@@ -67,7 +64,6 @@ testComplexFlowProcess = do
 
   let ApiClient {..}            = mkApiClient (Left oauth)
   let ParticipantApiClient {..} = mkParticipantApiClient (Nothing, Nothing)
-  let PageClient {..}           = mkPageClient (Nothing, Nothing)
 
   -- Prepare document with two signatories (one of them is author).
   -- Consent module is disabled so we don't need to care about it when signing.

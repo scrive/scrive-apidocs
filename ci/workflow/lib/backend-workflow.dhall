@@ -28,7 +28,8 @@ let Args =
 
 let createWorkflow =
   \(args: Args.Type) ->
-    let shell = "${GHCVersion.format args.ghc-version}.${args.nix-shell}"
+    let ghc-version = GHCVersion.format args.ghc-version
+    let shell = "${ghc-version}.${args.nix-shell}"
 
     -- We want to cache ~/.cabal using GitHub Actions cache
     -- when running on cloud runner to speed up manual shell
@@ -38,16 +39,16 @@ let createWorkflow =
       then
         -- We cache ~/.cabal depending on the hash value of cabal.project.freeze
         -- The suffix like -1 are used to purge the cache on GitHub Actions if needed
-        let hasher = "\${{ hashFiles('cabal.project.freeze') }}-2" in
+        let hasher = "\${{ hashFiles('cabal.project.freeze') }}-1"
+        let cache-key = "\${{ runner.os }}-cabal-${ghc-version}-${hasher}"
+        in
         [ Step ::
           { name = "Cache ~/.cabal"
           , uses = Some "actions/cache@v2"
           , with = Some (toMap
               { path = Json.Str "~/.cabal"
-              , key = Json.Str "\${{ runner.os }}-cabal-${hasher}"
-              , restore-keys = Json.Str ''
-                  ''${{ runner.os }}-cabal-${hasher}
-                  ''
+              , key = Json.Str cache-key
+              , restore-keys = Json.Str cache-key
               })
           }
         ]

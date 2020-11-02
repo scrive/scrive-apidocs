@@ -320,7 +320,7 @@ handleNetsError = do
 handleSignRequest :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m A.Value
 handleSignRequest did slid = do
   logInfo_ "NETS SIGN start"
-  conf@NetsSignConfig {..} <- do
+  conf <- do
     ctx <- getContext
     case ctx ^. #netsSignConfig of
       Nothing       -> noConfigurationError "Nets ESigning"

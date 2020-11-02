@@ -1,9 +1,9 @@
-let GHCVersion = < ghc88 | ghc86 >
+let GHCVersion = < ghc88 | ghc810 >
 
 let format = \(version: GHCVersion) ->
   merge
     { ghc88 = "ghc88"
-    , ghc86 = "ghc86"
+    , ghc810 = "ghc810"
     }
     version
 

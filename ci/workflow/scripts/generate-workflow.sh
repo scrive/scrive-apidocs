@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 
+set -euxo pipefail
+
 jobs=(
   ghc88-nix
+  ghc810-nix
   ghc88-manual
+  ghc810-manual
   formatting
   quick-formatting
   frontend

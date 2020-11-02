@@ -36,7 +36,7 @@
         "containers".revision = (((hackage."containers")."0.6.2.1").revisions).default;
         "bytestring".revision = (((hackage."bytestring")."0.10.10.1").revisions).default;
         "text".revision = (((hackage."text")."1.2.4.0").revisions).default;
-        "Cabal".revision = (((hackage."Cabal")."3.2.0.0").revisions).default;
+        "Cabal".revision = (((hackage."Cabal")."3.2.1.0").revisions).default;
         "Cabal".flags.bundled-binary-generic = false;
         "base64-bytestring".revision = (((hackage."base64-bytestring")."1.2.0.0").revisions).default;
         "base".revision = (((hackage."base")."4.13.0.0").revisions).default;

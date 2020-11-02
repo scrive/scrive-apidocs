@@ -5,8 +5,8 @@ let
     { checkMaterialization = false;
     };
 
+  ghc810-plan = release.ghc810.build-plan;
   ghc88-plan = release.ghc88.build-plan;
-  ghc86-plan = release.ghc86.build-plan;
 in
 nixpkgs.stdenv.mkDerivation {
   name = "kontrakcja-release-plans";
@@ -16,7 +16,7 @@ nixpkgs.stdenv.mkDerivation {
   installPhase = ''
     mkdir -p $out
 
+    cp -r ${release.ghc810.build-plan} $out/${release.ghc810.ghc-version}
     cp -r ${release.ghc88.build-plan} $out/${release.ghc88.ghc-version}
-    cp -r ${release.ghc86.build-plan} $out/${release.ghc86.ghc-version}
   '';
 }

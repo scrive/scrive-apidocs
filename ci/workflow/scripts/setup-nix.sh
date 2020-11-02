@@ -34,3 +34,10 @@ echo "/nix/var/nix/profiles/default/bin" >> $GITHUB_PATH
 echo "$HOME/.nix-profile/bin/" >> $GITHUB_PATH
 echo "NIX_PATH=$HOME/.nix-defexpr/channels" >> $GITHUB_ENV
 echo "NIX_SSL_CERT_FILE=$NIX_SSL_CERT_FILE" >> $GITHUB_ENV
+
+mkdir -p ~/.config/nix
+
+cat  <<EOF > ~/.config/nix/nix.conf
+substituters = https://cache.nixos.org https://scrive.cachix.org https://iohk.cachix.org https://hydra.iohk.io
+trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= scrive.cachix.org-1:hwxjGBTLxgKl3EmWXHB+mQ8OnSMgh1tDsIKaV6rdBJU= iohk.cachix.org-1:DpRUyj7h7V830dp/i6Nti+NEO2/nhblbov/8MW7Rqoo= hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ=
+EOF

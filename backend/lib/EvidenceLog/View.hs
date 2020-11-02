@@ -276,17 +276,17 @@ simplifiedEventText mactor sim dee = do
             dbQuery (GetESignature slinkid) >>= \case
               Nothing   -> return ()
               Just esig -> case esig of
-                LegacyBankIDSignature_{}                        -> return ()
-                LegacyTeliaSignature_{}                         -> return ()
-                LegacyNordeaSignature_{}                        -> return ()
-                LegacyMobileBankIDSignature_{}                  -> return ()
-                CGISEBankIDSignature_ CGISEBankIDSignature {..} -> do
+                LegacyBankIDSignature_{}                     -> return ()
+                LegacyTeliaSignature_{}                      -> return ()
+                LegacyNordeaSignature_{}                     -> return ()
+                LegacyMobileBankIDSignature_{}               -> return ()
+                CGISEBankIDSignature_ CGISEBankIDSignature{} -> do
                   F.value "provider_sebankid" True
-                NetsNOBankIDSignature_ NetsNOBankIDSignature {..} -> do
+                NetsNOBankIDSignature_ NetsNOBankIDSignature{} -> do
                   F.value "provider_nobankid" True
-                NetsDKNemIDSignature_ NetsDKNemIDSignature {..} -> do
+                NetsDKNemIDSignature_ NetsDKNemIDSignature{} -> do
                   F.value "provider_dknemid" True
-                EIDServiceIDINSignature_ EIDServiceNLIDINSignature {..} -> do
+                EIDServiceIDINSignature_ EIDServiceNLIDINSignature{} -> do
                   F.value "provider_idin" True
                 EIDServiceFITupasSignature_ _ -> do
                   F.value "provider_fitupas" True

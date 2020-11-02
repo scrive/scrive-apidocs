@@ -12,6 +12,8 @@ sed -i '
   /any.containers ==/d
   /any.directory ==/d
   /any.ghc-boot-th ==/d
+  /any.ghc-prim ==/d
+  /any.integer-gmp ==/d
   /any.parsec ==/d
   /any.process ==/d
   /any.template-haskell ==/d

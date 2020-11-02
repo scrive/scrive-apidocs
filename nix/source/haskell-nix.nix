@@ -1,6 +1,6 @@
 let
-  version = "b64fd964ab5bafbf42be956a0fa04daf28babd49";
-  sha256 = "0a9vif111mi7rsbzdxvbhab6apflzagrjff7w8r089l0aqvq7rpl";
+  version = "8dd7d8c7f047219a30004839fb9bc328c04560ca";
+  sha256 = "01adnrcs2da2bcgf2nyy4ss2mqqhk7b8n9n8zr06qwhyvf9wj45s";
 in
 builtins.fetchTarball
   { inherit sha256;

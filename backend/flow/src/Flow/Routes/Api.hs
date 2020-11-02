@@ -56,14 +56,14 @@ import Folder.Types
 type TemplateApi
   = -- Configuration
          ReqBody '[JSON] CreateTemplate :> PostCreated '[JSON] GetCreateTemplate
-    :<|> Capture "template_id" TemplateId :> DeleteNoContent '[JSON] NoContent
+    :<|> Capture "template_id" TemplateId :> DeleteNoContent
     :<|> Capture "template_id" TemplateId :> Get '[JSON] GetTemplate
     :<|> Capture "template_id" TemplateId :> ReqBody '[JSON] PatchTemplate
                      :> Patch '[JSON] GetTemplate
     :<|> Get '[JSON] [GetTemplate]
     -- Control
     :<|> Capture "template_id" TemplateId :> "commit"
-                     :> PostNoContent '[JSON] NoContent
+                     :> PostNoContent
     :<|> Capture "template_id" TemplateId :> "start"
                      :> ReqBody '[JSON] CreateInstance
                      :> PostCreated '[JSON] GetInstance
@@ -73,7 +73,7 @@ type InstanceApi
   = -- Progress
          Capture "instance_id" InstanceId :> Get '[JSON] GetInstance
     :<|> Get '[JSON] [GetInstance]
-    :<|> Capture "instance_id" InstanceId :> "cancel" :> PostNoContent '[JSON] NoContent
+    :<|> Capture "instance_id" InstanceId :> "cancel" :> PostNoContent
 
 -- brittany-disable-next-binding
 type AllApis
@@ -95,11 +95,11 @@ type AllApis
             :> Capture "instance_id" InstanceId
             :> "reject"
             :> ReqBody '[JSON] RejectParam
-            :> PostNoContent '[JSON] NoContent
+            :> PostNoContent
         )
     :<|>
     -- No authentication
-      "templates" :> "validate" :> ReqBody '[JSON] Process :> PostNoContent '[JSON] NoContent
+      "templates" :> "validate" :> ReqBody '[JSON] Process :> PostNoContent
     :<|>
       "version" :> Get '[JSON] Version
 

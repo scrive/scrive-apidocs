@@ -17,5 +17,6 @@ source-repository-package
     location: https://github.com/dylex/hsaml2.git
     tag: d4852ee7d96f7643c97e5a7f1a82a7705a0e1236
 
-allow-newer: servant-docs:lens
-             servant:QuickCheck
+allow-newer: base-noprelude:base
+             servant-blaze:servant
+             unliftio-core:base
