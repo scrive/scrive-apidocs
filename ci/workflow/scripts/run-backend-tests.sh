@@ -10,6 +10,9 @@ then
   set -x
 fi
 
+export FAKES3_PORT=$(./ci/workflow/scripts/random-port.sh)
+export SAM_PORT=$(./ci/workflow/scripts/random-port.sh)
+
 ./scripts/workspace/generate-config.sh
 
 db_path="$(pwd)/_local/data"
@@ -23,13 +26,10 @@ initdb --pgdata "$db_path" --locale "en_US.UTF-8"
 
 supervisord -c "$supervisor_config"
 
-pkill fakes3 || true
-pkill postgres || true
 supervisorctl -c "$supervisor_config" start postgres fakes3
 
 if [[ ! -v PDFTOOLS_CONFIG ]]
 then
-  pkill sam || true
   supervisorctl -c "$supervisor_config" start sam
 fi
 

@@ -3,15 +3,22 @@
 script_dir="$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )"
 KONTRAKCJA_ROOT=${KONTRAKCJA_ROOT:-`pwd -P`}
 KONTRAKCJA_WORKSPACE=${KONTRAKCJA_WORKSPACE:-"$KONTRAKCJA_ROOT"}
+SAM_PORT=${SAM_PORT:-9876}
+FAKES3_PORT=${FAKES3_PORT:-4568}
 
 echo "Generating config files at $KONTRAKCJA_WORKSPACE"
 
-set_amazon="setpath([\"amazon\"]; $( cat $script_dir/fixture/amazon.json ))"
+set_fakes3_port="setpath([\"port\"]; $FAKES3_PORT)"
+amazon_config=$( jq "$set_fakes3_port" < $script_dir/fixture/amazon.json )
+
+set_amazon="setpath([\"amazon\"]; $amazon_config)"
+set_amazon_s3="setpath([\"amazon_s3\"]; $amazon_config)"
+set_gateway_url="setpath([\"gateway_url\"]; \"http://localhost:$SAM_PORT/seal\")"
 
 if [[ -e "$KONTRAKCJA_WORKSPACE/pdftools-lambda.local.json" ]]; then
   pdftools_conf=$( cat "$KONTRAKCJA_WORKSPACE/pdftools-lambda.local.json" )
 else
-  pdftools_conf=$( cat "$script_dir/fixture/pdftools_lambda.json" )
+  pdftools_conf=$( jq "$set_amazon_s3 | $set_gateway_url" "$script_dir/fixture/pdftools_lambda.json" )
 fi
 
 set_pdftools="setpath([\"pdftools_lambda\"]; $pdftools_conf)"

@@ -19,6 +19,9 @@ set +x
 echo "$PDFTOOLS_CONFIG" > ./pdftools-lambda.local.json
 set -x
 
+export FAKES3_PORT=$(./ci/workflow/scripts/random-port.sh)
+export SAM_PORT=$(./ci/workflow/scripts/random-port.sh)
+
 ./scripts/workspace/generate-config.sh
 
 db_path="$(pwd)/_local/data"

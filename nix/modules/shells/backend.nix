@@ -32,7 +32,7 @@ let
     pkgs.mupdf
     pkgs.nodejs
     pkgs.xmlsec
-    pkgs.procps
+    pkgs.netcat
     pkgs.gnuplot
     pkgs.openjdk
     pkgs.pngquant

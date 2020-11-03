@@ -4,12 +4,13 @@ set -eux
 
 trap 'kill 0' EXIT
 
+SAM_PORT=${SAM_PORT:-9876}
+
 echo "Running AWS SAM local instance"
 
 docker_host=$(docker network inspect -f "{{ json . }}" bridge | jq -r '.IPAM.Config | .[0].Gateway')
 
 echo "Docker Host IP: $docker_host"
-
 
 if [ -z "${scrivepdftools:-}" ]
 then
@@ -58,9 +59,9 @@ Resources:
                         Method: post
 EOF
 
-echo "Running SAM with template path at $template_path:"
+echo "Running SAM on port $SAM_PORT with template path at $template_path:"
 
 cat "$template_path"
 
 sam --version
-sam local start-api --port 9876 --region eu-central-1 --template "$template_path"
+sam local start-api --port "$SAM_PORT" --region eu-central-1 --template "$template_path"
