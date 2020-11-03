@@ -237,6 +237,7 @@ companySettingsJson ugs = do
   value "haspostsignview" $ ugs ^. #hasPostSignview
   value "eiduseforseview" $ ugs ^. #eidUseForSEView
   value "appfrontend" $ ugs ^. #appFrontend
+  value "ssoenabled" . isJust $ ugs ^. #ssoConfig
   value "promptbpid" $ ugs ^. #requireBPIDForNewDoc
   value "seBankIDSigningOverride" $ case ugs ^. #seBankIDSigningOverride of
     Just ForceCGIForSEBankIDSigning -> "force_cgi"

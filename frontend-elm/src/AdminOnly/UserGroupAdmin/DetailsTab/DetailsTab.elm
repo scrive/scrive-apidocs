@@ -715,6 +715,15 @@ viewUserGroup model ug address settings =
                 settings.appFrontend
                 (SetBoolField "appFrontend")
                 [ readonly ug.settingsIsInherited ]
+            , formRow labelColAttrs
+                inputColAttrs
+                "SSO enabled"
+                "If set, then there is an SSO configuration associated with this company"
+              <|
+                [ Checkbox.checkbox
+                    [ Checkbox.attrs <| [ checked settings.usesSSO, readonly True, disabled True ] ]
+                    ""
+                ]
             ]
         , Grid.row [ Row.leftSm ] <|
             [ Grid.col [ Col.sm12 ]

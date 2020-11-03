@@ -43,6 +43,7 @@ type alias Settings =
     , appFrontend : Bool
     , seBankIDSigningOverride : SEBankIDSigningProviderOverride
     , padesCredentialsLabel : Maybe String
+    , usesSSO : Bool
     }
 
 
@@ -76,6 +77,7 @@ decoder =
         |> DP.required "appfrontend" JD.bool
         |> DP.required "seBankIDSigningOverride" SEBankIDSigningProviderOverride.decoder
         |> DP.required "padescredentialslabel" (JD.string |> JD.nullable)
+        |> DP.required "ssoenabled" JD.bool
 
 
 formValues : Settings -> List ( String, String )
