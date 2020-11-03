@@ -1,5 +1,8 @@
 # Scrive API Documentation using Slate
 
+_This repository has been merged into [Kontrakcja](https://github.com/scrive/kontrakcja/tree/master/api-docs)._
+_Do not make any change here._
+
 Forked and edited from the original
 [Slate repository](https://github.com/lord/slate).
 
