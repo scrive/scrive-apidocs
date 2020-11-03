@@ -1,0 +1,88 @@
+$top-navbar-bg: #ffffff;
+$top-navbar-border: #cccccc;
+$nav-bg: #f2f6f9;
+$examples-bg: #393939;
+$code-bg: #292929;
+$code-annotation-bg: #1c1c1c;
+$nav-subitem-bg: $nav-bg;
+$nav-active-bg: #2467af;
+$nav-active-parent-bg: inherit;
+$nav-active-parent-text: inherit;
+
+$lang-select-border: #000;
+$lang-select-bg: #222;
+$lang-select-active-bg: $examples-bg; // feel free to change this to blue or something
+$lang-select-pressed-bg: #111; // color of language tab bg when mouse is pressed
+$main-bg: #ffffff;
+$aside-notice-bg: lighten(#8fbcd4,20%);
+$aside-warning-bg: lighten(#c97a7e,25%);
+$aside-success-bg: lighten(#6ac174,30%);
+$search-notice-bg: #c97a7e;
+$search-highlight: lighten(#F7E633,20%);
+
+$main-text: #456; // main content text color
+$nav-text: #505050;
+$nav-active-text: #fff;
+
+$lang-select-text: #fff; // color of unselected language tab text
+$lang-select-active-text: #fff; // color of selected language tab text
+$lang-select-pressed-text: #fff; // color of language tab text when mouse is pressed
+
+$top-navbar-height: 50px; // height of the top navbar
+$nav-width: 230px; // width of the navbar
+$examples-width: 35%; // portion of the screen taken up by code examples
+$logo-margin: 20px; // margin between nav items and logo, ignored if search is active
+$main-padding: 42px; // padding to left and right of content & examples
+$nav-padding: 20px; // padding to left and right of navbar
+$nav-top-padding: 15px;
+$nav-v-padding: 10px; // padding used vertically around search boxes and results
+$nav-indent: 10px; // extra padding for ToC subitems
+$code-annotation-padding: 13px; // padding inside code annotations
+$h1-margin-bottom: 21px; // padding under the largest header tags
+$tablet-width: 930px; // min width before reverting to tablet size
+$phone-width: $tablet-width - $nav-width; // min width before reverting to mobile size
+
+@font-face {
+  font-family: 'Montserrat';
+  src: url('/fonts/Montserrat-Regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Montserrat';
+  src: url('/fonts/Montserrat-Bold.otf') format('opentype');
+  font-weight: bold;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Montserrat';
+  src: url('/fonts/Montserrat-Light.otf') format('opentype');
+  font-weight: 200;
+  font-style: normal;
+}
+
+%default-font {
+  font-family: Montserrat, Helvetica, Arial, sans-serif;
+  font-size: 13px;
+}
+
+%header-font {
+  font-weight: normal;
+}
+
+%code-font {
+  font-family: Menlo, Monaco, Consolas, "Lucida Console", "Liberation Mono", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Courier New", monospace, serif;
+}
+
+//white-space: pre-wrap; // ???
+
+$nav-active-shadow: #000;
+$nav-footer-border-color: #666;
+$nav-embossed-border-top: #000;
+$nav-embossed-border-bottom: #939393;
+$main-embossed-text-shadow: none;
+$search-box-border-color: #666;
+
+%break-words {
+  word-break: break-word;
+}
