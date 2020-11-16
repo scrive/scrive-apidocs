@@ -10,6 +10,20 @@ Forked and edited from the original
   <img src="https://raw.githubusercontent.com/lord/img/master/logo-slate.png" alt="Slate: API Documentation Generator" width="226">
 </p>
 
+<!-- Generate toc with `markdown-toc -i README.md` -->
+
+<!-- toc -->
+
+- [What's in here?](#whats-in-here)
+  * [Differrences from Slate upstream](#differrences-from-slate-upstream)
+  * [Generating a single OpenAPI / Swagger specification](#generating-a-single-openapi--swagger-specification)
+- [Updating the Documentation](#updating-the-documentation)
+  * [Dependencies](#dependencies)
+  * [Generating documentation on your local machine](#generating-documentation-on-your-local-machine)
+  * [Updating documentation on http://apidocs.scrive.com/](#updating-documentation-on-httpapidocsscrivecom)
+
+<!-- tocstop -->
+
 ## What's in here?
 
 **Use with caution:**
@@ -44,6 +58,16 @@ Other than that other differences probably mean that upstream made some changes.
 
 Also, thanks to all the
 [original contributors](https://github.com/lord/slate#contributors) of _Slate_!
+
+### Generating a single OpenAPI / Swagger specification
+
+Since the `documentation/` files use JSON references to bring it other files,
+you need to manually generate a single OpenAPI / Swagger file if someone needs it.
+
+Conveniently `openapi2slate` provides a `--difference` option ([not yet
+released](https://github.com/scrive/openapi2slate/pull/6)), so using that you
+should be able to get a JSON that somewhat matches what you need, however
+**note that it will include all "internal" API endpoints as well**.
 
 ## Updating the Documentation
 
