@@ -744,6 +744,10 @@ This is the only officially supported encoding for our API.
 </tr>
 </thead><tbody>
 <tr>
+<td>2021-02-11</td>
+<td>Added <code>nl_idin</code> option to <code>authentication_method_to_sign</code>.</td>
+</tr>
+<tr>
 <td>2020-12-14</td>
 <td>Added <code>freja</code> option to <code>authentication_method_to_sign</code>.</td>
 </tr>
@@ -7809,6 +7813,7 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 <li><code>dk_nemid_cpr</code></li>
 <li><code>dk_nemid_cvr</code></li>
 <li><code>fi_tupas</code></li>
+<li><code>nl_idin</code></li>
 <li><code>onfido_document_check</code></li>
 <li><code>onfido_document_and_photo_check</code></li>
 <li><code>freja</code></li>
@@ -11855,6 +11860,7 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 <li><code>dk_nemid_cpr</code></li>
 <li><code>dk_nemid_cvr</code></li>
 <li><code>fi_tupas</code></li>
+<li><code>nl_idin</code></li>
 <li><code>onfido_document_check</code></li>
 <li><code>onfido_document_and_photo_check</code></li>
 <li><code>freja</code></li>
@@ -14935,6 +14941,7 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 <li><code>dk_nemid_cpr</code></li>
 <li><code>dk_nemid_cvr</code></li>
 <li><code>fi_tupas</code></li>
+<li><code>nl_idin</code></li>
 <li><code>onfido_document_check</code></li>
 <li><code>onfido_document_and_photo_check</code></li>
 <li><code>freja</code></li>
@@ -18532,6 +18539,7 @@ count of documents on different stages of the process</p>
   </span><span class="s2">"email"</span><span class="p">:</span><span class="w"> </span><span class="s2">"arthur.dent@scrive.com"</span><span class="p">,</span><span class="w">
   </span><span class="s2">"twofactor_active"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
   </span><span class="s2">"twofactor_is_mandatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"webauthn_active"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
   </span><span class="s2">"personalnumber"</span><span class="p">:</span><span class="w"> </span><span class="s2">"197910124242"</span><span class="p">,</span><span class="w">
   </span><span class="s2">"phone"</span><span class="p">:</span><span class="w"> </span><span class="s2">"+444242424242"</span><span class="p">,</span><span class="w">
   </span><span class="s2">"companyadmin"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
@@ -18590,6 +18598,12 @@ count of documents on different stages of the process</p>
 </div>
 
 <h3><code>twofactor_is_mandatory</code> (boolean)</h3>
+
+<div class="json-schema">
+
+</div>
+
+<h3><code>webauthn_active</code> (boolean)</h3>
 
 <div class="json-schema">
 
