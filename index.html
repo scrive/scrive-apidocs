@@ -615,6 +615,9 @@
                     <a href="#signatoryfieldcustomtext" class="toc-h2 toc-link" data-title="signatoryfieldcustomtext">SignatoryFieldCustomText</a>
                   </li>
                   <li>
+                    <a href="#signatoryfielddate" class="toc-h2 toc-link" data-title="signatoryfielddate">SignatoryFieldDate</a>
+                  </li>
+                  <li>
                     <a href="#list-filter" class="toc-h2 toc-link" data-title="list-filter">List Filter</a>
                   </li>
                   <li>
@@ -5819,6 +5822,7 @@ the signatory to draw their signature.</li>
 <li><code>SignatoryFieldRadiogroup</code>: Radio buttons of varying sizes.</li>
 <li><code>SignatoryFieldCustomText</code>: A text field for any other information
 about, or requested, from the signatory.</li>
+<li><code>SignatoryFieldDate</code>: A date input field.</li>
 </ul>
 <p>Please read the detailed definition of each field type for more
 information.
@@ -6070,6 +6074,15 @@ depending on the field type.</p>
 
 <p></div></p>
 
+<h6><code>description</code> (string,null)</h6>
+
+<div class="json-schema">
+
+<p>Description of this field</p>
+
+
+</div>
+
 <p></div></p>
 
 <h6>SignatoryFieldEmailMobile</h6>
@@ -6309,6 +6322,15 @@ depending on the field type.</p>
 <p></div></p>
 
 <p></div></p>
+
+<h6><code>description</code> (string,null)</h6>
+
+<div class="json-schema">
+
+<p>Description of this field</p>
+
+
+</div>
 
 <p></div></p>
 
@@ -6554,6 +6576,15 @@ depending on the field type.</p>
 
 <p></div></p>
 
+<h6><code>description</code> (string,null)</h6>
+
+<div class="json-schema">
+
+<p>Description of this field</p>
+
+
+</div>
+
 <p></div></p>
 
 <h6>SignatoryFieldStandard</h6>
@@ -6783,6 +6814,15 @@ depending on the field type.</p>
 <p></div></p>
 
 <p></div></p>
+
+<h6><code>description</code> (string,null)</h6>
+
+<div class="json-schema">
+
+<p>Description of this field</p>
+
+
+</div>
 
 <p></div></p>
 
@@ -7044,6 +7084,15 @@ depending on the field type.</p>
 
 <p></div></p>
 
+<h6><code>description</code> (string,null)</h6>
+
+<div class="json-schema">
+
+<p>Description of this field</p>
+
+
+</div>
+
 <p></div></p>
 
 <h6>SignatoryFieldRadiogroup</h6>
@@ -7301,6 +7350,15 @@ depending on the field type.</p>
 <p></div></p>
 
 <p></div></p>
+
+<h6><code>description</code> (string,null)</h6>
+
+<div class="json-schema">
+
+<p>Description of this field</p>
+
+
+</div>
 
 <p></div></p>
 
@@ -7589,6 +7647,448 @@ custom regular expression.</p>
 
 
 </div>
+
+<p></div></p>
+
+<p></div></p>
+
+<h6><code>description</code> (string,null)</h6>
+
+<div class="json-schema">
+
+<p>Description of this field</p>
+
+
+</div>
+
+<p></div></p>
+
+<h6>SignatoryFieldDate</h6>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>Signatory field for dates. Optionally can impose restrictions
+on start and/or end date (either absolute or relative to document view).</p>
+
+
+<p>This object has the following properties:</p>
+
+<h6><code>type</code> (string, enum, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Used to specify that this is a date field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>date</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>name</code> (string, required)</h6>
+
+<div class="json-schema">
+
+<p>A name for the date field.</p>
+<p>The name will be used as a placeholder value on the signing page, it will
+also be used in the Evidence Log as a reference.</p>
+
+
+</div>
+
+<h6><code>value</code> (string,null)</h6>
+
+<div class="json-schema">
+
+<p>Either a pre-filled value, or the value entered by the signatory.
+Must be specified as ISO8601 date.</p>
+
+
+<p>Default: <code>null</code></p>
+
+</div>
+
+<h6><code>is_obligatory</code> (boolean)</h6>
+
+<div class="json-schema">
+
+<p>Default: <code>true</code></p>
+
+</div>
+
+<h6><code>should_be_filled_by_sender</code> (boolean)</h6>
+
+<div class="json-schema">
+
+<p>Default: <code>false</code></p>
+
+</div>
+
+<h6><code>placements</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p><strong>Needs to be set, otherwise the signatory will not be asked or presented with this information.</strong></p>
+<p>Defines where this field should be placed on the document.
+This is both for the signatory to fill out on the signing page, and for
+the final sealed PDF.</p>
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>xrel</code> (number, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Position on the x-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>yrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Position on the y-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>wrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Width of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>hrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Height of placement, as proportion of total height, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>fsrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Font size of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>page</code> (integer, required)</h6>
+
+<div class="json-schema">
+
+<p>The page number for this placement, starting from 1.</p>
+
+
+</div>
+
+<h6><code>tip</code> </h6>
+
+<div class="json-schema">
+
+<p>Default: <code>null</code></p>
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>From which side the arrow on the signing page should point
+to the field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>left</code></li>
+<li><code>right</code></li>
+
+</ul>
+
+</div>
+
+<h6>(null)</h6>
+
+<div class="json-schema">
+
+<p>Let the signing page default to either <code>left</code> or <code>right</code>
+depending on the field type.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h6><code>anchors</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>text</code> (string)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>index</code> (integer)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<h6><code>description</code> (string,null)</h6>
+
+<div class="json-schema">
+
+<p>Description of this field.</p>
+
+
+</div>
+
+<h6><code>configuration</code> (object, required)</h6>
+
+<div class="json-schema">
+
+<p>Definition of optional restriction imposed upon start and/or end date.
+Null means no restriction.</p>
+
+
+<p>The <code>configuration</code> object has the following properties:</p>
+
+<h6><code>start_date</code> </h6>
+
+
+<div class="json-schema">
+
+The elements of this item must match *exactly one* of the following properties:
+
+<h6>(null)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6>DateConfig</h6>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>Describes restriction imposed on start or end date of a signatory date field.
+The threshold is based on document view date, plus (or minus, if &quot;value&quot; is negative)
+the number of days defined in &quot;value&quot;.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h6><code>type</code> (string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>relative-to-doc-view</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>value</code> (integer)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<h6>DateConfig</h6>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>Describes restricted imposed on start or end date of a signatory date field.
+The threshold is the date specified by &quot;value&quot;.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h6><code>type</code> (string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>absolute</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>value</code> (string)</h6>
+
+<div class="json-schema">
+
+<p>Must be specified as ISO8601 date.</p>
+
+
+</div>
+
+<p></div></p>
+
+<p></div></p>
+
+<h6><code>end_date</code> </h6>
+
+<div class="json-schema">
+
+The elements of this item must match *exactly one* of the following properties:
+
+<h6>(null)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6>DateConfig</h6>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>Describes restriction imposed on start or end date of a signatory date field.
+The threshold is based on document view date, plus (or minus, if &quot;value&quot; is negative)
+the number of days defined in &quot;value&quot;.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h6><code>type</code> (string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>relative-to-doc-view</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>value</code> (integer)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<h6>DateConfig</h6>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>Describes restricted imposed on start or end date of a signatory date field.
+The threshold is the date specified by &quot;value&quot;.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h6><code>type</code> (string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>absolute</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>value</code> (string)</h6>
+
+<div class="json-schema">
+
+<p>Must be specified as ISO8601 date.</p>
+
+
+</div>
+
+<p></div></p>
 
 <p></div></p>
 
@@ -9866,6 +10366,7 @@ the signatory to draw their signature.</li>
 <li><code>SignatoryFieldRadiogroup</code>: Radio buttons of varying sizes.</li>
 <li><code>SignatoryFieldCustomText</code>: A text field for any other information
 about, or requested, from the signatory.</li>
+<li><code>SignatoryFieldDate</code>: A date input field.</li>
 </ul>
 <p>Please read the detailed definition of each field type for more
 information.
@@ -10117,6 +10618,15 @@ depending on the field type.</p>
 
 <p></div></p>
 
+<h6><code>description</code> (string,null)</h6>
+
+<div class="json-schema">
+
+<p>Description of this field</p>
+
+
+</div>
+
 <p></div></p>
 
 <h6>SignatoryFieldEmailMobile</h6>
@@ -10356,6 +10866,15 @@ depending on the field type.</p>
 <p></div></p>
 
 <p></div></p>
+
+<h6><code>description</code> (string,null)</h6>
+
+<div class="json-schema">
+
+<p>Description of this field</p>
+
+
+</div>
 
 <p></div></p>
 
@@ -10601,6 +11120,15 @@ depending on the field type.</p>
 
 <p></div></p>
 
+<h6><code>description</code> (string,null)</h6>
+
+<div class="json-schema">
+
+<p>Description of this field</p>
+
+
+</div>
+
 <p></div></p>
 
 <h6>SignatoryFieldStandard</h6>
@@ -10830,6 +11358,15 @@ depending on the field type.</p>
 <p></div></p>
 
 <p></div></p>
+
+<h6><code>description</code> (string,null)</h6>
+
+<div class="json-schema">
+
+<p>Description of this field</p>
+
+
+</div>
 
 <p></div></p>
 
@@ -11091,6 +11628,15 @@ depending on the field type.</p>
 
 <p></div></p>
 
+<h6><code>description</code> (string,null)</h6>
+
+<div class="json-schema">
+
+<p>Description of this field</p>
+
+
+</div>
+
 <p></div></p>
 
 <h6>SignatoryFieldRadiogroup</h6>
@@ -11348,6 +11894,15 @@ depending on the field type.</p>
 <p></div></p>
 
 <p></div></p>
+
+<h6><code>description</code> (string,null)</h6>
+
+<div class="json-schema">
+
+<p>Description of this field</p>
+
+
+</div>
 
 <p></div></p>
 
@@ -11636,6 +12191,448 @@ custom regular expression.</p>
 
 
 </div>
+
+<p></div></p>
+
+<p></div></p>
+
+<h6><code>description</code> (string,null)</h6>
+
+<div class="json-schema">
+
+<p>Description of this field</p>
+
+
+</div>
+
+<p></div></p>
+
+<h6>SignatoryFieldDate</h6>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>Signatory field for dates. Optionally can impose restrictions
+on start and/or end date (either absolute or relative to document view).</p>
+
+
+<p>This object has the following properties:</p>
+
+<h6><code>type</code> (string, enum, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Used to specify that this is a date field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>date</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>name</code> (string, required)</h6>
+
+<div class="json-schema">
+
+<p>A name for the date field.</p>
+<p>The name will be used as a placeholder value on the signing page, it will
+also be used in the Evidence Log as a reference.</p>
+
+
+</div>
+
+<h6><code>value</code> (string,null)</h6>
+
+<div class="json-schema">
+
+<p>Either a pre-filled value, or the value entered by the signatory.
+Must be specified as ISO8601 date.</p>
+
+
+<p>Default: <code>null</code></p>
+
+</div>
+
+<h6><code>is_obligatory</code> (boolean)</h6>
+
+<div class="json-schema">
+
+<p>Default: <code>true</code></p>
+
+</div>
+
+<h6><code>should_be_filled_by_sender</code> (boolean)</h6>
+
+<div class="json-schema">
+
+<p>Default: <code>false</code></p>
+
+</div>
+
+<h6><code>placements</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p><strong>Needs to be set, otherwise the signatory will not be asked or presented with this information.</strong></p>
+<p>Defines where this field should be placed on the document.
+This is both for the signatory to fill out on the signing page, and for
+the final sealed PDF.</p>
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>xrel</code> (number, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Position on the x-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>yrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Position on the y-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>wrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Width of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>hrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Height of placement, as proportion of total height, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>fsrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Font size of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>page</code> (integer, required)</h6>
+
+<div class="json-schema">
+
+<p>The page number for this placement, starting from 1.</p>
+
+
+</div>
+
+<h6><code>tip</code> </h6>
+
+<div class="json-schema">
+
+<p>Default: <code>null</code></p>
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>From which side the arrow on the signing page should point
+to the field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>left</code></li>
+<li><code>right</code></li>
+
+</ul>
+
+</div>
+
+<h6>(null)</h6>
+
+<div class="json-schema">
+
+<p>Let the signing page default to either <code>left</code> or <code>right</code>
+depending on the field type.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h6><code>anchors</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>text</code> (string)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>index</code> (integer)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<h6><code>description</code> (string,null)</h6>
+
+<div class="json-schema">
+
+<p>Description of this field.</p>
+
+
+</div>
+
+<h6><code>configuration</code> (object, required)</h6>
+
+<div class="json-schema">
+
+<p>Definition of optional restriction imposed upon start and/or end date.
+Null means no restriction.</p>
+
+
+<p>The <code>configuration</code> object has the following properties:</p>
+
+<h6><code>start_date</code> </h6>
+
+
+<div class="json-schema">
+
+The elements of this item must match *exactly one* of the following properties:
+
+<h6>(null)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6>DateConfig</h6>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>Describes restriction imposed on start or end date of a signatory date field.
+The threshold is based on document view date, plus (or minus, if &quot;value&quot; is negative)
+the number of days defined in &quot;value&quot;.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h6><code>type</code> (string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>relative-to-doc-view</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>value</code> (integer)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<h6>DateConfig</h6>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>Describes restricted imposed on start or end date of a signatory date field.
+The threshold is the date specified by &quot;value&quot;.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h6><code>type</code> (string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>absolute</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>value</code> (string)</h6>
+
+<div class="json-schema">
+
+<p>Must be specified as ISO8601 date.</p>
+
+
+</div>
+
+<p></div></p>
+
+<p></div></p>
+
+<h6><code>end_date</code> </h6>
+
+<div class="json-schema">
+
+The elements of this item must match *exactly one* of the following properties:
+
+<h6>(null)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6>DateConfig</h6>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>Describes restriction imposed on start or end date of a signatory date field.
+The threshold is based on document view date, plus (or minus, if &quot;value&quot; is negative)
+the number of days defined in &quot;value&quot;.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h6><code>type</code> (string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>relative-to-doc-view</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>value</code> (integer)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<h6>DateConfig</h6>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>Describes restricted imposed on start or end date of a signatory date field.
+The threshold is the date specified by &quot;value&quot;.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h6><code>type</code> (string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>absolute</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>value</code> (string)</h6>
+
+<div class="json-schema">
+
+<p>Must be specified as ISO8601 date.</p>
+
+
+</div>
+
+<p></div></p>
 
 <p></div></p>
 
@@ -12947,6 +13944,7 @@ the signatory to draw their signature.</li>
 <li><code>SignatoryFieldRadiogroup</code>: Radio buttons of varying sizes.</li>
 <li><code>SignatoryFieldCustomText</code>: A text field for any other information
 about, or requested, from the signatory.</li>
+<li><code>SignatoryFieldDate</code>: A date input field.</li>
 </ul>
 <p>Please read the detailed definition of each field type for more
 information.
@@ -13198,6 +14196,15 @@ depending on the field type.</p>
 
 <p></div></p>
 
+<h5><code>description</code> (string,null)</h5>
+
+<div class="json-schema">
+
+<p>Description of this field</p>
+
+
+</div>
+
 <p></div></p>
 
 <h4>SignatoryFieldEmailMobile</h4>
@@ -13437,6 +14444,15 @@ depending on the field type.</p>
 <p></div></p>
 
 <p></div></p>
+
+<h5><code>description</code> (string,null)</h5>
+
+<div class="json-schema">
+
+<p>Description of this field</p>
+
+
+</div>
 
 <p></div></p>
 
@@ -13682,6 +14698,15 @@ depending on the field type.</p>
 
 <p></div></p>
 
+<h5><code>description</code> (string,null)</h5>
+
+<div class="json-schema">
+
+<p>Description of this field</p>
+
+
+</div>
+
 <p></div></p>
 
 <h4>SignatoryFieldStandard</h4>
@@ -13911,6 +14936,15 @@ depending on the field type.</p>
 <p></div></p>
 
 <p></div></p>
+
+<h5><code>description</code> (string,null)</h5>
+
+<div class="json-schema">
+
+<p>Description of this field</p>
+
+
+</div>
 
 <p></div></p>
 
@@ -14172,6 +15206,15 @@ depending on the field type.</p>
 
 <p></div></p>
 
+<h5><code>description</code> (string,null)</h5>
+
+<div class="json-schema">
+
+<p>Description of this field</p>
+
+
+</div>
+
 <p></div></p>
 
 <h4>SignatoryFieldRadiogroup</h4>
@@ -14429,6 +15472,15 @@ depending on the field type.</p>
 <p></div></p>
 
 <p></div></p>
+
+<h5><code>description</code> (string,null)</h5>
+
+<div class="json-schema">
+
+<p>Description of this field</p>
+
+
+</div>
 
 <p></div></p>
 
@@ -14717,6 +15769,448 @@ custom regular expression.</p>
 
 
 </div>
+
+<p></div></p>
+
+<p></div></p>
+
+<h5><code>description</code> (string,null)</h5>
+
+<div class="json-schema">
+
+<p>Description of this field</p>
+
+
+</div>
+
+<p></div></p>
+
+<h4>SignatoryFieldDate</h4>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>Signatory field for dates. Optionally can impose restrictions
+on start and/or end date (either absolute or relative to document view).</p>
+
+
+<p>This object has the following properties:</p>
+
+<h5><code>type</code> (string, enum, required)</h5>
+
+
+<div class="json-schema">
+
+<p>Used to specify that this is a date field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>date</code></li>
+
+</ul>
+
+</div>
+
+<h5><code>name</code> (string, required)</h5>
+
+<div class="json-schema">
+
+<p>A name for the date field.</p>
+<p>The name will be used as a placeholder value on the signing page, it will
+also be used in the Evidence Log as a reference.</p>
+
+
+</div>
+
+<h5><code>value</code> (string,null)</h5>
+
+<div class="json-schema">
+
+<p>Either a pre-filled value, or the value entered by the signatory.
+Must be specified as ISO8601 date.</p>
+
+
+<p>Default: <code>null</code></p>
+
+</div>
+
+<h5><code>is_obligatory</code> (boolean)</h5>
+
+<div class="json-schema">
+
+<p>Default: <code>true</code></p>
+
+</div>
+
+<h5><code>should_be_filled_by_sender</code> (boolean)</h5>
+
+<div class="json-schema">
+
+<p>Default: <code>false</code></p>
+
+</div>
+
+<h5><code>placements</code> <code>(array)</code></h5>
+
+<div class="json-schema">
+
+<p><strong>Needs to be set, otherwise the signatory will not be asked or presented with this information.</strong></p>
+<p>Defines where this field should be placed on the document.
+This is both for the signatory to fill out on the signing page, and for
+the final sealed PDF.</p>
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>xrel</code> (number, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Position on the x-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>yrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Position on the y-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>wrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Width of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>hrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Height of placement, as proportion of total height, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>fsrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Font size of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>page</code> (integer, required)</h6>
+
+<div class="json-schema">
+
+<p>The page number for this placement, starting from 1.</p>
+
+
+</div>
+
+<h6><code>tip</code> </h6>
+
+<div class="json-schema">
+
+<p>Default: <code>null</code></p>
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>From which side the arrow on the signing page should point
+to the field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>left</code></li>
+<li><code>right</code></li>
+
+</ul>
+
+</div>
+
+<h6>(null)</h6>
+
+<div class="json-schema">
+
+<p>Let the signing page default to either <code>left</code> or <code>right</code>
+depending on the field type.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h6><code>anchors</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>text</code> (string)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>index</code> (integer)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<h5><code>description</code> (string,null)</h5>
+
+<div class="json-schema">
+
+<p>Description of this field.</p>
+
+
+</div>
+
+<h5><code>configuration</code> (object, required)</h5>
+
+<div class="json-schema">
+
+<p>Definition of optional restriction imposed upon start and/or end date.
+Null means no restriction.</p>
+
+
+<p>The <code>configuration</code> object has the following properties:</p>
+
+<h6><code>start_date</code> </h6>
+
+
+<div class="json-schema">
+
+The elements of this item must match *exactly one* of the following properties:
+
+<h6>(null)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6>DateConfig</h6>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>Describes restriction imposed on start or end date of a signatory date field.
+The threshold is based on document view date, plus (or minus, if &quot;value&quot; is negative)
+the number of days defined in &quot;value&quot;.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h6><code>type</code> (string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>relative-to-doc-view</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>value</code> (integer)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<h6>DateConfig</h6>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>Describes restricted imposed on start or end date of a signatory date field.
+The threshold is the date specified by &quot;value&quot;.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h6><code>type</code> (string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>absolute</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>value</code> (string)</h6>
+
+<div class="json-schema">
+
+<p>Must be specified as ISO8601 date.</p>
+
+
+</div>
+
+<p></div></p>
+
+<p></div></p>
+
+<h6><code>end_date</code> </h6>
+
+<div class="json-schema">
+
+The elements of this item must match *exactly one* of the following properties:
+
+<h6>(null)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6>DateConfig</h6>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>Describes restriction imposed on start or end date of a signatory date field.
+The threshold is based on document view date, plus (or minus, if &quot;value&quot; is negative)
+the number of days defined in &quot;value&quot;.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h6><code>type</code> (string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>relative-to-doc-view</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>value</code> (integer)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<h6>DateConfig</h6>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>Describes restricted imposed on start or end date of a signatory date field.
+The threshold is the date specified by &quot;value&quot;.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h6><code>type</code> (string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>absolute</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>value</code> (string)</h6>
+
+<div class="json-schema">
+
+<p>Must be specified as ISO8601 date.</p>
+
+
+</div>
+
+<p></div></p>
 
 <p></div></p>
 
@@ -15302,7 +16796,8 @@ when the signatory selected the negative response.</p>
       </span><span class="s2">"tip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"right"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"anchors"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
     </span><span class="p">}</span><span class="w">
-  </span><span class="p">]</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="s2">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Name field"</span><span class="w">
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
 <div class="json-schema">
@@ -15540,6 +17035,15 @@ depending on the field type.</p>
 
 <p></div></p>
 
+<h3><code>description</code> (string,null)</h3>
+
+<div class="json-schema">
+
+<p>Description of this field</p>
+
+
+</div>
+
 <p></div></p>
 <h2 id='signatoryfieldemailmobile'>SignatoryFieldEmailMobile</h2>
 <p><code>(object)</code></p>
@@ -15563,7 +17067,8 @@ depending on the field type.</p>
       </span><span class="s2">"tip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"right"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"anchors"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
     </span><span class="p">}</span><span class="w">
-  </span><span class="p">]</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="s2">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Phone number field"</span><span class="w">
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
 <div class="json-schema">
@@ -15800,6 +17305,15 @@ depending on the field type.</p>
 
 <p></div></p>
 
+<h3><code>description</code> (string,null)</h3>
+
+<div class="json-schema">
+
+<p>Description of this field</p>
+
+
+</div>
+
 <p></div></p>
 <h2 id='signatoryfieldsignature'>SignatoryFieldSignature</h2>
 <p><code>(object)</code></p>
@@ -15823,7 +17337,8 @@ depending on the field type.</p>
       </span><span class="s2">"tip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"right"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"anchors"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
     </span><span class="p">}</span><span class="w">
-  </span><span class="p">]</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="s2">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Signature field"</span><span class="w">
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
 <div class="json-schema">
@@ -16064,6 +17579,15 @@ depending on the field type.</p>
 
 <p></div></p>
 
+<h3><code>description</code> (string,null)</h3>
+
+<div class="json-schema">
+
+<p>Description of this field</p>
+
+
+</div>
+
 <p></div></p>
 <h2 id='signatoryfieldstandard'>SignatoryFieldStandard</h2>
 <p><code>(object)</code></p>
@@ -16086,7 +17610,8 @@ depending on the field type.</p>
       </span><span class="s2">"tip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"right"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"anchors"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
     </span><span class="p">}</span><span class="w">
-  </span><span class="p">]</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="s2">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Company field"</span><span class="w">
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
 <div class="json-schema">
@@ -16313,6 +17838,15 @@ depending on the field type.</p>
 
 <p></div></p>
 
+<h3><code>description</code> (string,null)</h3>
+
+<div class="json-schema">
+
+<p>Description of this field</p>
+
+
+</div>
+
 <p></div></p>
 <h2 id='signatoryfieldcheckbox'>SignatoryFieldCheckbox</h2>
 <p><code>(object)</code></p>
@@ -16336,7 +17870,8 @@ depending on the field type.</p>
       </span><span class="s2">"tip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"left"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"anchors"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
     </span><span class="p">}</span><span class="w">
-  </span><span class="p">]</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="s2">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Checkbox field"</span><span class="w">
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
 <div class="json-schema">
@@ -16593,6 +18128,15 @@ depending on the field type.</p>
 
 <p></div></p>
 
+<h3><code>description</code> (string,null)</h3>
+
+<div class="json-schema">
+
+<p>Description of this field</p>
+
+
+</div>
+
 <p></div></p>
 <h2 id='signatoryfieldradiogroup'>SignatoryFieldRadiogroup</h2>
 <p><code>(object)</code></p>
@@ -16639,7 +18183,8 @@ depending on the field type.</p>
     </span><span class="s2">"Radio button 1"</span><span class="p">,</span><span class="w">
     </span><span class="s2">"Radio button 2"</span><span class="p">,</span><span class="w">
     </span><span class="s2">"Radio button 3"</span><span class="w">
-  </span><span class="p">]</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="s2">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Radio group field"</span><span class="w">
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
 <div class="json-schema">
@@ -16894,6 +18439,15 @@ depending on the field type.</p>
 
 <p></div></p>
 
+<h3><code>description</code> (string,null)</h3>
+
+<div class="json-schema">
+
+<p>Description of this field</p>
+
+
+</div>
+
 <p></div></p>
 <h2 id='signatoryfieldcustomtext'>SignatoryFieldCustomText</h2>
 <p><code>(object)</code></p>
@@ -16922,7 +18476,8 @@ depending on the field type.</p>
     </span><span class="s2">"pattern"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^foo|bar|baz$"</span><span class="p">,</span><span class="w">
     </span><span class="s2">"positive_example"</span><span class="p">:</span><span class="w"> </span><span class="s2">"foo"</span><span class="p">,</span><span class="w">
     </span><span class="s2">"tooltip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Must be either 'foo', 'bar', or 'baz'."</span><span class="w">
-  </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="s2">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Custom name field"</span><span class="w">
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
 <div class="json-schema">
@@ -17206,6 +18761,478 @@ custom regular expression.</p>
 
 
 </div>
+
+<p></div></p>
+
+<p></div></p>
+
+<h3><code>description</code> (string,null)</h3>
+
+<div class="json-schema">
+
+<p>Description of this field</p>
+
+
+</div>
+
+<p></div></p>
+<h2 id='signatoryfielddate'>SignatoryFieldDate</h2>
+<p><code>(object)</code></p>
+
+<blockquote>
+<h3 id='example-json-for-quot-signatoryfielddate-quot'>Example JSON: for &quot;SignatoryFieldDate&quot;</h3></blockquote>
+<pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="s2">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"date"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Date field"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"value"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"is_obligatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"should_be_filled_by_sender"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"placements"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"xrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.29368421052631577</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"yrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.3444940476190476</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"wrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.10842105263157895</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"hrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.025297619047619048</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"fsrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.016842105263157894</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"page"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"tip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"right"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"anchors"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="s2">"configuration"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"start_date"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"relative-to-doc-view"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="s2">"end_date"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"absolute"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-01-01"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+<div class="json-schema">
+
+<p>Signatory field for dates. Optionally can impose restrictions
+on start and/or end date (either absolute or relative to document view).</p>
+
+
+<p>This object has the following properties:</p>
+
+<h3><code>type</code> (string, enum, required)</h3>
+
+
+<div class="json-schema">
+
+<p>Used to specify that this is a date field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>date</code></li>
+
+</ul>
+
+</div>
+
+<h3><code>name</code> (string, required)</h3>
+
+<div class="json-schema">
+
+<p>A name for the date field.</p>
+<p>The name will be used as a placeholder value on the signing page, it will
+also be used in the Evidence Log as a reference.</p>
+
+
+</div>
+
+<h3><code>value</code> (string,null)</h3>
+
+<div class="json-schema">
+
+<p>Either a pre-filled value, or the value entered by the signatory.
+Must be specified as ISO8601 date.</p>
+
+
+<p>Default: <code>null</code></p>
+
+</div>
+
+<h3><code>is_obligatory</code> (boolean)</h3>
+
+<div class="json-schema">
+
+<p>Default: <code>true</code></p>
+
+</div>
+
+<h3><code>should_be_filled_by_sender</code> (boolean)</h3>
+
+<div class="json-schema">
+
+<p>Default: <code>false</code></p>
+
+</div>
+
+<h3><code>placements</code> <code>(array)</code></h3>
+
+<div class="json-schema">
+
+<p><strong>Needs to be set, otherwise the signatory will not be asked or presented with this information.</strong></p>
+<p>Defines where this field should be placed on the document.
+This is both for the signatory to fill out on the signing page, and for
+the final sealed PDF.</p>
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h4>(object)</h4>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h5><code>xrel</code> (number, required)</h5>
+
+
+<div class="json-schema">
+
+<p>Position on the x-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h5><code>yrel</code> (number, required)</h5>
+
+<div class="json-schema">
+
+<p>Position on the y-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h5><code>wrel</code> (number, required)</h5>
+
+<div class="json-schema">
+
+<p>Width of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h5><code>hrel</code> (number, required)</h5>
+
+<div class="json-schema">
+
+<p>Height of placement, as proportion of total height, from 0 to 1.</p>
+
+
+</div>
+
+<h5><code>fsrel</code> (number, required)</h5>
+
+<div class="json-schema">
+
+<p>Font size of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h5><code>page</code> (integer, required)</h5>
+
+<div class="json-schema">
+
+<p>The page number for this placement, starting from 1.</p>
+
+
+</div>
+
+<h5><code>tip</code> </h5>
+
+<div class="json-schema">
+
+<p>Default: <code>null</code></p>
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>From which side the arrow on the signing page should point
+to the field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>left</code></li>
+<li><code>right</code></li>
+
+</ul>
+
+</div>
+
+<h6>(null)</h6>
+
+<div class="json-schema">
+
+<p>Let the signing page default to either <code>left</code> or <code>right</code>
+depending on the field type.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h5><code>anchors</code> <code>(array)</code></h5>
+
+<div class="json-schema">
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>text</code> (string)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>index</code> (integer)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<h3><code>description</code> (string,null)</h3>
+
+<div class="json-schema">
+
+<p>Description of this field.</p>
+
+
+</div>
+
+<h3><code>configuration</code> (object, required)</h3>
+
+<div class="json-schema">
+
+<p>Definition of optional restriction imposed upon start and/or end date.
+Null means no restriction.</p>
+
+
+<p>The <code>configuration</code> object has the following properties:</p>
+
+<h4><code>start_date</code> </h4>
+
+
+<div class="json-schema">
+
+The elements of this item must match *exactly one* of the following properties:
+
+<h5>(null)</h5>
+
+
+<div class="json-schema">
+
+</div>
+
+<h5>DateConfig</h5>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>Describes restriction imposed on start or end date of a signatory date field.
+The threshold is based on document view date, plus (or minus, if &quot;value&quot; is negative)
+the number of days defined in &quot;value&quot;.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h6><code>type</code> (string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>relative-to-doc-view</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>value</code> (integer)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<h5>DateConfig</h5>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>Describes restricted imposed on start or end date of a signatory date field.
+The threshold is the date specified by &quot;value&quot;.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h6><code>type</code> (string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>absolute</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>value</code> (string)</h6>
+
+<div class="json-schema">
+
+<p>Must be specified as ISO8601 date.</p>
+
+
+</div>
+
+<p></div></p>
+
+<p></div></p>
+
+<h4><code>end_date</code> </h4>
+
+<div class="json-schema">
+
+The elements of this item must match *exactly one* of the following properties:
+
+<h5>(null)</h5>
+
+
+<div class="json-schema">
+
+</div>
+
+<h5>DateConfig</h5>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>Describes restriction imposed on start or end date of a signatory date field.
+The threshold is based on document view date, plus (or minus, if &quot;value&quot; is negative)
+the number of days defined in &quot;value&quot;.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h6><code>type</code> (string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>relative-to-doc-view</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>value</code> (integer)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<h5>DateConfig</h5>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>Describes restricted imposed on start or end date of a signatory date field.
+The threshold is the date specified by &quot;value&quot;.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h6><code>type</code> (string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>absolute</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>value</code> (string)</h6>
+
+<div class="json-schema">
+
+<p>Must be specified as ISO8601 date.</p>
+
+
+</div>
+
+<p></div></p>
 
 <p></div></p>
 
