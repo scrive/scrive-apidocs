@@ -350,6 +350,9 @@
             <a href="#get-2" class="toc-h1 toc-link" data-title="get">Get</a>
               <ul class="toc-list-h2">
                   <li>
+                    <a href="#can-the-signing-process-be-started" class="toc-h2 toc-link" data-title="can-the-signing-process-be-started">Can the signing process be started?</a>
+                  </li>
+                  <li>
                     <a href="#get-a-document" class="toc-h2 toc-link" data-title="get-a-document">Get a document</a>
                   </li>
                   <li>
@@ -565,7 +568,7 @@
               </ul>
           </li>
           <li>
-            <a href="#responses-71" class="toc-h1 toc-link" data-title="responses">Responses</a>
+            <a href="#responses-72" class="toc-h1 toc-link" data-title="responses">Responses</a>
               <ul class="toc-list-h2">
                   <li>
                     <a href="#document" class="toc-h2 toc-link" data-title="document">Document</a>
@@ -1807,6 +1810,14 @@ Scrive eSign system returning errors.</p>
 </p>
 <h2 id='get'>Get</h2>
 <p>
+<a href="#apiv2documents{document_id}canbestarted">
+<strong>
+<code class="operation-method operation-method-GET">GET  /api/v2/documents/{document_id}/canbestarted</code>
+</strong>
+</a>
+</p>
+
+<p>
 <a href="#apiv2documents{document_id}get">
 <strong>
 <code class="operation-method operation-method-GET">GET  /api/v2/documents/{document_id}/get</code>
@@ -2746,6 +2757,52 @@ is missing or invalid in the document is given.</li>
 </td> </tr>
 </table>
 <h1 id='get-2'>Get</h1>
+<div><a id="apiv2documents{document_id}canbestarted"></a></div>
+<h2 id='can-the-signing-process-be-started'>Can the signing process be started?</h2>
+<p>
+<strong>
+<code class="operation-method operation-method-GET">GET  /api/v2/documents/{document_id}/canbestarted</code>
+</strong>
+</p>
+
+<blockquote>
+<h3 id='example-6'>Example</h3></blockquote>
+<pre class="highlight shell"><code>curl -X GET <span class="s1">'https://{server_address}/api/v2/documents/${document_id}/canbestarted'</span> <span class="se">\</span>
+  -H <span class="s1">'Authorization: oauth_signature_method="PLAINTEXT",oauth_consumer_key="${apitoken}",oauth_token="${accesstoken}",oauth_signature="${apisecret}&amp;${accesssecret}"'</span>
+</code></pre>
+<blockquote>
+<p>The above example uses <a href="#personal-access-credentials">personal access credentials</a> (see <code>-H</code> option), but can be easily updated to use <a href="#oauth">OAuth</a>.</p>
+</blockquote>
+
+<p>Find out whether the signing process can be started. If it can not, return a list of reasons.</p>
+
+<p><em>OAuth Privileges required: <code>DOC_SEND</code></em></p>
+<h3 id='parameters-9'>Parameters</h3>
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
+Will not change.</p>
+</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+</table>
+<h3 id='responses-10'>Responses</h3>
+<table>
+<tr> <th>Code</th> <th>Description</th> </tr>
+<tr> <td>200</td> <td><ul>
+<li><code>&quot;can_start&quot;: true</code> if the signing process can be started.</li>
+<li><code>&quot;can_start&quot;: false</code> otherwise, along with a list of <code>errors</code>.</li>
+</ul>
+</td> </tr>
+<tr> <td>409</td> <td><p><code>document_state_error</code> with error messages:</p>
+<ul>
+<li>The document state must be 'Preparation'.</li>
+<li>Document is a template, templates can not be started.</li>
+<li>Document must have a file before it can be started.</li>
+<li>The document has missing or invalid data. Some information about what
+is missing or invalid in the document is given.</li>
+</ul>
+</td> </tr>
+</table>
+
 <div><a id="apiv2documents{document_id}get"></a></div>
 <h2 id='get-a-document'>Get a document</h2>
 <p>
@@ -2757,14 +2814,14 @@ is missing or invalid in the document is given.</li>
 <p>Get the JSON metadata for a given <code>document_id</code>.</p>
 
 <p><em>OAuth Privileges required: <code>DOC_CHECK</code></em></p>
-<h3 id='parameters-9'>Parameters</h3>
+<h3 id='parameters-10'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
 Will not change.</p>
 </td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
 </table>
-<h3 id='responses-10'>Responses</h3>
+<h3 id='responses-11'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
@@ -2786,14 +2843,14 @@ It can only be used for documents that are pending.
 You can only get documents that you have access to.</p>
 
 <p><em>OAuth Privileges required: <code>DOC_CHECK</code></em></p>
-<h3 id='parameters-10'>Parameters</h3>
+<h3 id='parameters-11'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>short_document_id</code><br/><em>required</em></p></td><td><p>Last 6 digits of a regular Document ID.
 Must be a pending document created within the last 72 hours.</p>
 </td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
 </table>
-<h3 id='responses-11'>Responses</h3>
+<h3 id='responses-12'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
@@ -2826,7 +2883,7 @@ and Google Play Store.</p>
 It will also work for viewing parties.</p>
 
 <p><em>OAuth Privileges required: <code>DOC_CHECK</code></em></p>
-<h3 id='parameters-11'>Parameters</h3>
+<h3 id='parameters-12'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
@@ -2837,7 +2894,7 @@ This value can change before document is made ready for signing, and should
 not be used to identify signatories while document is a draft.</p>
 </td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
 </table>
-<h3 id='responses-12'>Responses</h3>
+<h3 id='responses-13'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>PNG image, <code>content-type: image/png</code>.</p>
@@ -2870,7 +2927,7 @@ Do not poll more often than necessary, and if there are no changes between subse
 use an <a href="https://en.wikipedia.org/wiki/Exponential_backoff">exponential backoff</a>.</p>
 
 <p><em>OAuth Privileges required: <code>DOC_CHECK</code></em></p>
-<h3 id='parameters-12'>Parameters</h3>
+<h3 id='parameters-13'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>offset</code><br/><em>optional</em></p><p><em>default:</em> <code>0</code></p></td><td><p><strong>Starting offset for documents to return.</strong></p>
@@ -2899,7 +2956,7 @@ of documents in the order you provided.</p>
 <p>Must be of type <a href="#list-sorting">List Sorting</a>.</p>
 </td><td><p>string<br><em>application/json</em></p></td><td>query</td></tr>
 </table>
-<h3 id='responses-13'>Responses</h3>
+<h3 id='responses-14'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>A JSON object containing the total number of matching documents, and an
@@ -2925,7 +2982,7 @@ This allows you to download the file with user-specified file name in the
 browser.</p>
 
 <p><em>OAuth Privileges required: <code>DOC_CHECK</code></em></p>
-<h3 id='parameters-13'>Parameters</h3>
+<h3 id='parameters-14'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
@@ -2934,7 +2991,7 @@ Will not change.</p>
 <tr><td><p><code>filename</code><br/><em>optional</em></p></td><td><p>Optional filename parameter.</p>
 </td><td><p>string</p></td><td>path</td></tr>
 </table>
-<h3 id='responses-14'>Responses</h3>
+<h3 id='responses-15'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The PDF file.</p>
@@ -2967,7 +3024,7 @@ This allows you to download the file with user-specified file name in the
 browser.</p>
 
 <p><em>OAuth Privileges required: <code>DOC_CHECK</code></em></p>
-<h3 id='parameters-14'>Parameters</h3>
+<h3 id='parameters-15'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
@@ -2976,7 +3033,7 @@ Will not change.</p>
 <tr><td><p><code>file_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a file available via Scrive.</p>
 </td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
 </table>
-<h3 id='responses-15'>Responses</h3>
+<h3 id='responses-16'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The file</p>
@@ -3000,7 +3057,7 @@ making the API call.
 This can optionally be overridden.</p>
 
 <p><em>OAuth Privileges required: <code>DOC_CHECK</code></em></p>
-<h3 id='parameters-15'>Parameters</h3>
+<h3 id='parameters-16'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
@@ -3012,7 +3069,7 @@ Will not change.</p>
 Languages may be added or removed without notice.</p>
 </td><td><p>string</p></td><td>query</td></tr>
 </table>
-<h3 id='responses-16'>Responses</h3>
+<h3 id='responses-17'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The list of history items for this document.</p>
@@ -3033,7 +3090,7 @@ Languages may be added or removed without notice.</p>
 If one is set, no effect otherwise.</p>
 
 <p><em>OAuth Privileges required: <code>DOC_SEND</code></em></p>
-<h3 id='parameters-16'>Parameters</h3>
+<h3 id='parameters-17'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
@@ -3044,7 +3101,7 @@ operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-17'>Responses</h3>
+<h3 id='responses-18'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>202</td> <td><p>A callback will be triggered for the document if a User or Document
@@ -3066,7 +3123,7 @@ callback URL was set.</p>
 signed.</p>
 
 <p><em>OAuth Privileges required: <code>DOC_SEND</code></em></p>
-<h3 id='parameters-17'>Parameters</h3>
+<h3 id='parameters-18'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
@@ -3077,7 +3134,7 @@ operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-18'>Responses</h3>
+<h3 id='responses-19'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>202</td> <td><p>The call succeeded, reminders have been queued and will be sent to all
@@ -3098,7 +3155,7 @@ signatories that have not yet signed.</p>
 <p>Prolong a document that has timed out.</p>
 
 <p><em>OAuth Privileges required: <code>DOC_SEND</code></em></p>
-<h3 id='parameters-18'>Parameters</h3>
+<h3 id='parameters-19'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
@@ -3111,7 +3168,7 @@ operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-19'>Responses</h3>
+<h3 id='responses-20'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
@@ -3134,7 +3191,7 @@ Only timed out documents can be prolonged.</p>
 <p>Cancel a pending document.</p>
 
 <p><em>OAuth Privileges required: <code>DOC_SEND</code></em></p>
-<h3 id='parameters-19'>Parameters</h3>
+<h3 id='parameters-20'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
@@ -3145,7 +3202,7 @@ operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-20'>Responses</h3>
+<h3 id='responses-21'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
@@ -3167,7 +3224,7 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 <p>Move a document to Trash.</p>
 
 <p><em>OAuth Privileges required: <code>DOC_SEND</code></em></p>
-<h3 id='parameters-20'>Parameters</h3>
+<h3 id='parameters-21'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
@@ -3178,7 +3235,7 @@ operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-21'>Responses</h3>
+<h3 id='responses-22'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
@@ -3198,13 +3255,13 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 <p>Move one or more documents to Trash.</p>
 
 <p><em>OAuth Privileges required: <code>DOC_SEND</code></em></p>
-<h3 id='parameters-21'>Parameters</h3>
+<h3 id='parameters-22'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>document_ids</code><br/><em>required</em></p></td><td><p>List of document IDs to trash.</p>
 </td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-22'>Responses</h3>
+<h3 id='responses-23'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>A JSON object containing the total number of <code>trashed</code> documents, and an array of documents.</p>
@@ -3226,7 +3283,7 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 <p>Delete a document that is in Trash.</p>
 
 <p><em>OAuth Privileges required: <code>DOC_SEND</code></em></p>
-<h3 id='parameters-22'>Parameters</h3>
+<h3 id='parameters-23'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
@@ -3237,7 +3294,7 @@ operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-23'>Responses</h3>
+<h3 id='responses-24'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
@@ -3257,13 +3314,13 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 <p>Delete one or more documents that are in Trash.</p>
 
 <p><em>OAuth Privileges required: <code>DOC_SEND</code></em></p>
-<h3 id='parameters-23'>Parameters</h3>
+<h3 id='parameters-24'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>document_ids</code><br/><em>required</em></p></td><td><p>List of document IDs to delete.</p>
 </td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-24'>Responses</h3>
+<h3 id='responses-25'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>A JSON object containing the total number of <code>deleted</code> documents, and an array of documents.</p>
@@ -3283,7 +3340,7 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 <p>Forward a signed document to a third party.</p>
 
 <p><em>OAuth Privileges required: <code>DOC_SEND</code></em></p>
-<h3 id='parameters-24'>Parameters</h3>
+<h3 id='parameters-25'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
@@ -3304,7 +3361,7 @@ operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-25'>Responses</h3>
+<h3 id='responses-26'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>202</td> <td><p>The call succeeded, an email to the given address has been queued.</p>
@@ -3325,7 +3382,7 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 message to the signatories that have not yet signed by that date.</p>
 
 <p><em>OAuth Privileges required: <code>DOC_SEND</code></em></p>
-<h3 id='parameters-25'>Parameters</h3>
+<h3 id='parameters-26'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
@@ -3340,7 +3397,7 @@ operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-26'>Responses</h3>
+<h3 id='responses-27'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
@@ -3363,7 +3420,7 @@ before the document expires.</p>
 <p>Restart a document that has been cancelled, timed out, or rejected.</p>
 
 <p><em>OAuth Privileges required: <code>DOC_CREATE</code></em></p>
-<h3 id='parameters-26'>Parameters</h3>
+<h3 id='parameters-27'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
@@ -3374,7 +3431,7 @@ operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-27'>Responses</h3>
+<h3 id='responses-28'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>201</td> <td><p>The document metadata as a JSON.</p>
@@ -3402,7 +3459,7 @@ then setting the authentication method to Swedish BankID will necessitate
 adding the field to the signatory with a valid personal number.</p>
 
 <p><em>OAuth Privileges required: <code>DOC_SEND</code></em></p>
-<h3 id='parameters-27'>Parameters</h3>
+<h3 id='parameters-28'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
@@ -3430,7 +3487,7 @@ operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-28'>Responses</h3>
+<h3 id='responses-29'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
@@ -3465,7 +3522,7 @@ setting the authentication method to SMS PIN will necessitate adding a
 mobile number field to the signatory and setting it as obligatory.</p>
 
 <p><em>OAuth Privileges required: <code>DOC_SEND</code></em></p>
-<h3 id='parameters-28'>Parameters</h3>
+<h3 id='parameters-29'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
@@ -3501,7 +3558,7 @@ operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-29'>Responses</h3>
+<h3 id='responses-30'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
@@ -3541,7 +3598,7 @@ For example, if they have no mobile field set, you will not be able to
 change it.</p>
 
 <p><em>OAuth Privileges required: <code>DOC_SEND</code></em></p>
-<h3 id='parameters-29'>Parameters</h3>
+<h3 id='parameters-30'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
@@ -3564,7 +3621,7 @@ operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-30'>Responses</h3>
+<h3 id='responses-31'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
@@ -3593,7 +3650,7 @@ is provided.</li>
 <p>Share or unshare the specified templates with the company&#39;s other users.</p>
 
 <p><em>OAuth Privileges required: <code>DOC_CREATE</code></em></p>
-<h3 id='parameters-30'>Parameters</h3>
+<h3 id='parameters-31'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>document_ids</code><br/><em>required</em></p></td><td><p>List of document IDs of templates to share or unshare.</p>
@@ -3601,7 +3658,7 @@ is provided.</li>
 <tr><td><p><code>shared</code><br/><em>required</em></p></td><td><p><code>true</code> to share, <code>false</code> to unshare.</p>
 </td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-31'>Responses</h3>
+<h3 id='responses-32'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>202</td> <td><p>The change has succeeded. The body is empty.</p>
@@ -3619,7 +3676,7 @@ is provided.</li>
 <p>Fetch a list of attachments, with filtering and sorting options.</p>
 
 <p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
-<h3 id='parameters-31'>Parameters</h3>
+<h3 id='parameters-32'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>domain</code><br/><em>optional</em></p></td><td><p><strong>Domain in which to search.</strong></p>
@@ -3645,7 +3702,7 @@ list of attachments in the order you provided.</p>
 <p>Must be of type <a href="#list-sorting">List Sorting</a>.</p>
 </td><td><p>string<br><em>application/json</em></p></td><td>query</td></tr>
 </table>
-<h3 id='responses-32'>Responses</h3>
+<h3 id='responses-33'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>A JSON object containing an array of attachments.</p>
@@ -3667,7 +3724,7 @@ name. This allows you to download the file with user-specified file name in
 the browser.</p>
 
 <p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
-<h3 id='parameters-32'>Parameters</h3>
+<h3 id='parameters-33'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>attachment_id</code><br/><em>required</em></p></td><td><p>Identifier for the attachment.</p>
@@ -3675,7 +3732,7 @@ the browser.</p>
 <tr><td><p><code>filename</code><br/><em>optional</em></p></td><td><p>Optional filename parameter.</p>
 </td><td><p>string</p></td><td>path</td></tr>
 </table>
-<h3 id='responses-33'>Responses</h3>
+<h3 id='responses-34'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The attachment's PDF file.</p>
@@ -3693,7 +3750,7 @@ the browser.</p>
 <p>Create a new attachment.</p>
 
 <p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
-<h3 id='parameters-33'>Parameters</h3>
+<h3 id='parameters-34'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>title</code><br/><em>optional</em></p></td><td><p>Title of the attachment. If not present, the title will be taken from
@@ -3702,7 +3759,7 @@ the file name.</p>
 <tr><td><p><code>file</code><br/><em>required</em></p></td><td><p>The PDF to use for the attachment.</p>
 </td><td><p>file<br><em>application/pdf</em></p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-34'>Responses</h3>
+<h3 id='responses-35'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>201</td> <td><p>The attachment has been added. The body is empty.</p>
@@ -3720,13 +3777,13 @@ the file name.</p>
 <p>Delete the specified attachments.</p>
 
 <p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
-<h3 id='parameters-34'>Parameters</h3>
+<h3 id='parameters-35'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>attachment_ids</code><br/><em>required</em></p></td><td><p>List of attachment IDs of attachments to delete.</p>
 </td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-35'>Responses</h3>
+<h3 id='responses-36'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The change has succeeded. The body is empty.</p>
@@ -3744,7 +3801,7 @@ the file name.</p>
 <p>Share or unshare the specified attachments with the company&#39;s other users.</p>
 
 <p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
-<h3 id='parameters-35'>Parameters</h3>
+<h3 id='parameters-36'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>attachment_ids</code><br/><em>required</em></p></td><td><p>List of attachment IDs of attachments to share or unshare.</p>
@@ -3752,7 +3809,7 @@ the file name.</p>
 <tr><td><p><code>shared</code><br/><em>required</em></p></td><td><p><code>true</code> to share, <code>false</code> to unshare.</p>
 </td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-36'>Responses</h3>
+<h3 id='responses-37'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>202</td> <td><p>The change has succeeded. The body is empty.</p>
@@ -3786,13 +3843,13 @@ such as:
 Remember that all URL query parameters must be URL encoded!</p>
 
 <p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
-<h3 id='parameters-36'>Parameters</h3>
+<h3 id='parameters-37'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>personal_token</code><br/><em>required</em></p></td><td><p>Must be of type <a href="#oauthauthorization"><code>OAuthAuthorization</code></a></p>
 </td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-37'>Responses</h3>
+<h3 id='responses-38'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON response, for example:
@@ -3818,13 +3875,13 @@ JSON is to allow the potential for versioning in future.</p>
 
 <p>This feature is generally for use with Scrive mobile applications and will
 be supported in an upcoming relase.</p>
-<h3 id='parameters-37'>Parameters</h3>
+<h3 id='parameters-38'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>minutes</code><br/><em>optional</em></p><p><em>default:</em> <code>5</code></p></td><td><p>How many minutes the <code>login_token</code> should be valid for (maximum of 30).</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-38'>Responses</h3>
+<h3 id='responses-39'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>Returns a JSON containing <code>login_token</code>, <code>qr_code</code> and <code>expiration_time</code>.</p>
@@ -3841,7 +3898,7 @@ be supported in an upcoming relase.</p>
 
 <p>If already activated, returns true,
 else triggers QR code generation</p>
-<h3 id='responses-39'>Responses</h3>
+<h3 id='responses-40'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>A JSON with the <code>twofactor_active</code> flag and (if not activated yet) a <code>qr_code</code>. If present, the field <code>qr_code</code> contains a base64-encoded image of the QR code.</p>
@@ -3857,13 +3914,13 @@ else triggers QR code generation</p>
 </p>
 
 <p>Activates 2-factor-authentication if 2-factor code from QR code is valid</p>
-<h3 id='parameters-38'>Parameters</h3>
+<h3 id='parameters-39'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>totp</code><br/><em>required</em></p></td><td><p>2-factor code</p>
 </td><td><p>string</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-40'>Responses</h3>
+<h3 id='responses-41'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>A JSON with the <code>twofactor_active</code> flag and <code>totp_valid</code> flag</p>
@@ -3881,7 +3938,7 @@ else triggers QR code generation</p>
 </p>
 
 <p>Disables 2-factor-authentication</p>
-<h3 id='responses-41'>Responses</h3>
+<h3 id='responses-42'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>A JSON with the <code>twofactor_active</code> flag</p>
@@ -3897,7 +3954,7 @@ else triggers QR code generation</p>
 </p>
 
 <p>Returns an object with boolean flag</p>
-<h3 id='responses-42'>Responses</h3>
+<h3 id='responses-43'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>A JSON with the <code>deletable</code> flag and (if not deletable) a <code>reason</code></p>
@@ -3913,13 +3970,13 @@ else triggers QR code generation</p>
 </p>
 
 <p>undefined</p>
-<h3 id='parameters-39'>Parameters</h3>
+<h3 id='parameters-40'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>email</code><br/><em>required</em></p></td><td><p>User's email</p>
 </td><td><p>string</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-43'>Responses</h3>
+<h3 id='responses-44'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The user was deleted succesfully. The body is empty</p>
@@ -3937,7 +3994,7 @@ else triggers QR code generation</p>
 </p>
 
 <p>Returns an object with user and company data detention policies</p>
-<h3 id='responses-44'>Responses</h3>
+<h3 id='responses-45'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>An object with data retention policies properties.</p>
@@ -3953,13 +4010,13 @@ else triggers QR code generation</p>
 </p>
 
 <p>Returns an object with user and company data detention policies</p>
-<h3 id='parameters-40'>Parameters</h3>
+<h3 id='parameters-41'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>data_retention_policy</code><br/><em>required</em></p></td><td><p>Must be of type <a href="#dataretentionpolicy"><code>DataRetentionPolicy</code></a></p>
 </td><td><p>object<br><em>application/json</em></p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-45'>Responses</h3>
+<h3 id='responses-46'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The data retention policy has been updated. The body is empty.</p>
@@ -3975,7 +4032,7 @@ else triggers QR code generation</p>
 </p>
 
 <p>Returns tags attached to the user</p>
-<h3 id='responses-46'>Responses</h3>
+<h3 id='responses-47'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p><strong>User defined set of name/value pairs.</strong></p>
@@ -3995,13 +4052,13 @@ Other value types lead to 400 Bad Request response.</p>
 </p>
 
 <p>Updates tags attached to the user.</p>
-<h3 id='parameters-41'>Parameters</h3>
+<h3 id='parameters-42'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>tags</code><br/><em>required</em></p><p><em>default:</em> <code></code></p></td><td><p>Must be of type <a href="#tags"><code>Tags</code></a></p>
 </td><td><p>array<br><em>application/json</em></p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-47'>Responses</h3>
+<h3 id='responses-48'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The tags have been updated. The body is empty.</p>
@@ -4017,13 +4074,13 @@ Other value types lead to 400 Bad Request response.</p>
 </p>
 
 <p>Retrieve usage statistics for the last 30 days</p>
-<h3 id='parameters-42'>Parameters</h3>
+<h3 id='parameters-43'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>withCompany</code><br/><em>optional</em></p></td><td><p>Boolean flag for showing company information in the response.</p>
 </td><td><p>string</p></td><td>query</td></tr>
 </table>
-<h3 id='responses-48'>Responses</h3>
+<h3 id='responses-49'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>A JSON object with the statistics on usage:
@@ -4040,13 +4097,13 @@ count of documents on different stages of the process</p>
 </p>
 
 <p>Retrieve usage statistics for the last 6 months</p>
-<h3 id='parameters-43'>Parameters</h3>
+<h3 id='parameters-44'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>withCompany</code><br/><em>optional</em></p></td><td><p>Boolean flag for showing company information in the response.</p>
 </td><td><p>string</p></td><td>query</td></tr>
 </table>
-<h3 id='responses-49'>Responses</h3>
+<h3 id='responses-50'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>A JSON object with the statistics on usage:
@@ -4074,7 +4131,7 @@ to them.</p>
 
 <p>If a user account that has accepted the <em>Terms of Service</em> already exists,
 no signup request will be created.</p>
-<h3 id='parameters-44'>Parameters</h3>
+<h3 id='parameters-45'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>email</code><br/><em>required</em></p></td><td><p>Has to be a valid email address format.</p>
@@ -4092,7 +4149,7 @@ no signup request will be created.</p>
 <tr><td><p><code>lang</code><br/><em>optional</em></p></td><td><p>Has to be a valid lang code <a href="#language-code"><code>LanguageCode</code></a></p>
 </td><td><p>string</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-50'>Responses</h3>
+<h3 id='responses-51'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON response, will be one of:</p>
@@ -4150,7 +4207,7 @@ the create operation has been performed. Performing <code>/update</code> and the
 using the <code>GET</code> endpoint should produce the same output both times.</p>
 
 <p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
-<h3 id='parameters-45'>Parameters</h3>
+<h3 id='parameters-46'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>usergroup</code><br/><em>required</em></p></td><td><p>JSON object containing the <code>name</code>, <code>parent_id</code>, and <code>tags</code> of the User
@@ -4160,7 +4217,7 @@ Group to be created.</p>
 values can be inherited from an ancestor User Group.</p>
 </td><td><p>boolean</p></td><td>query</td></tr>
 </table>
-<h3 id='responses-51'>Responses</h3>
+<h3 id='responses-52'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON representation of a User Group.</p>
@@ -4331,7 +4388,7 @@ inheritance calculation, ignoring whether or not the User Group already
 inherits.</p>
 
 <p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
-<h3 id='parameters-46'>Parameters</h3>
+<h3 id='parameters-47'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group you wish to view</p>
@@ -4340,7 +4397,7 @@ inherits.</p>
 values can be inherited from an ancestor User Group.</p>
 </td><td><p>boolean</p></td><td>query</td></tr>
 </table>
-<h3 id='responses-52'>Responses</h3>
+<h3 id='responses-53'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON representation of a User Group.</p>
@@ -4423,7 +4480,7 @@ using the <code>GET</code> endpoint should produce the same output both times.</
 field, it must be done via <code>parent_id</code></em>.</p>
 
 <p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
-<h3 id='parameters-47'>Parameters</h3>
+<h3 id='parameters-48'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group you wish to update</p>
@@ -4435,7 +4492,7 @@ Group.</p>
 values can be inherited from an ancestor User Group.</p>
 </td><td><p>boolean</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-53'>Responses</h3>
+<h3 id='responses-54'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON representation of a User Group.</p>
@@ -4470,13 +4527,13 @@ recursive deletion. If this is required, it can be implemented client-side
 by simply working up the tree, deleting the leaves.</p>
 
 <p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
-<h3 id='parameters-48'>Parameters</h3>
+<h3 id='parameters-49'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group you wish to update</p>
 </td><td><p>integer</p></td><td>path</td></tr>
 </table>
-<h3 id='responses-54'>Responses</h3>
+<h3 id='responses-55'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>Simple JSON showing that a User Group with a given ID has been deleted.</p>
@@ -4607,7 +4664,7 @@ inheritance calculation, ignoring whether or not the User Group already
 inherits.</p>
 
 <p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
-<h3 id='parameters-49'>Parameters</h3>
+<h3 id='parameters-50'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group whose <code>contact_details</code> object you wish to view</p>
@@ -4616,7 +4673,7 @@ inherits.</p>
 values can be inherited from an ancestor User Group.</p>
 </td><td><p>boolean</p></td><td>query</td></tr>
 </table>
-<h3 id='responses-55'>Responses</h3>
+<h3 id='responses-56'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON representation of a User Group's Contact Details.</p>
@@ -4673,7 +4730,7 @@ full) update applied to it.</p>
 be unaffected by the operation.</p>
 
 <p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
-<h3 id='parameters-50'>Parameters</h3>
+<h3 id='parameters-51'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group whose <code>contact_details</code> object you wish to update</p>
@@ -4685,7 +4742,7 @@ subtrees (currently only <code>data_retention_policy</code> is exposed by the AP
 values can be inherited from an ancestor User Group.</p>
 </td><td><p>boolean</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-56'>Responses</h3>
+<h3 id='responses-57'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON representation of a User Group's Contact Details.</p>
@@ -4719,7 +4776,7 @@ contact_details object of a root User Group will result in an error.</p>
 <p>For more details on inheritance, see <a href="#view-user-group-contact-details">View User Group Contact Details</a>.</p>
 
 <p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
-<h3 id='parameters-51'>Parameters</h3>
+<h3 id='parameters-52'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group whose <code>contact_details</code> object you wish to
@@ -4729,7 +4786,7 @@ delete</p>
 values can be inherited from an ancestor User Group.</p>
 </td><td><p>boolean</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-57'>Responses</h3>
+<h3 id='responses-58'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON representation of a User Group's Contact Details.</p>
@@ -4865,7 +4922,7 @@ inheritance calculation, ignoring whether or not the User Group already
 inherits.</p>
 
 <p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
-<h3 id='parameters-52'>Parameters</h3>
+<h3 id='parameters-53'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group whose <code>settings</code> object you wish to view</p>
@@ -4874,7 +4931,7 @@ inherits.</p>
 values can be inherited from an ancestor User Group.</p>
 </td><td><p>boolean</p></td><td>query</td></tr>
 </table>
-<h3 id='responses-58'>Responses</h3>
+<h3 id='responses-59'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON representation of a User Group's Settings.</p>
@@ -4926,7 +4983,7 @@ become the new non-inherited settings object for this User Group.</p>
 be unaffected by the operation.</p>
 
 <p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
-<h3 id='parameters-53'>Parameters</h3>
+<h3 id='parameters-54'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group whose <code>settings</code> object you wish to update</p>
@@ -4938,7 +4995,7 @@ subtrees (currently only <code>data_retention_policy</code> is exposed by the AP
 values can be inherited from an ancestor User Group.</p>
 </td><td><p>boolean</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-59'>Responses</h3>
+<h3 id='responses-60'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON representation of a User Group's Settings.</p>
@@ -4972,7 +5029,7 @@ object of a root User Group will result in an error.</p>
 <p>For more details on inheritance, see <a href="#view-user-group-settings">View User Group Settings</a>.</p>
 
 <p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
-<h3 id='parameters-54'>Parameters</h3>
+<h3 id='parameters-55'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group whose <code>settings</code> object you wish to delete</p>
@@ -4981,7 +5038,7 @@ object of a root User Group will result in an error.</p>
 values can be inherited from an ancestor User Group.</p>
 </td><td><p>boolean</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-60'>Responses</h3>
+<h3 id='responses-61'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON representation of a User Group's Settings.</p>
@@ -5024,13 +5081,13 @@ exists with this ID or that you do not have permission to view it)</p>
 not show the Users who are members of any descendent User Groups.</p>
 
 <p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
-<h3 id='parameters-55'>Parameters</h3>
+<h3 id='parameters-56'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group whose users you wish to view</p>
 </td><td><p>integer</p></td><td>path</td></tr>
 </table>
-<h3 id='responses-61'>Responses</h3>
+<h3 id='responses-62'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>List of Users in the User Group</p>
@@ -5082,13 +5139,13 @@ exists with this ID or that you do not have permission to view it)</p>
 </span></code></pre>
 <p>This endpoint is used to view the roles which have been granted to a given
 user.</p>
-<h3 id='parameters-56'>Parameters</h3>
+<h3 id='parameters-57'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>user_id</code><br/><em>required</em></p></td><td><p>The ID of the User whose roles you wish to view</p>
 </td><td><p>integer</p></td><td>url</td></tr>
 </table>
-<h3 id='responses-62'>Responses</h3>
+<h3 id='responses-63'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>A JSON array of Access Role objects.</p>
@@ -5134,13 +5191,13 @@ set to <code>true</code> and <code>id</code> set to <code>null</code>.</p>
 <p>Explicit roles are those which have been, as the name suggests, explicitly
 granted. This was also almost certainly done via this API. Explicit roles
 have <code>is_generated</code> set to <code>false</code> and a non-<code>null</code> <code>id</code>.</p>
-<h3 id='parameters-57'>Parameters</h3>
+<h3 id='parameters-58'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>role_id</code><br/><em>required</em></p></td><td><p>The ID of the Access Role you wish to view</p>
 </td><td><p>integer</p></td><td>url</td></tr>
 </table>
-<h3 id='responses-63'>Responses</h3>
+<h3 id='responses-64'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON representation of an Access Role.</p>
@@ -5176,13 +5233,13 @@ role refers to.</p>
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
 <p>This endpoint allows you to grant a new Access Role.</p>
-<h3 id='parameters-58'>Parameters</h3>
+<h3 id='parameters-59'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>role</code><br/><em>required</em></p></td><td><p>JSON object containing details of the role to be granted.</p>
 </td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-64'>Responses</h3>
+<h3 id='responses-65'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON representation of an Access Role.</p>
@@ -5208,13 +5265,13 @@ target that the proposed role refers to.</p>
 via the Access Control API&quot; as opposed to an implicit role acquired via, for
 example, User Group membership. If it has a non-<code>null</code> <code>id</code> field then it is
 an explicit role and can be deleted.</p>
-<h3 id='parameters-59'>Parameters</h3>
+<h3 id='parameters-60'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>role_id</code><br/><em>required</em></p></td><td><p>The ID of the Access Role you wish to delete</p>
 </td><td><p>integer</p></td><td>url</td></tr>
 </table>
-<h3 id='responses-65'>Responses</h3>
+<h3 id='responses-66'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON object showing that an Access Role with the given ID has been
@@ -5263,7 +5320,7 @@ and information about its children. Only the immediate children are
 included by default (see the <code>recursive</code> parameter).</p>
 
 <p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
-<h3 id='parameters-60'>Parameters</h3>
+<h3 id='parameters-61'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>folder_id</code><br/><em>required</em></p></td><td><p>The ID of the Folder you wish to view</p>
@@ -5272,7 +5329,7 @@ included by default (see the <code>recursive</code> parameter).</p>
 instead of just the immediate children.</p>
 </td><td><p>boolean</p></td><td>query</td></tr>
 </table>
-<h3 id='responses-66'>Responses</h3>
+<h3 id='responses-67'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON representation of a Folder.</p>
@@ -5318,13 +5375,13 @@ create operation has been performed. Performing <code>/update</code> and then us
 GET endpoint should produce the same output both times.</p>
 
 <p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
-<h3 id='parameters-61'>Parameters</h3>
+<h3 id='parameters-62'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>folder</code><br/><em>optional</em></p></td><td><p>JSON object containing details of the folder to be created.</p>
 </td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-67'>Responses</h3>
+<h3 id='responses-68'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON representation of a Folder.</p>
@@ -5384,7 +5441,7 @@ using the <code>GET</code> endpoint should produce the same output both times.</
 
 <p><strong>Important Note</strong>: <em>You cannot move Folders by updating the <code>children</code>
 field, it must be done via <code>parent_id</code></em>.</p>
-<h3 id='parameters-62'>Parameters</h3>
+<h3 id='parameters-63'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>folder_id</code><br/><em>required</em></p></td><td><p>The ID of the Folder whose contents you wish to list</p>
@@ -5392,7 +5449,7 @@ field, it must be done via <code>parent_id</code></em>.</p>
 <tr><td><p><code>folder</code><br/><em>optional</em></p></td><td><p>JSON object containing details of the folder to be updated.</p>
 </td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-68'>Responses</h3>
+<h3 id='responses-69'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON representation of a Folder.</p>
@@ -5419,13 +5476,13 @@ deletion. If this is required, it can be implemented client-side by simply
 working up the tree, deleting the leaves.</p>
 
 <p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
-<h3 id='parameters-63'>Parameters</h3>
+<h3 id='parameters-64'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>folder_id</code><br/><em>required</em></p></td><td><p>The ID of the Folder you wish to delete</p>
 </td><td><p>string</p></td><td>url</td></tr>
 </table>
-<h3 id='responses-69'>Responses</h3>
+<h3 id='responses-70'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON object showing that a Folder with the given ID has been
@@ -5465,13 +5522,13 @@ document. <em>(See the <a href="#document-3">Document Definition</a> documentati
 details).</em></p>
 
 <p><em>OAuth Privileges required: <code>FULL_ACCESS</code></em></p>
-<h3 id='parameters-64'>Parameters</h3>
+<h3 id='parameters-65'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>folder_id</code><br/><em>required</em></p></td><td><p>The ID of the Folder whose contents you wish to list</p>
 </td><td><p>string</p></td><td>url</td></tr>
 </table>
-<h3 id='responses-70'>Responses</h3>
+<h3 id='responses-71'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>JSON object which states the number of documents in the folder and lists
@@ -5483,7 +5540,7 @@ permissions to create this Folder. In practice this means that you lack
 Read permissions on the Folder)</p>
 </td> </tr>
 </table>
-<h1 id='responses-71'>Responses</h1><h2 id='document'>Document</h2>
+<h1 id='responses-72'>Responses</h1><h2 id='document'>Document</h2>
 <p>The document metadata as a JSON.</p>
 <h3 id='document-2'>Document</h3>
 <p><code>(object)</code></p>
@@ -8616,6 +8673,17 @@ field does not have any placements.</p>
 
 </div>
 
+<h6><code>can_forward</code> (boolean)</h6>
+
+<div class="json-schema">
+
+<p>Whether the signatory can forward the signing process to someone else.</p>
+
+
+<p>Default: <code>false</code></p>
+
+</div>
+
 <h6><code>highlighted_pages</code> (array, read only)</h6>
 
 <div class="json-schema">
@@ -8877,6 +8945,19 @@ when the signatory selected the negative response.</p>
 <p></div></p>
 
 <p></div></p>
+
+<h6><code>is_visible</code> (bool,null)</h6>
+
+<div class="json-schema">
+
+<p>Determines if an approver is visible in verification page and sign view.</p>
+<p>This value is only used for approvers, it has to be <code>null</code> for all
+non-approver signatories.</p>
+
+
+<p>Default: <code>"null"</code></p>
+
+</div>
 
 <p></div></p>
 
@@ -13372,6 +13453,17 @@ field does not have any placements.</p>
 
 </div>
 
+<h5><code>can_forward</code> (boolean)</h5>
+
+<div class="json-schema">
+
+<p>Whether the signatory can forward the signing process to someone else.</p>
+
+
+<p>Default: <code>false</code></p>
+
+</div>
+
 <h5><code>highlighted_pages</code> (array, read only)</h5>
 
 <div class="json-schema">
@@ -13633,6 +13725,19 @@ when the signatory selected the negative response.</p>
 <p></div></p>
 
 <p></div></p>
+
+<h5><code>is_visible</code> (bool,null)</h5>
+
+<div class="json-schema">
+
+<p>Determines if an approver is visible in verification page and sign view.</p>
+<p>This value is only used for approvers, it has to be <code>null</code> for all
+non-approver signatories.</p>
+
+
+<p>Default: <code>"null"</code></p>
+
+</div>
 
 <p></div></p>
 
@@ -14292,7 +14397,8 @@ be changed.</p>
         </span><span class="p">}</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">]</span><span class="w">
-  </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="s2">"is_visible"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
 <div class="json-schema">
@@ -17167,6 +17273,17 @@ field does not have any placements.</p>
 
 </div>
 
+<h3><code>can_forward</code> (boolean)</h3>
+
+<div class="json-schema">
+
+<p>Whether the signatory can forward the signing process to someone else.</p>
+
+
+<p>Default: <code>false</code></p>
+
+</div>
+
 <h3><code>highlighted_pages</code> (array, read only)</h3>
 
 <div class="json-schema">
@@ -17428,6 +17545,19 @@ when the signatory selected the negative response.</p>
 <p></div></p>
 
 <p></div></p>
+
+<h3><code>is_visible</code> (bool,null)</h3>
+
+<div class="json-schema">
+
+<p>Determines if an approver is visible in verification page and sign view.</p>
+<p>This value is only used for approvers, it has to be <code>null</code> for all
+non-approver signatories.</p>
+
+
+<p>Default: <code>"null"</code></p>
+
+</div>
 
 <p></div></p>
 <h2 id='signatoryfieldname'>SignatoryFieldName</h2>
