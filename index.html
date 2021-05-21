@@ -600,6 +600,9 @@
                     <a href="#signatoryfieldname" class="toc-h2 toc-link" data-title="signatoryfieldname">SignatoryFieldName</a>
                   </li>
                   <li>
+                    <a href="#signatoryfieldfullname" class="toc-h2 toc-link" data-title="signatoryfieldfullname">SignatoryFieldFullName</a>
+                  </li>
+                  <li>
                     <a href="#signatoryfieldemailmobile" class="toc-h2 toc-link" data-title="signatoryfieldemailmobile">SignatoryFieldEmailMobile</a>
                   </li>
                   <li>
@@ -752,6 +755,30 @@ This is the only officially supported encoding for our API.
 <th>Details of changes</th>
 </tr>
 </thead><tbody>
+<tr>
+<td>2021-04-30</td>
+<td>Added authentication to view provider: <code>freja</code>.</td>
+</tr>
+<tr>
+<td>2021-04-28</td>
+<td>Added <code>FullName</code> Signatory Field type.</td>
+</tr>
+<tr>
+<td>2021-04-22</td>
+<td>Added missing authentication to view providers: <code>nl_idin</code>.</td>
+</tr>
+<tr>
+<td></td>
+<td>Added missing authentication to sign providers: <code>swisscom_qes</code>, <code>verimi_qes</code>.</td>
+</tr>
+<tr>
+<td></td>
+<td>Enum values are now displayed in the parameter description.</td>
+</tr>
+<tr>
+<td>2021-04-20</td>
+<td>Added <code>onfido_document_check</code> and <code>onfido_document_and_photo_check&#39; to</code>authentication_method_to_view`</td>
+</tr>
 <tr>
 <td>2021-03-15</td>
 <td>Added <code>SignDate</code> Signatory Field type.</td>
@@ -2351,19 +2378,19 @@ API call.</p>
 <h3 id='parameters'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>file</code><br/><em>optional</em></p><p><em>default:</em> <code>No file</code></p></td><td><p><strong>The PDF to use for the document.</strong></p>
+<tr><td><p><code>file</code><br/><em>optional</em></p><p><em>default:</em> <code>No file</code></p></td><td><div class="description"><p><strong>The PDF to use for the document.</strong></p>
 <p>If supplied, the document’s title will be set to the filename (with the
 extensions removed).
 Otherwise a default document title will be set, depending on the user
 language settings.</p>
-</td><td><p>file<br><em>application/pdf</em></p></td><td>formData</td></tr>
-<tr><td><p><code>saved</code><br/><em>optional</em></p><p><em>default:</em> <code>true</code></p></td><td><p>Whether the document should start out as being &quot;saved&quot; (<em>i.e.</em> appear
+</div></td><td><p>file<br><em>application/pdf</em></p></td><td>formData</td></tr>
+<tr><td><p><code>saved</code><br/><em>optional</em></p><p><em>default:</em> <code>true</code></p></td><td><div class="description"><p>Whether the document should start out as being &quot;saved&quot; (<em>i.e.</em> appear
 in the E-archive).</p>
 <p>The document can be &quot;saved&quot; later, by setting the &quot;saved&quot; field to
 <code>true</code> via an <code>update</code> call.
 All API operations are applied immediately, the &quot;saved&quot; flag simply
 represents visibility in the E-archive.</p>
-</td><td><p>boolean</p></td><td>formData</td></tr>
+</div></td><td><p>boolean</p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-2'>Responses</h3>
 <table>
@@ -2399,13 +2426,13 @@ represents visibility in the E-archive.</p>
 <h3 id='parameters-2'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
+<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><div class="description"><p>Unique identifier for a document.
 Will not change.</p>
-</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
-<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
+</div></td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><div class="description"><p>If provided, will check the document <code>object_version</code> and only perform the
 operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
-</td><td><p>integer</p></td><td>formData</td></tr>
+</div></td><td><p>integer</p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-3'>Responses</h3>
 <table>
@@ -2433,13 +2460,13 @@ will use the current author details for the author signatory fields.</p>
 <h3 id='parameters-3'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
+<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><div class="description"><p>Unique identifier for a document.
 Will not change.</p>
-</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
-<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
+</div></td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><div class="description"><p>If provided, will check the document <code>object_version</code> and only perform the
 operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
-</td><td><p>integer</p></td><td>formData</td></tr>
+</div></td><td><p>integer</p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-4'>Responses</h3>
 <table>
@@ -2473,21 +2500,21 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 <h3 id='parameters-4'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
+<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><div class="description"><p>Unique identifier for a document.
 Will not change.</p>
-</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
-<tr><td><p><code>document</code><br/><em>required</em></p></td><td><p><strong>The document metadata</strong></p>
+</div></td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><p><code>document</code><br/><em>required</em></p></td><td><div class="description"><p><strong>The document metadata</strong></p>
 <p>Must be of type <code>Document</code>, see <a href="#definitions">Definitions</a>.</p>
 <p>Can be a subset of the JSON structure, for example it is possible to
 just update the title of a document with <code>{&quot;title&quot;: &quot;New title&quot;}</code>.</p>
 <p>Not all fields can be set this way, please refer to the definitions for
 details, those marked as read-only cannot be modified using this API
 call.</p>
-</td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
-<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
+</div></td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
+<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><div class="description"><p>If provided, will check the document <code>object_version</code> and only perform the
 operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
-</td><td><p>integer</p></td><td>formData</td></tr>
+</div></td><td><p>integer</p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-5'>Responses</h3>
 <table>
@@ -2522,16 +2549,16 @@ we may be able to offer you.</p>
 <h3 id='parameters-5'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
+<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><div class="description"><p>Unique identifier for a document.
 Will not change.</p>
-</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
-<tr><td><p><code>file</code><br/><em>optional</em></p></td><td><p>If provided, the PDF will be set as the main file for the document.</p>
+</div></td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><p><code>file</code><br/><em>optional</em></p></td><td><div class="description"><p>If provided, the PDF will be set as the main file for the document.</p>
 <p>If not provided, the current main file for the document will be removed.</p>
-</td><td><p>file<br><em>application/pdf</em></p></td><td>formData</td></tr>
-<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
+</div></td><td><p>file<br><em>application/pdf</em></p></td><td>formData</td></tr>
+<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><div class="description"><p>If provided, will check the document <code>object_version</code> and only perform the
 operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
-</td><td><p>integer</p></td><td>formData</td></tr>
+</div></td><td><p>integer</p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-6'>Responses</h3>
 <table>
@@ -2600,10 +2627,10 @@ behaviour.</p>
 <h3 id='parameters-6'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
+<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><div class="description"><p>Unique identifier for a document.
 Will not change.</p>
-</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
-<tr><td><p><code>attachments</code><br/><em>required</em></p></td><td><p><strong>List of author attachments.</strong></p>
+</div></td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><p><code>attachments</code><br/><em>required</em></p></td><td><div class="description"><p><strong>List of author attachments.</strong></p>
 <p>The list provided will replace any existing attachments (if any).
 Therefore, to add an attachment to an existing list, you would need to
 first fetch the existing attachments <code>file_id</code> and use it for this
@@ -2622,24 +2649,24 @@ You must have the rights to access the <code>file_id</code> to use it.</p>
 </li>
 </ul>
 <p>Must be of type <a href="#author-attachments">Author Attachments</a>.</p>
-</td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
-<tr><td><p><code>{attachment_name}</code><br/><em>optional</em></p></td><td><p><strong>The named file parameters</strong></p>
+</div></td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
+<tr><td><p><code>{attachment_name}</code><br/><em>optional</em></p></td><td><div class="description"><p><strong>The named file parameters</strong></p>
 <p>Any <code>file_param</code> in the <code>attachments</code> JSON must be supplied as named
 file parameters.</p>
 <p>If converting from API version 1, it is convenient to name these
 parameters <code>attachment_1</code>, <code>attachment_2</code>, etc, and reference them as
 such in the <code>attachments</code> JSON.
 Although it is possible to use any HTTP compatible naming scheme.</p>
-</td><td><p>file<br><em>application/pdf</em></p></td><td>formData</td></tr>
-<tr><td><p><code>incremental</code><br/><em>optional</em></p><p><em>default:</em> <code>false</code></p></td><td><p>If set to <code>true</code>, this will make the API set the given author
+</div></td><td><p>file<br><em>application/pdf</em></p></td><td>formData</td></tr>
+<tr><td><p><code>incremental</code><br/><em>optional</em></p><p><em>default:</em> <code>false</code></p></td><td><div class="description"><p>If set to <code>true</code>, this will make the API set the given author
 attachments leaving all already set attachments intact.</p>
 <p>For each given attachment, if there already is one with the same name,
 it will get overwritten, otherwise, the attachment will be added.</p>
-</td><td><p>boolean</p></td><td>formData</td></tr>
-<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
+</div></td><td><p>boolean</p></td><td>formData</td></tr>
+<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><div class="description"><p>If provided, will check the document <code>object_version</code> and only perform the
 operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
-</td><td><p>integer</p></td><td>formData</td></tr>
+</div></td><td><p>integer</p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-7'>Responses</h3>
 <table>
@@ -2674,17 +2701,17 @@ have the requested pages removed from its current main file.</p>
 <h3 id='parameters-7'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
+<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><div class="description"><p>Unique identifier for a document.
 Will not change.</p>
-</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
-<tr><td><p><code>pages</code><br/><em>required</em></p></td><td><p>List of pages to be removed. Pages are indexed from 1.</p>
+</div></td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><p><code>pages</code><br/><em>required</em></p></td><td><div class="description"><p>List of pages to be removed. Pages are indexed from 1.</p>
 <p>To remove the first and last page, when the main file has 4 pages, set
 this param to <code>[1,4]</code>.</p>
-</td><td><p>array<br><em>[integer]</em></p></td><td>formData</td></tr>
-<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
+</div></td><td><p>array<br><em>[integer]</em></p></td><td>formData</td></tr>
+<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><div class="description"><p>If provided, will check the document <code>object_version</code> and only perform the
 operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
-</td><td><p>integer</p></td><td>formData</td></tr>
+</div></td><td><p>integer</p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-8'>Responses</h3>
 <table>
@@ -2733,13 +2760,13 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 <h3 id='parameters-8'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
+<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><div class="description"><p>Unique identifier for a document.
 Will not change.</p>
-</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
-<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
+</div></td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><div class="description"><p>If provided, will check the document <code>object_version</code> and only perform the
 operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
-</td><td><p>integer</p></td><td>formData</td></tr>
+</div></td><td><p>integer</p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-9'>Responses</h3>
 <table>
@@ -2780,9 +2807,9 @@ is missing or invalid in the document is given.</li>
 <h3 id='parameters-9'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
+<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><div class="description"><p>Unique identifier for a document.
 Will not change.</p>
-</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+</div></td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
 </table>
 <h3 id='responses-10'>Responses</h3>
 <table>
@@ -2817,9 +2844,9 @@ is missing or invalid in the document is given.</li>
 <h3 id='parameters-10'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
+<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><div class="description"><p>Unique identifier for a document.
 Will not change.</p>
-</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+</div></td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
 </table>
 <h3 id='responses-11'>Responses</h3>
 <table>
@@ -2846,9 +2873,9 @@ You can only get documents that you have access to.</p>
 <h3 id='parameters-11'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>short_document_id</code><br/><em>required</em></p></td><td><p>Last 6 digits of a regular Document ID.
+<tr><td><p><code>short_document_id</code><br/><em>required</em></p></td><td><div class="description"><p>Last 6 digits of a regular Document ID.
 Must be a pending document created within the last 72 hours.</p>
-</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+</div></td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
 </table>
 <h3 id='responses-12'>Responses</h3>
 <table>
@@ -2886,13 +2913,13 @@ It will also work for viewing parties.</p>
 <h3 id='parameters-12'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
+<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><div class="description"><p>Unique identifier for a document.
 Will not change.</p>
-</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
-<tr><td><p><code>signatory_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a signatory.
+</div></td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><p><code>signatory_id</code><br/><em>required</em></p></td><td><div class="description"><p>Unique identifier for a signatory.
 This value can change before document is made ready for signing, and should
 not be used to identify signatories while document is a draft.</p>
-</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+</div></td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
 </table>
 <h3 id='responses-13'>Responses</h3>
 <table>
@@ -2930,15 +2957,15 @@ use an <a href="https://en.wikipedia.org/wiki/Exponential_backoff">exponential b
 <h3 id='parameters-13'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>offset</code><br/><em>optional</em></p><p><em>default:</em> <code>0</code></p></td><td><p><strong>Starting offset for documents to return.</strong></p>
+<tr><td><p><code>offset</code><br/><em>optional</em></p><p><em>default:</em> <code>0</code></p></td><td><div class="description"><p><strong>Starting offset for documents to return.</strong></p>
 <p>If offset is larger than the total number of matching documents, an
 empty list is returned.</p>
-</td><td><p>integer<br><em>int32</em></p></td><td>query</td></tr>
-<tr><td><p><code>max</code><br/><em>optional</em></p><p><em>default:</em> <code>100</code></p></td><td><p><strong>Maximum number of documents to return.</strong></p>
+</div></td><td><p>integer<br><em>int32</em></p></td><td>query</td></tr>
+<tr><td><p><code>max</code><br/><em>optional</em></p><p><em>default:</em> <code>100</code></p></td><td><div class="description"><p><strong>Maximum number of documents to return.</strong></p>
 <p>Server may cap to a lower value.</p>
 <p>Default value may change without notice.</p>
-</td><td><p>integer<br><em>int32</em></p></td><td>query</td></tr>
-<tr><td><p><code>filter</code><br/><em>optional</em></p><p><em>default:</em> <code>[]</code></p></td><td><p><strong>List of filtering options.</strong></p>
+</div></td><td><p>integer<br><em>int32</em></p></td><td>query</td></tr>
+<tr><td><p><code>filter</code><br/><em>optional</em></p><p><em>default:</em> <code>[]</code></p></td><td><div class="description"><p><strong>List of filtering options.</strong></p>
 <p>You can supply a list of filtering options to apply.
 Only documents that match <strong>all</strong> filters will be returned.
 Therefore, it is easy to apply a set of filters that will return no
@@ -2946,15 +2973,15 @@ documents.</p>
 <p>If not supplied, the default is not to apply any filter, i.e. <code>[]</code>.</p>
 <p>Must be of type <a href="#list-filter">List Filter</a>, for example:</p>
 <p><code>[ { &quot;filter_by&quot;:&quot;status&quot;, &quot;statuses&quot;: [&quot;preparation&quot;,&quot;pending&quot;] } ]</code></p>
-</td><td><p>string<br><em>application/json</em></p></td><td>query</td></tr>
-<tr><td><p><code>sorting</code><br/><em>optional</em></p><p><em>default:</em> <code>[ { "sort_by":"mtime", "order":"descending" } ]</code></p></td><td><p><strong>List of sorting options.</strong></p>
+</div></td><td><p>string<br><em>application/json</em></p></td><td>query</td></tr>
+<tr><td><p><code>sorting</code><br/><em>optional</em></p><p><em>default:</em> <code>[ { "sort_by":"mtime", "order":"descending" } ]</code></p></td><td><div class="description"><p><strong>List of sorting options.</strong></p>
 <p>You can supply a list of sorting options, which will be applied to list
 of documents in the order you provided.</p>
 <p>If not supplied, the default is
 <code>[ { &quot;sort_by&quot;:&quot;mtime&quot;, &quot;order&quot;:&quot;descending&quot; } ]</code>,
 <em>i.e.</em>, sort by modification time, newest first.</p>
 <p>Must be of type <a href="#list-sorting">List Sorting</a>.</p>
-</td><td><p>string<br><em>application/json</em></p></td><td>query</td></tr>
+</div></td><td><p>string<br><em>application/json</em></p></td><td>query</td></tr>
 </table>
 <h3 id='responses-14'>Responses</h3>
 <table>
@@ -2985,11 +3012,11 @@ browser.</p>
 <h3 id='parameters-14'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
+<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><div class="description"><p>Unique identifier for a document.
 Will not change.</p>
-</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
-<tr><td><p><code>filename</code><br/><em>optional</em></p></td><td><p>Optional filename parameter.</p>
-</td><td><p>string</p></td><td>path</td></tr>
+</div></td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><p><code>filename</code><br/><em>optional</em></p></td><td><div class="description"><p>Optional filename parameter.</p>
+</div></td><td><p>string</p></td><td>path</td></tr>
 </table>
 <h3 id='responses-15'>Responses</h3>
 <table>
@@ -3027,11 +3054,11 @@ browser.</p>
 <h3 id='parameters-15'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
+<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><div class="description"><p>Unique identifier for a document.
 Will not change.</p>
-</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
-<tr><td><p><code>file_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a file available via Scrive.</p>
-</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+</div></td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><p><code>file_id</code><br/><em>required</em></p></td><td><div class="description"><p>Unique identifier for a file available via Scrive.</p>
+</div></td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
 </table>
 <h3 id='responses-16'>Responses</h3>
 <table>
@@ -3060,14 +3087,14 @@ This can optionally be overridden.</p>
 <h3 id='parameters-16'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
+<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><div class="description"><p>Unique identifier for a document.
 Will not change.</p>
-</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
-<tr><td><p><code>lang</code><br/><em>optional</em></p><p><em>default:</em> <code>User language</code></p></td><td><p><strong>The language used to display the document history.</strong></p>
+</div></td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><p><code>lang</code><br/><em>optional</em></p><p><em>default:</em> <code>User language</code></p></td><td><div class="description"><p><strong>The language used to display the document history.</strong></p>
 <p>Defaults to the language of the User making the API call.</p>
 <p>Has to be a supported language code.
 Languages may be added or removed without notice.</p>
-</td><td><p>string</p></td><td>query</td></tr>
+</div><div class="enumeration"><strong>Enum:</strong> <code>da</code>, <code>de</code>, <code>el</code>, <code>en</code>, <code>es</code>, <code>et</code>, <code>fi</code>, <code>fr</code>, <code>is</code>, <code>it</code>, <code>lt</code>, <code>lv</code>, <code>nl</code>, <code>no</code>, <code>pt</code>, <code>sv</code></div></td><td><p>string</p></td><td>query</td></tr>
 </table>
 <h3 id='responses-17'>Responses</h3>
 <table>
@@ -3093,13 +3120,13 @@ If one is set, no effect otherwise.</p>
 <h3 id='parameters-17'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
+<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><div class="description"><p>Unique identifier for a document.
 Will not change.</p>
-</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
-<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
+</div></td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><div class="description"><p>If provided, will check the document <code>object_version</code> and only perform the
 operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
-</td><td><p>integer</p></td><td>formData</td></tr>
+</div></td><td><p>integer</p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-18'>Responses</h3>
 <table>
@@ -3126,13 +3153,13 @@ signed.</p>
 <h3 id='parameters-18'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
+<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><div class="description"><p>Unique identifier for a document.
 Will not change.</p>
-</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
-<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
+</div></td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><div class="description"><p>If provided, will check the document <code>object_version</code> and only perform the
 operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
-</td><td><p>integer</p></td><td>formData</td></tr>
+</div></td><td><p>integer</p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-19'>Responses</h3>
 <table>
@@ -3158,15 +3185,15 @@ signatories that have not yet signed.</p>
 <h3 id='parameters-19'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
+<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><div class="description"><p>Unique identifier for a document.
 Will not change.</p>
-</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
-<tr><td><p><code>days</code><br/><em>required</em></p></td><td><p>Number of days to prolong the document by.</p>
-</td><td><p>integer</p></td><td>formData</td></tr>
-<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
+</div></td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><p><code>days</code><br/><em>required</em></p></td><td><div class="description"><p>Number of days to prolong the document by.</p>
+</div></td><td><p>integer</p></td><td>formData</td></tr>
+<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><div class="description"><p>If provided, will check the document <code>object_version</code> and only perform the
 operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
-</td><td><p>integer</p></td><td>formData</td></tr>
+</div></td><td><p>integer</p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-20'>Responses</h3>
 <table>
@@ -3194,13 +3221,13 @@ Only timed out documents can be prolonged.</p>
 <h3 id='parameters-20'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
+<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><div class="description"><p>Unique identifier for a document.
 Will not change.</p>
-</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
-<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
+</div></td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><div class="description"><p>If provided, will check the document <code>object_version</code> and only perform the
 operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
-</td><td><p>integer</p></td><td>formData</td></tr>
+</div></td><td><p>integer</p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-21'>Responses</h3>
 <table>
@@ -3227,13 +3254,13 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 <h3 id='parameters-21'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
+<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><div class="description"><p>Unique identifier for a document.
 Will not change.</p>
-</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
-<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
+</div></td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><div class="description"><p>If provided, will check the document <code>object_version</code> and only perform the
 operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
-</td><td><p>integer</p></td><td>formData</td></tr>
+</div></td><td><p>integer</p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-22'>Responses</h3>
 <table>
@@ -3258,8 +3285,8 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 <h3 id='parameters-22'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>document_ids</code><br/><em>required</em></p></td><td><p>List of document IDs to trash.</p>
-</td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
+<tr><td><p><code>document_ids</code><br/><em>required</em></p></td><td><div class="description"><p>List of document IDs to trash.</p>
+</div></td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-23'>Responses</h3>
 <table>
@@ -3286,13 +3313,13 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 <h3 id='parameters-23'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
+<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><div class="description"><p>Unique identifier for a document.
 Will not change.</p>
-</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
-<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
+</div></td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><div class="description"><p>If provided, will check the document <code>object_version</code> and only perform the
 operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
-</td><td><p>integer</p></td><td>formData</td></tr>
+</div></td><td><p>integer</p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-24'>Responses</h3>
 <table>
@@ -3317,8 +3344,8 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 <h3 id='parameters-24'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>document_ids</code><br/><em>required</em></p></td><td><p>List of document IDs to delete.</p>
-</td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
+<tr><td><p><code>document_ids</code><br/><em>required</em></p></td><td><div class="description"><p>List of document IDs to delete.</p>
+</div></td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-25'>Responses</h3>
 <table>
@@ -3343,23 +3370,23 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 <h3 id='parameters-25'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
+<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><div class="description"><p>Unique identifier for a document.
 Will not change.</p>
-</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
-<tr><td><p><code>email</code><br/><em>required</em></p></td><td><p>The email address to forward the document to.</p>
-</td><td><p>string</p></td><td>formData</td></tr>
-<tr><td><p><code>no_content</code><br/><em>optional</em></p><p><em>default:</em> <code>true</code></p></td><td><p>When set to true only the signed document will be forwarded, with no
+</div></td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><p><code>email</code><br/><em>required</em></p></td><td><div class="description"><p>The email address to forward the document to.</p>
+</div></td><td><p>string</p></td><td>formData</td></tr>
+<tr><td><p><code>no_content</code><br/><em>optional</em></p><p><em>default:</em> <code>true</code></p></td><td><div class="description"><p>When set to true only the signed document will be forwarded, with no
 other email content.
 Otherwise a template email content is used, with the document attached.</p>
-</td><td><p>boolean</p></td><td>formData</td></tr>
-<tr><td><p><code>no_attachments</code><br/><em>optional</em></p><p><em>default:</em> <code>false</code></p></td><td><p>When set to true, only the main file will be included as email
+</div></td><td><p>boolean</p></td><td>formData</td></tr>
+<tr><td><p><code>no_attachments</code><br/><em>optional</em></p><p><em>default:</em> <code>false</code></p></td><td><div class="description"><p>When set to true, only the main file will be included as email
 attachments.
 Any attachments not merged with the main file will not be sent.</p>
-</td><td><p>boolean</p></td><td>formData</td></tr>
-<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
+</div></td><td><p>boolean</p></td><td>formData</td></tr>
+<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><div class="description"><p>If provided, will check the document <code>object_version</code> and only perform the
 operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
-</td><td><p>integer</p></td><td>formData</td></tr>
+</div></td><td><p>integer</p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-26'>Responses</h3>
 <table>
@@ -3385,17 +3412,17 @@ message to the signatories that have not yet signed by that date.</p>
 <h3 id='parameters-26'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
+<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><div class="description"><p>Unique identifier for a document.
 Will not change.</p>
-</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
-<tr><td><p><code>days</code><br/><em>optional</em></p></td><td><p>Including this parameter sets the number of days in which to send
+</div></td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><p><code>days</code><br/><em>optional</em></p></td><td><div class="description"><p>Including this parameter sets the number of days in which to send
 automatic reminders.</p>
 <p>Excluding it will remove automatic reminders from the document.</p>
-</td><td><p>integer<br><em>int32</em></p></td><td>formData</td></tr>
-<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
+</div></td><td><p>integer<br><em>int32</em></p></td><td>formData</td></tr>
+<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><div class="description"><p>If provided, will check the document <code>object_version</code> and only perform the
 operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
-</td><td><p>integer</p></td><td>formData</td></tr>
+</div></td><td><p>integer</p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-27'>Responses</h3>
 <table>
@@ -3423,13 +3450,13 @@ before the document expires.</p>
 <h3 id='parameters-27'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
+<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><div class="description"><p>Unique identifier for a document.
 Will not change.</p>
-</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
-<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
+</div></td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><div class="description"><p>If provided, will check the document <code>object_version</code> and only perform the
 operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
-</td><td><p>integer</p></td><td>formData</td></tr>
+</div></td><td><p>integer</p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-28'>Responses</h3>
 <table>
@@ -3462,30 +3489,30 @@ adding the field to the signatory with a valid personal number.</p>
 <h3 id='parameters-28'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
+<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><div class="description"><p>Unique identifier for a document.
 Will not change.</p>
-</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
-<tr><td><p><code>signatory_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a signatory.
+</div></td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><p><code>signatory_id</code><br/><em>required</em></p></td><td><div class="description"><p>Unique identifier for a signatory.
 This value can change before document is made ready for signing, and should
 not be used to identify signatories while document is a draft.</p>
-</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
-<tr><td><p><code>authentication_type</code><br/><em>required</em></p></td><td><p>The type of authentication-to-view method to set for the signatory.
-<code>dk_nemid</code> is legacy equivalent of <code>dk_nemid_cpr</code>.</p>
-</td><td><p>string</p></td><td>formData</td></tr>
-<tr><td><p><code>personal_number</code><br/><em>optional</em></p></td><td><p>If the <code>authentication_type</code> requires a personal number, and the
+</div></td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><p><code>authentication_type</code><br/><em>required</em></p></td><td><div class="description"><p>The type of authentication-to-view method to set for the signatory.</p>
+<p>Additional value <code>dk_nemid</code> is supported as legacy equivalent of <code>dk_nemid_cpr</code>.</p>
+</div><div class="enumeration"><strong>Enum:</strong> <code>standard</code>, <code>sms_pin</code>, <code>dk_nemid_cpr</code>, <code>dk_nemid_cvr</code>, <code>dk_nemid_pid</code>, <code>fi_tupas</code>, <code>nl_idin</code>, <code>no_bankid</code>, <code>se_bankid</code>, <code>verimi</code>, <code>onfido_document_check</code>, <code>onfido_document_and_photo_check</code>, <code>freja</code></div></td><td><p>string</p></td><td>formData</td></tr>
+<tr><td><p><code>personal_number</code><br/><em>optional</em></p></td><td><div class="description"><p>If the <code>authentication_type</code> requires a personal number, and the
 signatory doesn’t have one set already, then it must be provided and
 valid for the chosen authentication-to-view method.</p>
-</td><td><p>string</p></td><td>formData</td></tr>
-<tr><td><p><code>mobile_number</code><br/><em>optional</em></p></td><td><p>Can be used for <code>authentication_type</code> that makes use of a mobile
+</div></td><td><p>string</p></td><td>formData</td></tr>
+<tr><td><p><code>mobile_number</code><br/><em>optional</em></p></td><td><div class="description"><p>Can be used for <code>authentication_type</code> that makes use of a mobile
 number.
 Similar requirements as <code>personal_number</code>.</p>
 <p>Currently only Norwegian BankID uses this and therefore must be a valid
 Norwegian mobile number.</p>
-</td><td><p>string</p></td><td>formData</td></tr>
-<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
+</div></td><td><p>string</p></td><td>formData</td></tr>
+<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><div class="description"><p>If provided, will check the document <code>object_version</code> and only perform the
 operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
-</td><td><p>integer</p></td><td>formData</td></tr>
+</div></td><td><p>integer</p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-29'>Responses</h3>
 <table>
@@ -3525,17 +3552,17 @@ mobile number field to the signatory and setting it as obligatory.</p>
 <h3 id='parameters-29'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
+<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><div class="description"><p>Unique identifier for a document.
 Will not change.</p>
-</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
-<tr><td><p><code>signatory_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a signatory.
+</div></td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><p><code>signatory_id</code><br/><em>required</em></p></td><td><div class="description"><p>Unique identifier for a signatory.
 This value can change before document is made ready for signing, and should
 not be used to identify signatories while document is a draft.</p>
-</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
-<tr><td><p><code>authentication_type</code><br/><em>required</em></p></td><td><p>The type of authentication-to-sign method to set for the signatory.
-<code>dk_nemid</code> is legacy equivalent of <code>dk_nemid_cpr</code>.</p>
-</td><td><p>string</p></td><td>formData</td></tr>
-<tr><td><p><code>personal_number</code><br/><em>optional</em></p></td><td><p>If provided, it must be valid for the chosen authentication-to-sign
+</div></td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><p><code>authentication_type</code><br/><em>required</em></p></td><td><div class="description"><p>The type of authentication-to-sign method to set for the signatory.</p>
+<p>Additional value <code>dk_nemid</code> is supported as legacy equivalent of <code>dk_nemid_cpr</code>.</p>
+</div><div class="enumeration"><strong>Enum:</strong> <code>standard</code>, <code>sms_pin</code>, <code>dk_nemid_cpr</code>, <code>dk_nemid_cvr</code>, <code>dk_nemid_pid</code>, <code>fi_tupas</code>, <code>freja</code>, <code>nl_idin</code>, <code>no_bankid</code>, <code>onfido_document_and_photo_check</code>, <code>onfido_document_check</code>, <code>se_bankid</code></div></td><td><p>string</p></td><td>formData</td></tr>
+<tr><td><p><code>personal_number</code><br/><em>optional</em></p></td><td><div class="description"><p>If provided, it must be valid for the chosen authentication-to-sign
 method.</p>
 <p>If it is not used by the chosen authentication-to-sign method, the
 parameter will be ignored and will have no effect.</p>
@@ -3543,8 +3570,8 @@ parameter will be ignored and will have no effect.</p>
 signatory will not be changed.
 However, if a <code>personal_number</code> <em>SignatoryField</em> does not yet exist,
 one will be added to the signatory (with empty string as <code>value</code>).</p>
-</td><td><p>string</p></td><td>formData</td></tr>
-<tr><td><p><code>mobile_number</code><br/><em>optional</em></p></td><td><p>If provided, it must be valid for the chosen authentication-to-sign
+</div></td><td><p>string</p></td><td>formData</td></tr>
+<tr><td><p><code>mobile_number</code><br/><em>optional</em></p></td><td><div class="description"><p>If provided, it must be valid for the chosen authentication-to-sign
 method.</p>
 <p>If it is not used by the chosen authentication-to-sign method, the
 parameter will be ignored and will have no effect.</p>
@@ -3552,11 +3579,11 @@ parameter will be ignored and will have no effect.</p>
 signatory will not be changed.
 However, if a <code>mobile</code> <em>SignatoryField</em> does not yet exist, one will be
 added to the signatory (with empty string as <code>value</code>).</p>
-</td><td><p>string</p></td><td>formData</td></tr>
-<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
+</div></td><td><p>string</p></td><td>formData</td></tr>
+<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><div class="description"><p>If provided, will check the document <code>object_version</code> and only perform the
 operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
-</td><td><p>integer</p></td><td>formData</td></tr>
+</div></td><td><p>integer</p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-30'>Responses</h3>
 <table>
@@ -3601,25 +3628,25 @@ change it.</p>
 <h3 id='parameters-30'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
+<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><div class="description"><p>Unique identifier for a document.
 Will not change.</p>
-</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
-<tr><td><p><code>signatory_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a signatory.
+</div></td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><p><code>signatory_id</code><br/><em>required</em></p></td><td><div class="description"><p>Unique identifier for a signatory.
 This value can change before document is made ready for signing, and should
 not be used to identify signatories while document is a draft.</p>
-</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
-<tr><td><p><code>email</code><br/><em>optional</em></p></td><td><p>The new email address for the signatory.</p>
+</div></td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><p><code>email</code><br/><em>optional</em></p></td><td><div class="description"><p>The new email address for the signatory.</p>
 <p>Whilst this field is optional, both <code>email</code> and <code>mobile_number</code> cannot
 be blank, you need at least one.</p>
-</td><td><p>string</p></td><td>formData</td></tr>
-<tr><td><p><code>mobile_number</code><br/><em>optional</em></p></td><td><p>The new mobile number for the signatory.</p>
+</div></td><td><p>string</p></td><td>formData</td></tr>
+<tr><td><p><code>mobile_number</code><br/><em>optional</em></p></td><td><div class="description"><p>The new mobile number for the signatory.</p>
 <p>Whilst this field is optional, both <code>email</code> and <code>mobile_number</code> cannot
 be blank, you need at least one.</p>
-</td><td><p>string</p></td><td>formData</td></tr>
-<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
+</div></td><td><p>string</p></td><td>formData</td></tr>
+<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><div class="description"><p>If provided, will check the document <code>object_version</code> and only perform the
 operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
-</td><td><p>integer</p></td><td>formData</td></tr>
+</div></td><td><p>integer</p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-31'>Responses</h3>
 <table>
@@ -3653,10 +3680,10 @@ is provided.</li>
 <h3 id='parameters-31'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>document_ids</code><br/><em>required</em></p></td><td><p>List of document IDs of templates to share or unshare.</p>
-</td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
-<tr><td><p><code>shared</code><br/><em>required</em></p></td><td><p><code>true</code> to share, <code>false</code> to unshare.</p>
-</td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
+<tr><td><p><code>document_ids</code><br/><em>required</em></p></td><td><div class="description"><p>List of document IDs of templates to share or unshare.</p>
+</div></td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
+<tr><td><p><code>shared</code><br/><em>required</em></p></td><td><div class="description"><p><code>true</code> to share, <code>false</code> to unshare.</p>
+</div></td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-32'>Responses</h3>
 <table>
@@ -3679,11 +3706,11 @@ is provided.</li>
 <h3 id='parameters-32'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>domain</code><br/><em>optional</em></p></td><td><p><strong>Domain in which to search.</strong></p>
+<tr><td><p><code>domain</code><br/><em>optional</em></p></td><td><div class="description"><p><strong>Domain in which to search.</strong></p>
 <p>The list always contains the attachments of the user. If <code>domain</code> is set
 to <code>All</code>, it will also return the attachments shared within the company.</p>
-</td><td><p>string<br><em>string</em></p></td><td>query</td></tr>
-<tr><td><p><code>filter</code><br/><em>optional</em></p><p><em>default:</em> <code>[]</code></p></td><td><p><strong>List of filtering options.</strong></p>
+</div></td><td><p>string<br><em>string</em></p></td><td>query</td></tr>
+<tr><td><p><code>filter</code><br/><em>optional</em></p><p><em>default:</em> <code>[]</code></p></td><td><div class="description"><p><strong>List of filtering options.</strong></p>
 <p>You can supply a list of filtering options to apply.
 Only attachments that match <strong>all</strong> filters will be returned.
 Therefore, it is easy to apply a set of filters that will return no
@@ -3692,15 +3719,15 @@ documents.</p>
 <p>Must be of type <a href="#attachment-list-filter">Attachment List Filter</a>, for
 example:</p>
 <p><code>[ { &quot;filter_by&quot;:&quot;text&quot;, &quot;text&quot;:&quot;some keywords&quot;] } ]</code></p>
-</td><td><p>string<br><em>application/json</em></p></td><td>query</td></tr>
-<tr><td><p><code>sorting</code><br/><em>optional</em></p><p><em>default:</em> <code>[ { "sort_by":"time", "order":"descending" } ]</code></p></td><td><p><strong>List of sorting options.</strong></p>
+</div></td><td><p>string<br><em>application/json</em></p></td><td>query</td></tr>
+<tr><td><p><code>sorting</code><br/><em>optional</em></p><p><em>default:</em> <code>[ { "sort_by":"time", "order":"descending" } ]</code></p></td><td><div class="description"><p><strong>List of sorting options.</strong></p>
 <p>You can supply a list of sorting options, which will be applied to the
 list of attachments in the order you provided.</p>
 <p>If not supplied, the default is
 <code>[ { &quot;sort_by&quot;:&quot;time&quot;, &quot;order&quot;:&quot;descending&quot; } ]</code>,
 <em>i.e.</em>, sort by modification time, newest first.</p>
 <p>Must be of type <a href="#list-sorting">List Sorting</a>.</p>
-</td><td><p>string<br><em>application/json</em></p></td><td>query</td></tr>
+</div></td><td><p>string<br><em>application/json</em></p></td><td>query</td></tr>
 </table>
 <h3 id='responses-33'>Responses</h3>
 <table>
@@ -3727,10 +3754,10 @@ the browser.</p>
 <h3 id='parameters-33'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>attachment_id</code><br/><em>required</em></p></td><td><p>Identifier for the attachment.</p>
-</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
-<tr><td><p><code>filename</code><br/><em>optional</em></p></td><td><p>Optional filename parameter.</p>
-</td><td><p>string</p></td><td>path</td></tr>
+<tr><td><p><code>attachment_id</code><br/><em>required</em></p></td><td><div class="description"><p>Identifier for the attachment.</p>
+</div></td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><p><code>filename</code><br/><em>optional</em></p></td><td><div class="description"><p>Optional filename parameter.</p>
+</div></td><td><p>string</p></td><td>path</td></tr>
 </table>
 <h3 id='responses-34'>Responses</h3>
 <table>
@@ -3753,11 +3780,11 @@ the browser.</p>
 <h3 id='parameters-34'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>title</code><br/><em>optional</em></p></td><td><p>Title of the attachment. If not present, the title will be taken from
+<tr><td><p><code>title</code><br/><em>optional</em></p></td><td><div class="description"><p>Title of the attachment. If not present, the title will be taken from
 the file name.</p>
-</td><td><p>string</p></td><td>formData</td></tr>
-<tr><td><p><code>file</code><br/><em>required</em></p></td><td><p>The PDF to use for the attachment.</p>
-</td><td><p>file<br><em>application/pdf</em></p></td><td>formData</td></tr>
+</div></td><td><p>string</p></td><td>formData</td></tr>
+<tr><td><p><code>file</code><br/><em>required</em></p></td><td><div class="description"><p>The PDF to use for the attachment.</p>
+</div></td><td><p>file<br><em>application/pdf</em></p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-35'>Responses</h3>
 <table>
@@ -3780,8 +3807,8 @@ the file name.</p>
 <h3 id='parameters-35'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>attachment_ids</code><br/><em>required</em></p></td><td><p>List of attachment IDs of attachments to delete.</p>
-</td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
+<tr><td><p><code>attachment_ids</code><br/><em>required</em></p></td><td><div class="description"><p>List of attachment IDs of attachments to delete.</p>
+</div></td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-36'>Responses</h3>
 <table>
@@ -3804,10 +3831,10 @@ the file name.</p>
 <h3 id='parameters-36'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>attachment_ids</code><br/><em>required</em></p></td><td><p>List of attachment IDs of attachments to share or unshare.</p>
-</td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
-<tr><td><p><code>shared</code><br/><em>required</em></p></td><td><p><code>true</code> to share, <code>false</code> to unshare.</p>
-</td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
+<tr><td><p><code>attachment_ids</code><br/><em>required</em></p></td><td><div class="description"><p>List of attachment IDs of attachments to share or unshare.</p>
+</div></td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
+<tr><td><p><code>shared</code><br/><em>required</em></p></td><td><div class="description"><p><code>true</code> to share, <code>false</code> to unshare.</p>
+</div></td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-37'>Responses</h3>
 <table>
@@ -3846,8 +3873,8 @@ Remember that all URL query parameters must be URL encoded!</p>
 <h3 id='parameters-37'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>personal_token</code><br/><em>required</em></p></td><td><p>Must be of type <a href="#oauthauthorization"><code>OAuthAuthorization</code></a></p>
-</td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
+<tr><td><p><code>personal_token</code><br/><em>required</em></p></td><td><div class="description"><p>Must be of type <a href="#oauthauthorization"><code>OAuthAuthorization</code></a></p>
+</div></td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-38'>Responses</h3>
 <table>
@@ -3878,8 +3905,8 @@ be supported in an upcoming relase.</p>
 <h3 id='parameters-38'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>minutes</code><br/><em>optional</em></p><p><em>default:</em> <code>5</code></p></td><td><p>How many minutes the <code>login_token</code> should be valid for (maximum of 30).</p>
-</td><td><p>integer</p></td><td>formData</td></tr>
+<tr><td><p><code>minutes</code><br/><em>optional</em></p><p><em>default:</em> <code>5</code></p></td><td><div class="description"><p>How many minutes the <code>login_token</code> should be valid for (maximum of 30).</p>
+</div></td><td><p>integer</p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-39'>Responses</h3>
 <table>
@@ -3917,8 +3944,8 @@ else triggers QR code generation</p>
 <h3 id='parameters-39'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>totp</code><br/><em>required</em></p></td><td><p>2-factor code</p>
-</td><td><p>string</p></td><td>formData</td></tr>
+<tr><td><p><code>totp</code><br/><em>required</em></p></td><td><div class="description"><p>2-factor code</p>
+</div></td><td><p>string</p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-41'>Responses</h3>
 <table>
@@ -3973,8 +4000,8 @@ else triggers QR code generation</p>
 <h3 id='parameters-40'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>email</code><br/><em>required</em></p></td><td><p>User's email</p>
-</td><td><p>string</p></td><td>formData</td></tr>
+<tr><td><p><code>email</code><br/><em>required</em></p></td><td><div class="description"><p>User's email</p>
+</div></td><td><p>string</p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-44'>Responses</h3>
 <table>
@@ -4013,8 +4040,8 @@ else triggers QR code generation</p>
 <h3 id='parameters-41'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>data_retention_policy</code><br/><em>required</em></p></td><td><p>Must be of type <a href="#dataretentionpolicy"><code>DataRetentionPolicy</code></a></p>
-</td><td><p>object<br><em>application/json</em></p></td><td>formData</td></tr>
+<tr><td><p><code>data_retention_policy</code><br/><em>required</em></p></td><td><div class="description"><p>Must be of type <a href="#dataretentionpolicy"><code>DataRetentionPolicy</code></a></p>
+</div></td><td><p>object<br><em>application/json</em></p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-46'>Responses</h3>
 <table>
@@ -4055,8 +4082,8 @@ Other value types lead to 400 Bad Request response.</p>
 <h3 id='parameters-42'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>tags</code><br/><em>required</em></p><p><em>default:</em> <code></code></p></td><td><p>Must be of type <a href="#tags"><code>Tags</code></a></p>
-</td><td><p>array<br><em>application/json</em></p></td><td>formData</td></tr>
+<tr><td><p><code>tags</code><br/><em>required</em></p><p><em>default:</em> <code></code></p></td><td><div class="description"><p>Must be of type <a href="#tags"><code>Tags</code></a></p>
+</div></td><td><p>array<br><em>application/json</em></p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-48'>Responses</h3>
 <table>
@@ -4077,8 +4104,8 @@ Other value types lead to 400 Bad Request response.</p>
 <h3 id='parameters-43'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>withCompany</code><br/><em>optional</em></p></td><td><p>Boolean flag for showing company information in the response.</p>
-</td><td><p>string</p></td><td>query</td></tr>
+<tr><td><p><code>withCompany</code><br/><em>optional</em></p></td><td><div class="description"><p>Boolean flag for showing company information in the response.</p>
+</div></td><td><p>string</p></td><td>query</td></tr>
 </table>
 <h3 id='responses-49'>Responses</h3>
 <table>
@@ -4100,8 +4127,8 @@ count of documents on different stages of the process</p>
 <h3 id='parameters-44'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>withCompany</code><br/><em>optional</em></p></td><td><p>Boolean flag for showing company information in the response.</p>
-</td><td><p>string</p></td><td>query</td></tr>
+<tr><td><p><code>withCompany</code><br/><em>optional</em></p></td><td><div class="description"><p>Boolean flag for showing company information in the response.</p>
+</div></td><td><p>string</p></td><td>query</td></tr>
 </table>
 <h3 id='responses-50'>Responses</h3>
 <table>
@@ -4134,20 +4161,20 @@ no signup request will be created.</p>
 <h3 id='parameters-45'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>email</code><br/><em>required</em></p></td><td><p>Has to be a valid email address format.</p>
-</td><td><p>email</p></td><td>formData</td></tr>
-<tr><td><p><code>firstName</code><br/><em>optional</em></p></td><td><p>Has to be a valid name string.</p>
-</td><td><p>string</p></td><td>formData</td></tr>
-<tr><td><p><code>lastName</code><br/><em>optional</em></p></td><td><p>Has to be a valid name string.</p>
-</td><td><p>string</p></td><td>formData</td></tr>
-<tr><td><p><code>phone</code><br/><em>optional</em></p></td><td><p>Has to be a valid phone</p>
-</td><td><p>string</p></td><td>formData</td></tr>
-<tr><td><p><code>companyName</code><br/><em>optional</em></p></td><td><p>Has to be a valid company name</p>
-</td><td><p>string</p></td><td>formData</td></tr>
-<tr><td><p><code>companyPosition</code><br/><em>optional</em></p></td><td><p>Has to be a valid position</p>
-</td><td><p>string</p></td><td>formData</td></tr>
-<tr><td><p><code>lang</code><br/><em>optional</em></p></td><td><p>Has to be a valid lang code <a href="#language-code"><code>LanguageCode</code></a></p>
-</td><td><p>string</p></td><td>formData</td></tr>
+<tr><td><p><code>email</code><br/><em>required</em></p></td><td><div class="description"><p>Has to be a valid email address format.</p>
+</div></td><td><p>email</p></td><td>formData</td></tr>
+<tr><td><p><code>firstName</code><br/><em>optional</em></p></td><td><div class="description"><p>Has to be a valid name string.</p>
+</div></td><td><p>string</p></td><td>formData</td></tr>
+<tr><td><p><code>lastName</code><br/><em>optional</em></p></td><td><div class="description"><p>Has to be a valid name string.</p>
+</div></td><td><p>string</p></td><td>formData</td></tr>
+<tr><td><p><code>phone</code><br/><em>optional</em></p></td><td><div class="description"><p>Has to be a valid phone</p>
+</div></td><td><p>string</p></td><td>formData</td></tr>
+<tr><td><p><code>companyName</code><br/><em>optional</em></p></td><td><div class="description"><p>Has to be a valid company name</p>
+</div></td><td><p>string</p></td><td>formData</td></tr>
+<tr><td><p><code>companyPosition</code><br/><em>optional</em></p></td><td><div class="description"><p>Has to be a valid position</p>
+</div></td><td><p>string</p></td><td>formData</td></tr>
+<tr><td><p><code>lang</code><br/><em>optional</em></p></td><td><div class="description"><p>Has to be a valid lang code <a href="#language-code"><code>LanguageCode</code></a></p>
+</div><div class="enumeration"><strong>Enum:</strong> <code>da</code>, <code>de</code>, <code>el</code>, <code>en</code>, <code>es</code>, <code>et</code>, <code>fi</code>, <code>fr</code>, <code>is</code>, <code>it</code>, <code>lt</code>, <code>lv</code>, <code>nl</code>, <code>no</code>, <code>pt</code>, <code>sv</code></div></td><td><p>string</p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-51'>Responses</h3>
 <table>
@@ -4210,12 +4237,12 @@ using the <code>GET</code> endpoint should produce the same output both times.</
 <h3 id='parameters-46'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>usergroup</code><br/><em>required</em></p></td><td><p>JSON object containing the <code>name</code>, <code>parent_id</code>, and <code>tags</code> of the User
+<tr><td><p><code>usergroup</code><br/><em>required</em></p></td><td><div class="description"><p>JSON object containing the <code>name</code>, <code>parent_id</code>, and <code>tags</code> of the User
 Group to be created.</p>
-</td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
-<tr><td><p><code>include-inheritable</code><br/><em>optional</em></p></td><td><p>Append <code>?include-inheritable</code> to the URL to see a preview of which
+</div></td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
+<tr><td><p><code>include-inheritable</code><br/><em>optional</em></p></td><td><div class="description"><p>Append <code>?include-inheritable</code> to the URL to see a preview of which
 values can be inherited from an ancestor User Group.</p>
-</td><td><p>boolean</p></td><td>query</td></tr>
+</div></td><td><p>boolean</p></td><td>query</td></tr>
 </table>
 <h3 id='responses-52'>Responses</h3>
 <table>
@@ -4391,11 +4418,11 @@ inherits.</p>
 <h3 id='parameters-47'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group you wish to view</p>
-</td><td><p>integer</p></td><td>path</td></tr>
-<tr><td><p><code>include-inheritable</code><br/><em>optional</em></p></td><td><p>Append <code>?include-inheritable</code> to the URL to see a preview of which
+<tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><div class="description"><p>The ID of the User Group you wish to view</p>
+</div></td><td><p>integer</p></td><td>path</td></tr>
+<tr><td><p><code>include-inheritable</code><br/><em>optional</em></p></td><td><div class="description"><p>Append <code>?include-inheritable</code> to the URL to see a preview of which
 values can be inherited from an ancestor User Group.</p>
-</td><td><p>boolean</p></td><td>query</td></tr>
+</div></td><td><p>boolean</p></td><td>query</td></tr>
 </table>
 <h3 id='responses-53'>Responses</h3>
 <table>
@@ -4483,14 +4510,14 @@ field, it must be done via <code>parent_id</code></em>.</p>
 <h3 id='parameters-48'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group you wish to update</p>
-</td><td><p>integer</p></td><td>path</td></tr>
-<tr><td><p><code>usergroup</code><br/><em>required</em></p></td><td><p>JSON object containing the new <code>name</code>, <code>parent_id</code> or <code>tags</code> for the User
+<tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><div class="description"><p>The ID of the User Group you wish to update</p>
+</div></td><td><p>integer</p></td><td>path</td></tr>
+<tr><td><p><code>usergroup</code><br/><em>required</em></p></td><td><div class="description"><p>JSON object containing the new <code>name</code>, <code>parent_id</code> or <code>tags</code> for the User
 Group.</p>
-</td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
-<tr><td><p><code>include-inheritable</code><br/><em>optional</em></p></td><td><p>Set to <code>true</code> to see a preview of which
+</div></td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
+<tr><td><p><code>include-inheritable</code><br/><em>optional</em></p></td><td><div class="description"><p>Set to <code>true</code> to see a preview of which
 values can be inherited from an ancestor User Group.</p>
-</td><td><p>boolean</p></td><td>formData</td></tr>
+</div></td><td><p>boolean</p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-54'>Responses</h3>
 <table>
@@ -4530,8 +4557,8 @@ by simply working up the tree, deleting the leaves.</p>
 <h3 id='parameters-49'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group you wish to update</p>
-</td><td><p>integer</p></td><td>path</td></tr>
+<tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><div class="description"><p>The ID of the User Group you wish to update</p>
+</div></td><td><p>integer</p></td><td>path</td></tr>
 </table>
 <h3 id='responses-55'>Responses</h3>
 <table>
@@ -4667,11 +4694,11 @@ inherits.</p>
 <h3 id='parameters-50'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group whose <code>contact_details</code> object you wish to view</p>
-</td><td><p>integer</p></td><td>path</td></tr>
-<tr><td><p><code>include-inheritable</code><br/><em>optional</em></p></td><td><p>Append <code>?include-inheritable</code> to the URL to see a preview of which
+<tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><div class="description"><p>The ID of the User Group whose <code>contact_details</code> object you wish to view</p>
+</div></td><td><p>integer</p></td><td>path</td></tr>
+<tr><td><p><code>include-inheritable</code><br/><em>optional</em></p></td><td><div class="description"><p>Append <code>?include-inheritable</code> to the URL to see a preview of which
 values can be inherited from an ancestor User Group.</p>
-</td><td><p>boolean</p></td><td>query</td></tr>
+</div></td><td><p>boolean</p></td><td>query</td></tr>
 </table>
 <h3 id='responses-56'>Responses</h3>
 <table>
@@ -4733,14 +4760,14 @@ be unaffected by the operation.</p>
 <h3 id='parameters-51'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group whose <code>contact_details</code> object you wish to update</p>
-</td><td><p>integer</p></td><td>path</td></tr>
-<tr><td><p><code>contact_details</code><br/><em>required</em></p></td><td><p>JSON object containing (partial or full) updates to the contact_details
+<tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><div class="description"><p>The ID of the User Group whose <code>contact_details</code> object you wish to update</p>
+</div></td><td><p>integer</p></td><td>path</td></tr>
+<tr><td><p><code>contact_details</code><br/><em>required</em></p></td><td><div class="description"><p>JSON object containing (partial or full) updates to the contact_details
 subtrees (currently only <code>data_retention_policy</code> is exposed by the API).</p>
-</td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
-<tr><td><p><code>include-inheritable</code><br/><em>optional</em></p></td><td><p>Set to <code>true</code> to see a preview of which
+</div></td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
+<tr><td><p><code>include-inheritable</code><br/><em>optional</em></p></td><td><div class="description"><p>Set to <code>true</code> to see a preview of which
 values can be inherited from an ancestor User Group.</p>
-</td><td><p>boolean</p></td><td>formData</td></tr>
+</div></td><td><p>boolean</p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-57'>Responses</h3>
 <table>
@@ -4779,12 +4806,12 @@ contact_details object of a root User Group will result in an error.</p>
 <h3 id='parameters-52'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group whose <code>contact_details</code> object you wish to
+<tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><div class="description"><p>The ID of the User Group whose <code>contact_details</code> object you wish to
 delete</p>
-</td><td><p>integer</p></td><td>path</td></tr>
-<tr><td><p><code>include-inheritable</code><br/><em>optional</em></p></td><td><p>Set to <code>true</code> to see a preview of which
+</div></td><td><p>integer</p></td><td>path</td></tr>
+<tr><td><p><code>include-inheritable</code><br/><em>optional</em></p></td><td><div class="description"><p>Set to <code>true</code> to see a preview of which
 values can be inherited from an ancestor User Group.</p>
-</td><td><p>boolean</p></td><td>formData</td></tr>
+</div></td><td><p>boolean</p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-58'>Responses</h3>
 <table>
@@ -4925,11 +4952,11 @@ inherits.</p>
 <h3 id='parameters-53'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group whose <code>settings</code> object you wish to view</p>
-</td><td><p>integer</p></td><td>path</td></tr>
-<tr><td><p><code>include-inheritable</code><br/><em>optional</em></p></td><td><p>Append <code>?include-inheritable</code> to the URL to see a preview of which
+<tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><div class="description"><p>The ID of the User Group whose <code>settings</code> object you wish to view</p>
+</div></td><td><p>integer</p></td><td>path</td></tr>
+<tr><td><p><code>include-inheritable</code><br/><em>optional</em></p></td><td><div class="description"><p>Append <code>?include-inheritable</code> to the URL to see a preview of which
 values can be inherited from an ancestor User Group.</p>
-</td><td><p>boolean</p></td><td>query</td></tr>
+</div></td><td><p>boolean</p></td><td>query</td></tr>
 </table>
 <h3 id='responses-59'>Responses</h3>
 <table>
@@ -4986,14 +5013,14 @@ be unaffected by the operation.</p>
 <h3 id='parameters-54'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group whose <code>settings</code> object you wish to update</p>
-</td><td><p>integer</p></td><td>path</td></tr>
-<tr><td><p><code>settings</code><br/><em>required</em></p></td><td><p>JSON object containing (partial or full) updates to the settings
+<tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><div class="description"><p>The ID of the User Group whose <code>settings</code> object you wish to update</p>
+</div></td><td><p>integer</p></td><td>path</td></tr>
+<tr><td><p><code>settings</code><br/><em>required</em></p></td><td><div class="description"><p>JSON object containing (partial or full) updates to the settings
 subtrees (currently only <code>data_retention_policy</code> is exposed by the API).</p>
-</td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
-<tr><td><p><code>include-inheritable</code><br/><em>optional</em></p></td><td><p>Set to <code>true</code> to see a preview of which
+</div></td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
+<tr><td><p><code>include-inheritable</code><br/><em>optional</em></p></td><td><div class="description"><p>Set to <code>true</code> to see a preview of which
 values can be inherited from an ancestor User Group.</p>
-</td><td><p>boolean</p></td><td>formData</td></tr>
+</div></td><td><p>boolean</p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-60'>Responses</h3>
 <table>
@@ -5032,11 +5059,11 @@ object of a root User Group will result in an error.</p>
 <h3 id='parameters-55'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group whose <code>settings</code> object you wish to delete</p>
-</td><td><p>integer</p></td><td>path</td></tr>
-<tr><td><p><code>include-inheritable</code><br/><em>optional</em></p></td><td><p>Set to <code>true</code> to see a preview of which
+<tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><div class="description"><p>The ID of the User Group whose <code>settings</code> object you wish to delete</p>
+</div></td><td><p>integer</p></td><td>path</td></tr>
+<tr><td><p><code>include-inheritable</code><br/><em>optional</em></p></td><td><div class="description"><p>Set to <code>true</code> to see a preview of which
 values can be inherited from an ancestor User Group.</p>
-</td><td><p>boolean</p></td><td>formData</td></tr>
+</div></td><td><p>boolean</p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-61'>Responses</h3>
 <table>
@@ -5084,8 +5111,8 @@ not show the Users who are members of any descendent User Groups.</p>
 <h3 id='parameters-56'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group whose users you wish to view</p>
-</td><td><p>integer</p></td><td>path</td></tr>
+<tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><div class="description"><p>The ID of the User Group whose users you wish to view</p>
+</div></td><td><p>integer</p></td><td>path</td></tr>
 </table>
 <h3 id='responses-62'>Responses</h3>
 <table>
@@ -5142,8 +5169,8 @@ user.</p>
 <h3 id='parameters-57'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>user_id</code><br/><em>required</em></p></td><td><p>The ID of the User whose roles you wish to view</p>
-</td><td><p>integer</p></td><td>url</td></tr>
+<tr><td><p><code>user_id</code><br/><em>required</em></p></td><td><div class="description"><p>The ID of the User whose roles you wish to view</p>
+</div></td><td><p>integer</p></td><td>url</td></tr>
 </table>
 <h3 id='responses-63'>Responses</h3>
 <table>
@@ -5194,8 +5221,8 @@ have <code>is_generated</code> set to <code>false</code> and a non-<code>null</c
 <h3 id='parameters-58'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>role_id</code><br/><em>required</em></p></td><td><p>The ID of the Access Role you wish to view</p>
-</td><td><p>integer</p></td><td>url</td></tr>
+<tr><td><p><code>role_id</code><br/><em>required</em></p></td><td><div class="description"><p>The ID of the Access Role you wish to view</p>
+</div></td><td><p>integer</p></td><td>url</td></tr>
 </table>
 <h3 id='responses-64'>Responses</h3>
 <table>
@@ -5236,8 +5263,8 @@ role refers to.</p>
 <h3 id='parameters-59'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>role</code><br/><em>required</em></p></td><td><p>JSON object containing details of the role to be granted.</p>
-</td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
+<tr><td><p><code>role</code><br/><em>required</em></p></td><td><div class="description"><p>JSON object containing details of the role to be granted.</p>
+</div></td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-65'>Responses</h3>
 <table>
@@ -5268,8 +5295,8 @@ an explicit role and can be deleted.</p>
 <h3 id='parameters-60'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>role_id</code><br/><em>required</em></p></td><td><p>The ID of the Access Role you wish to delete</p>
-</td><td><p>integer</p></td><td>url</td></tr>
+<tr><td><p><code>role_id</code><br/><em>required</em></p></td><td><div class="description"><p>The ID of the Access Role you wish to delete</p>
+</div></td><td><p>integer</p></td><td>url</td></tr>
 </table>
 <h3 id='responses-66'>Responses</h3>
 <table>
@@ -5323,11 +5350,11 @@ included by default (see the <code>recursive</code> parameter).</p>
 <h3 id='parameters-61'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>folder_id</code><br/><em>required</em></p></td><td><p>The ID of the Folder you wish to view</p>
-</td><td><p>string</p></td><td>url</td></tr>
-<tr><td><p><code>recursive</code><br/><em>optional</em></p><p><em>default:</em> <code>false</code></p></td><td><p>Set ?recursive=true to include all descendant folders in the metadata
+<tr><td><p><code>folder_id</code><br/><em>required</em></p></td><td><div class="description"><p>The ID of the Folder you wish to view</p>
+</div></td><td><p>string</p></td><td>url</td></tr>
+<tr><td><p><code>recursive</code><br/><em>optional</em></p><p><em>default:</em> <code>false</code></p></td><td><div class="description"><p>Set ?recursive=true to include all descendant folders in the metadata
 instead of just the immediate children.</p>
-</td><td><p>boolean</p></td><td>query</td></tr>
+</div></td><td><p>boolean</p></td><td>query</td></tr>
 </table>
 <h3 id='responses-67'>Responses</h3>
 <table>
@@ -5378,8 +5405,8 @@ GET endpoint should produce the same output both times.</p>
 <h3 id='parameters-62'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>folder</code><br/><em>optional</em></p></td><td><p>JSON object containing details of the folder to be created.</p>
-</td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
+<tr><td><p><code>folder</code><br/><em>optional</em></p></td><td><div class="description"><p>JSON object containing details of the folder to be created.</p>
+</div></td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-68'>Responses</h3>
 <table>
@@ -5444,10 +5471,10 @@ field, it must be done via <code>parent_id</code></em>.</p>
 <h3 id='parameters-63'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>folder_id</code><br/><em>required</em></p></td><td><p>The ID of the Folder whose contents you wish to list</p>
-</td><td><p>string</p></td><td>url</td></tr>
-<tr><td><p><code>folder</code><br/><em>optional</em></p></td><td><p>JSON object containing details of the folder to be updated.</p>
-</td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
+<tr><td><p><code>folder_id</code><br/><em>required</em></p></td><td><div class="description"><p>The ID of the Folder whose contents you wish to list</p>
+</div></td><td><p>string</p></td><td>url</td></tr>
+<tr><td><p><code>folder</code><br/><em>optional</em></p></td><td><div class="description"><p>JSON object containing details of the folder to be updated.</p>
+</div></td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-69'>Responses</h3>
 <table>
@@ -5479,8 +5506,8 @@ working up the tree, deleting the leaves.</p>
 <h3 id='parameters-64'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>folder_id</code><br/><em>required</em></p></td><td><p>The ID of the Folder you wish to delete</p>
-</td><td><p>string</p></td><td>url</td></tr>
+<tr><td><p><code>folder_id</code><br/><em>required</em></p></td><td><div class="description"><p>The ID of the Folder you wish to delete</p>
+</div></td><td><p>string</p></td><td>url</td></tr>
 </table>
 <h3 id='responses-70'>Responses</h3>
 <table>
@@ -5525,8 +5552,8 @@ details).</em></p>
 <h3 id='parameters-65'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>folder_id</code><br/><em>required</em></p></td><td><p>The ID of the Folder whose contents you wish to list</p>
-</td><td><p>string</p></td><td>url</td></tr>
+<tr><td><p><code>folder_id</code><br/><em>required</em></p></td><td><div class="description"><p>The ID of the Folder whose contents you wish to list</p>
+</div></td><td><p>string</p></td><td>url</td></tr>
 </table>
 <h3 id='responses-71'>Responses</h3>
 <table>
@@ -5885,6 +5912,7 @@ instances of the same type.</p>
 <p>Currently, Scrive supports the following field types:</p>
 <ul>
 <li><code>SignatoryFieldName</code>: First and last name of the signatory.</li>
+<li><code>SignatoryFieldFullName</code>: Computed combination of the above two.</li>
 <li><code>SignatoryFieldEmailMobile</code>: Email and mobile of the signatory.</li>
 <li><code>SignatoryFieldSignature</code>: A signature box placed on the document, for
 the signatory to draw their signature.</li>
@@ -6152,6 +6180,209 @@ depending on the field type.</p>
 <div class="json-schema">
 
 <p>Description of this field</p>
+
+
+</div>
+
+<p></div></p>
+
+<h6>SignatoryFieldFullName</h6>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>Signatory field displaying full name of the respective signatory.
+Note: this field doesn't contain value of its own and when displaying the text will be derived
+from the &quot;firstname&quot; and &quot;lastname&quot; field values.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h6><code>type</code> (string, enum, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Used to specify that this is a full name field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>full_name</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>placements</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p>Defines where this field should be placed on the document.
+This is both for the signatory to fill out on the signing page, and for
+the final sealed PDF.</p>
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>xrel</code> (number, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Position on the x-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>yrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Position on the y-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>wrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Width of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>hrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Height of placement, as proportion of total height, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>fsrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Font size of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>page</code> (integer, required)</h6>
+
+<div class="json-schema">
+
+<p>The page number for this placement, starting from 1.</p>
+
+
+</div>
+
+<h6><code>tip</code> </h6>
+
+<div class="json-schema">
+
+<p>Default: <code>null</code></p>
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>From which side the arrow on the signing page should point
+to the field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>left</code></li>
+<li><code>right</code></li>
+
+</ul>
+
+</div>
+
+<h6>(null)</h6>
+
+<div class="json-schema">
+
+<p>Let the signing page default to either <code>left</code> or <code>right</code>
+depending on the field type.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h6><code>anchors</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>text</code> (string)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>index</code> (integer)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<h6><code>description</code> (string,null)</h6>
+
+<div class="json-schema">
+
+<p>Description of this field.</p>
 
 
 </div>
@@ -8518,8 +8749,8 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 
 <div class="json-schema">
 
-<p>This setting forces signatories to authenticate using the supplied identification method to view the document before signing.
-<code>dk_nemid</code> is legacy equivalent of <code>dk_nemid_cpr</code>.</p>
+<p>This setting forces signatories to authenticate using the supplied identification method to view the document before signing.</p>
+<p>Additional value <code>dk_nemid</code> is supported as legacy equivalent of <code>dk_nemid_cpr</code>.</p>
 
 
 <p>Default: <code>"standard"</code></p>
@@ -8530,15 +8761,17 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 
 <li><code>standard</code></li>
 <li><code>sms_pin</code></li>
-<li><code>se_bankid</code></li>
-<li><code>no_bankid</code></li>
-<li><code>dk_nemid</code></li>
-<li><code>dk_nemid_pid</code></li>
 <li><code>dk_nemid_cpr</code></li>
 <li><code>dk_nemid_cvr</code></li>
+<li><code>dk_nemid_pid</code></li>
 <li><code>fi_tupas</code></li>
-<li><code>verimi</code></li>
 <li><code>nl_idin</code></li>
+<li><code>no_bankid</code></li>
+<li><code>onfido_document_and_photo_check</code></li>
+<li><code>onfido_document_check</code></li>
+<li><code>se_bankid</code></li>
+<li><code>verimi</code></li>
+<li><code>freja</code></li>
 
 </ul>
 
@@ -8548,8 +8781,8 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 
 <div class="json-schema">
 
-<p>This setting forces signatories to authenticate using the supplied identification method to view the document once it has been signed and resides in the e-archive.
-<code>dk_nemid</code> is legacy equivalent of <code>dk_nemid_cpr</code>.</p>
+<p>This setting forces signatories to authenticate using the supplied identification method to view the document once it has been signed and resides in the e-archive.</p>
+<p>Additional value <code>dk_nemid</code> is supported as legacy equivalent of <code>dk_nemid_cpr</code>.</p>
 
 
 <p>Default: <code>"standard"</code></p>
@@ -8560,15 +8793,17 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 
 <li><code>standard</code></li>
 <li><code>sms_pin</code></li>
-<li><code>se_bankid</code></li>
-<li><code>no_bankid</code></li>
-<li><code>dk_nemid</code></li>
-<li><code>dk_nemid_pid</code></li>
 <li><code>dk_nemid_cpr</code></li>
 <li><code>dk_nemid_cvr</code></li>
+<li><code>dk_nemid_pid</code></li>
 <li><code>fi_tupas</code></li>
-<li><code>verimi</code></li>
 <li><code>nl_idin</code></li>
+<li><code>no_bankid</code></li>
+<li><code>onfido_document_and_photo_check</code></li>
+<li><code>onfido_document_check</code></li>
+<li><code>se_bankid</code></li>
+<li><code>verimi</code></li>
+<li><code>freja</code></li>
 
 </ul>
 
@@ -8578,8 +8813,8 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 
 <div class="json-schema">
 
-<p>This setting forces user to authenticate to sign.
-<code>dk_nemid</code> is legacy equivalent of <code>dk_nemid_cpr</code>.</p>
+<p>This setting forces user to authenticate to sign.</p>
+<p>Additional value <code>dk_nemid</code> is supported as legacy equivalent of <code>dk_nemid_cpr</code>.</p>
 
 
 <p>Default: <code>"standard"</code></p>
@@ -8590,17 +8825,18 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 
 <li><code>standard</code></li>
 <li><code>sms_pin</code></li>
-<li><code>se_bankid</code></li>
-<li><code>no_bankid</code></li>
-<li><code>dk_nemid</code></li>
-<li><code>dk_nemid_pid</code></li>
 <li><code>dk_nemid_cpr</code></li>
 <li><code>dk_nemid_cvr</code></li>
+<li><code>dk_nemid_pid</code></li>
 <li><code>fi_tupas</code></li>
-<li><code>nl_idin</code></li>
-<li><code>onfido_document_check</code></li>
-<li><code>onfido_document_and_photo_check</code></li>
 <li><code>freja</code></li>
+<li><code>nl_idin</code></li>
+<li><code>no_bankid</code></li>
+<li><code>onfido_document_and_photo_check</code></li>
+<li><code>onfido_document_check</code></li>
+<li><code>se_bankid</code></li>
+<li><code>swisscom_qes</code></li>
+<li><code>verimi_qes</code></li>
 
 </ul>
 
@@ -10665,6 +10901,7 @@ instances of the same type.</p>
 <p>Currently, Scrive supports the following field types:</p>
 <ul>
 <li><code>SignatoryFieldName</code>: First and last name of the signatory.</li>
+<li><code>SignatoryFieldFullName</code>: Computed combination of the above two.</li>
 <li><code>SignatoryFieldEmailMobile</code>: Email and mobile of the signatory.</li>
 <li><code>SignatoryFieldSignature</code>: A signature box placed on the document, for
 the signatory to draw their signature.</li>
@@ -10932,6 +11169,209 @@ depending on the field type.</p>
 <div class="json-schema">
 
 <p>Description of this field</p>
+
+
+</div>
+
+<p></div></p>
+
+<h6>SignatoryFieldFullName</h6>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>Signatory field displaying full name of the respective signatory.
+Note: this field doesn't contain value of its own and when displaying the text will be derived
+from the &quot;firstname&quot; and &quot;lastname&quot; field values.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h6><code>type</code> (string, enum, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Used to specify that this is a full name field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>full_name</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>placements</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p>Defines where this field should be placed on the document.
+This is both for the signatory to fill out on the signing page, and for
+the final sealed PDF.</p>
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>xrel</code> (number, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Position on the x-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>yrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Position on the y-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>wrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Width of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>hrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Height of placement, as proportion of total height, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>fsrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Font size of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>page</code> (integer, required)</h6>
+
+<div class="json-schema">
+
+<p>The page number for this placement, starting from 1.</p>
+
+
+</div>
+
+<h6><code>tip</code> </h6>
+
+<div class="json-schema">
+
+<p>Default: <code>null</code></p>
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>From which side the arrow on the signing page should point
+to the field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>left</code></li>
+<li><code>right</code></li>
+
+</ul>
+
+</div>
+
+<h6>(null)</h6>
+
+<div class="json-schema">
+
+<p>Let the signing page default to either <code>left</code> or <code>right</code>
+depending on the field type.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h6><code>anchors</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>text</code> (string)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>index</code> (integer)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<h6><code>description</code> (string,null)</h6>
+
+<div class="json-schema">
+
+<p>Description of this field.</p>
 
 
 </div>
@@ -13298,8 +13738,8 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 
 <div class="json-schema">
 
-<p>This setting forces signatories to authenticate using the supplied identification method to view the document before signing.
-<code>dk_nemid</code> is legacy equivalent of <code>dk_nemid_cpr</code>.</p>
+<p>This setting forces signatories to authenticate using the supplied identification method to view the document before signing.</p>
+<p>Additional value <code>dk_nemid</code> is supported as legacy equivalent of <code>dk_nemid_cpr</code>.</p>
 
 
 <p>Default: <code>"standard"</code></p>
@@ -13310,15 +13750,17 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 
 <li><code>standard</code></li>
 <li><code>sms_pin</code></li>
-<li><code>se_bankid</code></li>
-<li><code>no_bankid</code></li>
-<li><code>dk_nemid</code></li>
-<li><code>dk_nemid_pid</code></li>
 <li><code>dk_nemid_cpr</code></li>
 <li><code>dk_nemid_cvr</code></li>
+<li><code>dk_nemid_pid</code></li>
 <li><code>fi_tupas</code></li>
-<li><code>verimi</code></li>
 <li><code>nl_idin</code></li>
+<li><code>no_bankid</code></li>
+<li><code>onfido_document_and_photo_check</code></li>
+<li><code>onfido_document_check</code></li>
+<li><code>se_bankid</code></li>
+<li><code>verimi</code></li>
+<li><code>freja</code></li>
 
 </ul>
 
@@ -13328,8 +13770,8 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 
 <div class="json-schema">
 
-<p>This setting forces signatories to authenticate using the supplied identification method to view the document once it has been signed and resides in the e-archive.
-<code>dk_nemid</code> is legacy equivalent of <code>dk_nemid_cpr</code>.</p>
+<p>This setting forces signatories to authenticate using the supplied identification method to view the document once it has been signed and resides in the e-archive.</p>
+<p>Additional value <code>dk_nemid</code> is supported as legacy equivalent of <code>dk_nemid_cpr</code>.</p>
 
 
 <p>Default: <code>"standard"</code></p>
@@ -13340,15 +13782,17 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 
 <li><code>standard</code></li>
 <li><code>sms_pin</code></li>
-<li><code>se_bankid</code></li>
-<li><code>no_bankid</code></li>
-<li><code>dk_nemid</code></li>
-<li><code>dk_nemid_pid</code></li>
 <li><code>dk_nemid_cpr</code></li>
 <li><code>dk_nemid_cvr</code></li>
+<li><code>dk_nemid_pid</code></li>
 <li><code>fi_tupas</code></li>
-<li><code>verimi</code></li>
 <li><code>nl_idin</code></li>
+<li><code>no_bankid</code></li>
+<li><code>onfido_document_and_photo_check</code></li>
+<li><code>onfido_document_check</code></li>
+<li><code>se_bankid</code></li>
+<li><code>verimi</code></li>
+<li><code>freja</code></li>
 
 </ul>
 
@@ -13358,8 +13802,8 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 
 <div class="json-schema">
 
-<p>This setting forces user to authenticate to sign.
-<code>dk_nemid</code> is legacy equivalent of <code>dk_nemid_cpr</code>.</p>
+<p>This setting forces user to authenticate to sign.</p>
+<p>Additional value <code>dk_nemid</code> is supported as legacy equivalent of <code>dk_nemid_cpr</code>.</p>
 
 
 <p>Default: <code>"standard"</code></p>
@@ -13370,17 +13814,18 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 
 <li><code>standard</code></li>
 <li><code>sms_pin</code></li>
-<li><code>se_bankid</code></li>
-<li><code>no_bankid</code></li>
-<li><code>dk_nemid</code></li>
-<li><code>dk_nemid_pid</code></li>
 <li><code>dk_nemid_cpr</code></li>
 <li><code>dk_nemid_cvr</code></li>
+<li><code>dk_nemid_pid</code></li>
 <li><code>fi_tupas</code></li>
-<li><code>nl_idin</code></li>
-<li><code>onfido_document_check</code></li>
-<li><code>onfido_document_and_photo_check</code></li>
 <li><code>freja</code></li>
+<li><code>nl_idin</code></li>
+<li><code>no_bankid</code></li>
+<li><code>onfido_document_and_photo_check</code></li>
+<li><code>onfido_document_check</code></li>
+<li><code>se_bankid</code></li>
+<li><code>swisscom_qes</code></li>
+<li><code>verimi_qes</code></li>
 
 </ul>
 
@@ -14303,6 +14748,10 @@ be changed.</p>
       </span><span class="s2">"placements"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"full_name"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"placements"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
       </span><span class="s2">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"email"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"noemail@scrive.com"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"is_obligatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
@@ -14485,6 +14934,7 @@ instances of the same type.</p>
 <p>Currently, Scrive supports the following field types:</p>
 <ul>
 <li><code>SignatoryFieldName</code>: First and last name of the signatory.</li>
+<li><code>SignatoryFieldFullName</code>: Computed combination of the above two.</li>
 <li><code>SignatoryFieldEmailMobile</code>: Email and mobile of the signatory.</li>
 <li><code>SignatoryFieldSignature</code>: A signature box placed on the document, for
 the signatory to draw their signature.</li>
@@ -14752,6 +15202,209 @@ depending on the field type.</p>
 <div class="json-schema">
 
 <p>Description of this field</p>
+
+
+</div>
+
+<p></div></p>
+
+<h4>SignatoryFieldFullName</h4>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>Signatory field displaying full name of the respective signatory.
+Note: this field doesn't contain value of its own and when displaying the text will be derived
+from the &quot;firstname&quot; and &quot;lastname&quot; field values.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h5><code>type</code> (string, enum, required)</h5>
+
+
+<div class="json-schema">
+
+<p>Used to specify that this is a full name field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>full_name</code></li>
+
+</ul>
+
+</div>
+
+<h5><code>placements</code> <code>(array)</code></h5>
+
+<div class="json-schema">
+
+<p>Defines where this field should be placed on the document.
+This is both for the signatory to fill out on the signing page, and for
+the final sealed PDF.</p>
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>xrel</code> (number, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Position on the x-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>yrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Position on the y-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>wrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Width of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>hrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Height of placement, as proportion of total height, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>fsrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Font size of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>page</code> (integer, required)</h6>
+
+<div class="json-schema">
+
+<p>The page number for this placement, starting from 1.</p>
+
+
+</div>
+
+<h6><code>tip</code> </h6>
+
+<div class="json-schema">
+
+<p>Default: <code>null</code></p>
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>From which side the arrow on the signing page should point
+to the field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>left</code></li>
+<li><code>right</code></li>
+
+</ul>
+
+</div>
+
+<h6>(null)</h6>
+
+<div class="json-schema">
+
+<p>Let the signing page default to either <code>left</code> or <code>right</code>
+depending on the field type.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h6><code>anchors</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>text</code> (string)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>index</code> (integer)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<h5><code>description</code> (string,null)</h5>
+
+<div class="json-schema">
+
+<p>Description of this field.</p>
 
 
 </div>
@@ -17118,8 +17771,8 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 
 <div class="json-schema">
 
-<p>This setting forces signatories to authenticate using the supplied identification method to view the document before signing.
-<code>dk_nemid</code> is legacy equivalent of <code>dk_nemid_cpr</code>.</p>
+<p>This setting forces signatories to authenticate using the supplied identification method to view the document before signing.</p>
+<p>Additional value <code>dk_nemid</code> is supported as legacy equivalent of <code>dk_nemid_cpr</code>.</p>
 
 
 <p>Default: <code>"standard"</code></p>
@@ -17130,15 +17783,17 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 
 <li><code>standard</code></li>
 <li><code>sms_pin</code></li>
-<li><code>se_bankid</code></li>
-<li><code>no_bankid</code></li>
-<li><code>dk_nemid</code></li>
-<li><code>dk_nemid_pid</code></li>
 <li><code>dk_nemid_cpr</code></li>
 <li><code>dk_nemid_cvr</code></li>
+<li><code>dk_nemid_pid</code></li>
 <li><code>fi_tupas</code></li>
-<li><code>verimi</code></li>
 <li><code>nl_idin</code></li>
+<li><code>no_bankid</code></li>
+<li><code>onfido_document_and_photo_check</code></li>
+<li><code>onfido_document_check</code></li>
+<li><code>se_bankid</code></li>
+<li><code>verimi</code></li>
+<li><code>freja</code></li>
 
 </ul>
 
@@ -17148,8 +17803,8 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 
 <div class="json-schema">
 
-<p>This setting forces signatories to authenticate using the supplied identification method to view the document once it has been signed and resides in the e-archive.
-<code>dk_nemid</code> is legacy equivalent of <code>dk_nemid_cpr</code>.</p>
+<p>This setting forces signatories to authenticate using the supplied identification method to view the document once it has been signed and resides in the e-archive.</p>
+<p>Additional value <code>dk_nemid</code> is supported as legacy equivalent of <code>dk_nemid_cpr</code>.</p>
 
 
 <p>Default: <code>"standard"</code></p>
@@ -17160,15 +17815,17 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 
 <li><code>standard</code></li>
 <li><code>sms_pin</code></li>
-<li><code>se_bankid</code></li>
-<li><code>no_bankid</code></li>
-<li><code>dk_nemid</code></li>
-<li><code>dk_nemid_pid</code></li>
 <li><code>dk_nemid_cpr</code></li>
 <li><code>dk_nemid_cvr</code></li>
+<li><code>dk_nemid_pid</code></li>
 <li><code>fi_tupas</code></li>
-<li><code>verimi</code></li>
 <li><code>nl_idin</code></li>
+<li><code>no_bankid</code></li>
+<li><code>onfido_document_and_photo_check</code></li>
+<li><code>onfido_document_check</code></li>
+<li><code>se_bankid</code></li>
+<li><code>verimi</code></li>
+<li><code>freja</code></li>
 
 </ul>
 
@@ -17178,8 +17835,8 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 
 <div class="json-schema">
 
-<p>This setting forces user to authenticate to sign.
-<code>dk_nemid</code> is legacy equivalent of <code>dk_nemid_cpr</code>.</p>
+<p>This setting forces user to authenticate to sign.</p>
+<p>Additional value <code>dk_nemid</code> is supported as legacy equivalent of <code>dk_nemid_cpr</code>.</p>
 
 
 <p>Default: <code>"standard"</code></p>
@@ -17190,17 +17847,18 @@ interface. Furthermore, <code>pad</code> delivery is referred to as &quot;In-per
 
 <li><code>standard</code></li>
 <li><code>sms_pin</code></li>
-<li><code>se_bankid</code></li>
-<li><code>no_bankid</code></li>
-<li><code>dk_nemid</code></li>
-<li><code>dk_nemid_pid</code></li>
 <li><code>dk_nemid_cpr</code></li>
 <li><code>dk_nemid_cvr</code></li>
+<li><code>dk_nemid_pid</code></li>
 <li><code>fi_tupas</code></li>
-<li><code>nl_idin</code></li>
-<li><code>onfido_document_check</code></li>
-<li><code>onfido_document_and_photo_check</code></li>
 <li><code>freja</code></li>
+<li><code>nl_idin</code></li>
+<li><code>no_bankid</code></li>
+<li><code>onfido_document_and_photo_check</code></li>
+<li><code>onfido_document_check</code></li>
+<li><code>se_bankid</code></li>
+<li><code>swisscom_qes</code></li>
+<li><code>verimi_qes</code></li>
 
 </ul>
 
@@ -17826,6 +18484,225 @@ depending on the field type.</p>
 <div class="json-schema">
 
 <p>Description of this field</p>
+
+
+</div>
+
+<p></div></p>
+<h2 id='signatoryfieldfullname'>SignatoryFieldFullName</h2>
+<p><code>(object)</code></p>
+
+<blockquote>
+<h3 id='example-json-for-quot-signatoryfieldfullname-quot'>Example JSON: for &quot;SignatoryFieldFullName&quot;</h3></blockquote>
+<pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="s2">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"full_name"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"placements"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"xrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.29368421052631577</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"yrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.3444940476190476</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"wrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.10842105263157895</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"hrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.025297619047619048</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"fsrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.016842105263157894</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"page"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"tip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"right"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"anchors"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+<div class="json-schema">
+
+<p>Signatory field displaying full name of the respective signatory.
+Note: this field doesn't contain value of its own and when displaying the text will be derived
+from the &quot;firstname&quot; and &quot;lastname&quot; field values.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h3><code>type</code> (string, enum, required)</h3>
+
+
+<div class="json-schema">
+
+<p>Used to specify that this is a full name field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>full_name</code></li>
+
+</ul>
+
+</div>
+
+<h3><code>placements</code> <code>(array)</code></h3>
+
+<div class="json-schema">
+
+<p>Defines where this field should be placed on the document.
+This is both for the signatory to fill out on the signing page, and for
+the final sealed PDF.</p>
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h4>(object)</h4>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h5><code>xrel</code> (number, required)</h5>
+
+
+<div class="json-schema">
+
+<p>Position on the x-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h5><code>yrel</code> (number, required)</h5>
+
+<div class="json-schema">
+
+<p>Position on the y-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h5><code>wrel</code> (number, required)</h5>
+
+<div class="json-schema">
+
+<p>Width of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h5><code>hrel</code> (number, required)</h5>
+
+<div class="json-schema">
+
+<p>Height of placement, as proportion of total height, from 0 to 1.</p>
+
+
+</div>
+
+<h5><code>fsrel</code> (number, required)</h5>
+
+<div class="json-schema">
+
+<p>Font size of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h5><code>page</code> (integer, required)</h5>
+
+<div class="json-schema">
+
+<p>The page number for this placement, starting from 1.</p>
+
+
+</div>
+
+<h5><code>tip</code> </h5>
+
+<div class="json-schema">
+
+<p>Default: <code>null</code></p>
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>From which side the arrow on the signing page should point
+to the field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>left</code></li>
+<li><code>right</code></li>
+
+</ul>
+
+</div>
+
+<h6>(null)</h6>
+
+<div class="json-schema">
+
+<p>Let the signing page default to either <code>left</code> or <code>right</code>
+depending on the field type.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h5><code>anchors</code> <code>(array)</code></h5>
+
+<div class="json-schema">
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>text</code> (string)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>index</code> (integer)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<h3><code>description</code> (string,null)</h3>
+
+<div class="json-schema">
+
+<p>Description of this field.</p>
 
 
 </div>
